@@ -22,14 +22,13 @@ export const generateMockup = async (
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ 
             model: modelId,
-            // @ts-ignore: Experimental parameters for image generation not yet in SDK types
             generationConfig: {
                 responseModalities: ["TEXT", "IMAGE"],
                 imageConfig: {
                     aspectRatio: aspectRatio,
                     imageSize: "2K" 
                 }
-            }
+            } as any
         });
 
         // Helper to fetch and convert URL to Base64
