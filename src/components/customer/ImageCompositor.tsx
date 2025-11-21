@@ -181,8 +181,34 @@ export default function ImageCompositor({ productId, baseImageUrl }: ImageCompos
                     <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none rounded-[2rem] z-10 border border-white/20"></div>
 
                     <div className="w-full h-full bg-white/50 rounded-[1.5rem] overflow-hidden relative flex items-center justify-center">
-                        {loading ? (
-                            <div className="flex flex-col items-center justify-center z-20">
+                        
+                        {/* 1. Image Layer: Shows either the result or the base product */}
+                        {generatedImage && !loading ? (
+                            <div className="relative w-full h-full">
+                                <img 
+                                    src={generatedImage} 
+                                    alt="Generated Mockup" 
+                                    className="w-full h-full object-contain animate-in fade-in duration-700" 
+                                />
+                                <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                    AI Generated Preview
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="relative w-full h-full flex items-center justify-center">
+                                <img 
+                                    src={baseImageUrl} 
+                                    alt="Base Product" 
+                                    className={`w-full h-full object-contain transition-all duration-500 ${
+                                        loading ? 'opacity-50 blur-sm scale-105' : 'opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60'
+                                    }`} 
+                                />
+                            </div>
+                        )}
+
+                        {/* 2. Loading Overlay Layer */}
+                        {loading && (
+                            <div className="absolute inset-0 z-20 bg-white/30 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
                                 <div className="relative w-24 h-24 mb-6">
                                     <div className="absolute inset-0 rounded-full bg-teal/20 animate-ping"></div>
                                     <div className="absolute inset-0 rounded-full border-4 border-teal/20 border-t-teal animate-spin"></div>
@@ -191,26 +217,19 @@ export default function ImageCompositor({ productId, baseImageUrl }: ImageCompos
                                     </div>
                                 </div>
                                 <h4 className="text-xl font-bold text-ink animate-pulse">Generating Mockup...</h4>
-                                <p className="text-ink/50 mt-2 text-sm">Applying AI magic to your design</p>
+                                <p className="text-ink/60 mt-2 text-sm font-medium">Applying AI magic to your design</p>
                             </div>
-                        ) : generatedImage ? (
-                            <div className="relative w-full h-full">
-                                <img src={generatedImage} alt="Generated Mockup" className="w-full h-full object-contain animate-in fade-in duration-700" />
-                                <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                                    AI Generated Preview
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="relative w-full h-full flex items-center justify-center">
-                                <img src={baseImageUrl} alt="Base Product" className="w-full h-full object-contain opacity-40 grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:opacity-60" />
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl shadow-xl border border-white/50 max-w-xs text-center transform group-hover:scale-105 transition-transform duration-300">
-                                        <div className="w-12 h-12 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-3 text-teal">
-                                            <Sparkles size={24} />
-                                        </div>
-                                        <h4 className="font-bold text-ink mb-1">Ready to Create</h4>
-                                        <p className="text-sm text-ink/60">Upload your logo and choose settings to see the result here.</p>
+                        )}
+
+                        {/* 3. Idle CTA Layer (Only if NOT loading and NO Result) */}
+                        {!loading && !generatedImage && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
+                                <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl shadow-xl border border-white/50 max-w-xs text-center transform group-hover:scale-105 transition-transform duration-300">
+                                    <div className="w-12 h-12 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-3 text-teal">
+                                        <Sparkles size={24} />
                                     </div>
+                                    <h4 className="font-bold text-ink mb-1">Ready to Create</h4>
+                                    <p className="text-sm text-ink/60">Upload your logo and choose settings to see the result here.</p>
                                 </div>
                             </div>
                         )}
