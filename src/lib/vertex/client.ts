@@ -22,11 +22,11 @@ export const generateMockup = async (
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ 
             model: modelId,
+            // @ts-ignore: Experimental parameters for image generation not yet in SDK types
             generationConfig: {
                 responseModalities: ["TEXT", "IMAGE"],
                 imageConfig: {
                     aspectRatio: aspectRatio,
-                    // @ts-ignore: SDK typing might lag behind actual API capabilities
                     imageSize: "2K" 
                 }
             }
