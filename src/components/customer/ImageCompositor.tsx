@@ -31,34 +31,73 @@ export default function ImageCompositor({ productId, baseImageUrl }: ImageCompos
         }
     };
 
+    // Helper to compress/resize image before sending to API
+    const compressImage = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1536;
+                    const MAX_HEIGHT = 1536;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+                    
+                    // Convert to JPEG with 0.85 quality
+                    resolve(canvas.toDataURL('image/jpeg', 0.85));
+                };
+                img.onerror = (err) => reject(err);
+            };
+            reader.onerror = (err) => reject(err);
+        });
+    };
+
     const handleGenerate = async () => {
         if (!logo) return;
 
         setLoading(true);
         try {
-            const reader = new FileReader();
-            reader.readAsDataURL(logo);
-            reader.onload = async () => {
-                const base64Logo = reader.result as string;
+            // Compress the image to avoid 413 Payload Too Large errors
+            const base64Logo = await compressImage(logo);
 
-                const res = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        productId,
-                        logoUrl: base64Logo,
-                        aspectRatio,
-                    }),
-                });
+            const res = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    productId,
+                    logoUrl: base64Logo,
+                    aspectRatio,
+                }),
+            });
 
-                const data = await res.json();
-                if (data.success) {
-                    setGeneratedImage(data.imageUrl);
-                } else {
-                    alert('Generation failed: ' + data.error);
-                }
-                setLoading(false);
-            };
+            const data = await res.json();
+            if (data.success) {
+                setGeneratedImage(data.imageUrl);
+            } else {
+                alert('Generation failed: ' + data.error);
+            }
+            setLoading(false);
+
         } catch (error) {
             console.error(error);
             setLoading(false);
