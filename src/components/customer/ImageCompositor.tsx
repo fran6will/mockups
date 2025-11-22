@@ -200,7 +200,7 @@ export default function ImageCompositor({ productId, baseImageUrl }: ImageCompos
                                     src={baseImageUrl} 
                                     alt="Base Product" 
                                     className={`w-full h-full object-contain transition-all duration-500 ${
-                                        loading ? 'opacity-50 blur-sm scale-105' : 'opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60'
+                                        loading ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60'
                                     }`} 
                                 />
                             </div>
@@ -208,16 +208,18 @@ export default function ImageCompositor({ productId, baseImageUrl }: ImageCompos
 
                         {/* 2. Loading Overlay Layer */}
                         {loading && (
-                            <div className="absolute inset-0 z-20 bg-white/30 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
-                                <div className="relative w-24 h-24 mb-6">
-                                    <div className="absolute inset-0 rounded-full bg-teal/20 animate-ping"></div>
-                                    <div className="absolute inset-0 rounded-full border-4 border-teal/20 border-t-teal animate-spin"></div>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <Sparkles className="text-teal animate-pulse" size={32} />
+                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center animate-in fade-in duration-300 bg-transparent">
+                                <div className="bg-white/60 backdrop-blur-md p-8 rounded-3xl shadow-lg border border-white/50 flex flex-col items-center">
+                                    <div className="relative w-20 h-20 mb-4">
+                                        <div className="absolute inset-0 rounded-full bg-teal/20 animate-ping"></div>
+                                        <div className="absolute inset-0 rounded-full border-4 border-teal/20 border-t-teal animate-spin"></div>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <Sparkles className="text-teal animate-pulse" size={28} />
+                                        </div>
                                     </div>
+                                    <h4 className="text-lg font-bold text-ink animate-pulse">Generating...</h4>
+                                    <p className="text-ink/60 mt-1 text-xs font-medium">Applying AI magic</p>
                                 </div>
-                                <h4 className="text-xl font-bold text-ink animate-pulse">Generating Mockup...</h4>
-                                <p className="text-ink/60 mt-2 text-sm font-medium">Applying AI magic to your design</p>
                             </div>
                         )}
 
