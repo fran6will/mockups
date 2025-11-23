@@ -19,7 +19,7 @@ export function useAccess(productSlug?: string) {
                         .select('status')
                         .eq('user_id', user.id)
                         .eq('status', 'active')
-                        .single();
+                        .maybeSingle();
 
                     if (subscription) {
                         setAccessLevel('pro');
