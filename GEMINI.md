@@ -30,6 +30,7 @@ The application follows a strict **Glassmorphism** aesthetic:
   - `password_hash`: Simple access control for Etsy buyers.
   - `base_image_url`: High-res blank product image.
   - `custom_prompt`: Specific instructions for the AI (e.g., "Maintain fabric ripples").
+  - `is_pro_included`: Boolean indicating if this product is part of the pro subscription (defaults to true).
 - **`generations`**: Tracks usage analytics.
   - `product_id`: Link to product.
   - `status`: 'success' or 'error'.

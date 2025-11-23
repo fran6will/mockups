@@ -4,10 +4,37 @@ import Link from 'next/link';
 import { Check, Sparkles, ArrowRight } from 'lucide-react';
 import Header from '@/components/ui/Header';
 import Banner from '@/components/ui/Banner';
+import { useEffect, useState } from 'react';
+
+import { supabase } from '@/lib/supabase/client';
 
 export default function PricingPage() {
-    // In a real app, this would come from your environment variables
-    const lemonSqueezyCheckoutUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL || '#';
+    const [userId, setUserId] = useState<string | null>(null);
+    const [lemonSqueezyCheckoutUrl, setLemonSqueezyCheckoutUrl] = useState<string>('#');
+
+
+    useEffect(() => {
+        const getSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                setUserId(session.user.id);
+            }
+        };
+        getSession();
+    }, []);
+
+    useEffect(() => {
+        const baseUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL;
+        if (baseUrl) {
+            let url = baseUrl;
+            if (userId) {
+                url += `?passthrough[user_id]=${userId}`;
+            }
+            setLemonSqueezyCheckoutUrl(url);
+        } else {
+            console.error('NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL is not set');
+        }
+    }, [userId]);
 
     return (
         <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-fixed" style={{
