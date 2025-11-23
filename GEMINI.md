@@ -1,69 +1,72 @@
-# Project Gemini: Nano Banana Pro Engine
+# Project Gemini: Nano Banana Pro Engine (Glassmorphism Edition)
 
 ## Overview
-This project is a Next.js application designed to generate realistic product mockups using Google's Gemini AI (specifically the "Nano Banana Pro Engine"). It features a dual-interface system: an admin panel for creating product templates and a customer-facing view for generating custom mockups by uploading logos.
+**CopiéCollé (Nano Banana Pro)** is a high-performance, AI-powered mockup generator designed to bridge the gap between static Etsy digital downloads and interactive product visualization. It utilizes Google's Gemini AI (Vertex AI) to realistically composite user-uploaded logos onto high-quality product photography.
 
 ## Tech Stack
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
-- **Styling:** Tailwind CSS v4
-- **Database & Auth:** Supabase (PostgreSQL, Storage)
-- **AI Model:** Google Generative AI (Gemini) via `@google/generative-ai` SDK
+- **Styling:** Tailwind CSS v4 (Custom Glassmorphism Theme)
+- **Database & Auth:** Supabase (PostgreSQL)
+- **Storage:** Supabase Storage (Public Buckets)
+- **AI Model:** Google Gemini 1.5 Pro / 2.0 (via Google Generative AI SDK)
 - **Icons:** Lucide React
 
-## Architecture & Key Components
+## Design System
+The application follows a strict **Glassmorphism** aesthetic:
+- **Palette:**
+  - Base Cream: `#F2F0E9`
+  - Deep Teal: `#2A7F7F`
+  - Ink Black: `#1A1A1A`
+- **UI Elements:** Frosted glass cards (`backdrop-blur`), floating inputs, and teal gradients.
+- **UX:** Animated loading states with transparency to keep context; client-side image compression for instant uploads.
 
-### 1. Database (Supabase)
-The database schema (`supabase/schema.sql`) consists of two main tables:
-- **`products`**: Stores product templates.
+## Core Architecture
+
+### 1. Database Schema (Supabase)
+- **`products`**: Stores mockup templates.
   - `id`: UUID
-  - `title`: Product name (e.g., "Vintage Cap")
-  - `slug`: Unique URL identifier (e.g., "vintage-cap")
-  - `password_hash`: Password for accessing the product page (Note: Currently handled insecurely on the client-side in some contexts).
-  - `base_image_url`: URL to the high-quality base image in Supabase Storage.
-  - `overlay_config`: JSONB field for storing AI prompt hints or coordinates.
-- **`downloads`**: Tracks download events (product ID, timestamp).
+  - `slug`: Unique URL (e.g., `vintage-tee`)
+  - `password_hash`: Simple access control for Etsy buyers.
+  - `base_image_url`: High-res blank product image.
+  - `custom_prompt`: Specific instructions for the AI (e.g., "Maintain fabric ripples").
+- **`generations`**: Tracks usage analytics.
+  - `product_id`: Link to product.
+  - `status`: 'success' or 'error'.
+  - `duration_ms`: Performance metric.
+  - `meta`: Stores aspect ratio choices.
 
-**Storage:** A public bucket named `mockup-bases` is used to store the base product images.
+### 2. User Flows
 
-### 2. Admin Interface (`src/app/admin/page.tsx`)
-- Allows authenticated admins to create new product templates.
-- Features:
-  - Form inputs for Title, Slug, and Access Password.
-  - File upload for the Base Image.
-  - Uses a Server Action (`createProduct` in `src/app/actions.ts`) to securely insert data into the database, bypassing Row Level Security (RLS) where necessary for admin operations.
+#### A. The Admin (Creator)
+- Accessed via `/admin`.
+- Uploads a raw high-res photo (4K).
+- Defines the "magic prompt" to guide the AI on where to place the logo.
+- Sets a password (distributed via Etsy receipt).
 
-### 3. Customer Interface (`src/app/[slug]/page.tsx`)
-- The main entry point for end-users.
-- Dynamic route based on the product `slug`.
-- **Flow:**
-  1. User visits `/[slug]`.
-  2. Application fetches product details from Supabase.
-  3. User is prompted for a password (client-side validation - **Needs Improvement**).
-  4. Upon access, the `ImageCompositor` component is rendered.
+#### B. The Customer (Etsy Buyer)
+- **Entry:** Hits `/[slug]` (e.g., `/heavy-hoodie`).
+- **Gate:** Enters the password provided in their Etsy purchase.
+- **Onboarding:** Sees a "Welcome" glass card explaining the "No Photoshop needed" benefit.
+- **Interaction:**
+  1. Uploads logo (auto-compressed client-side to <1.5MB to avoid timeouts).
+  2. Selects Aspect Ratio (Square, Wide, Story).
+  3. Clicks "Generate".
+- **Result:** AI returns a photorealistic composite. The user can download the high-res result.
 
-### 4. Image Compositor (`src/components/customer/ImageCompositor.tsx`)
-- A comprehensive React component handling the user interaction.
-- **Features:**
-  - Logo upload via drag-and-drop or file selection.
-  - Client-side preview.
-  - "Generate Mockup" button that triggers the backend API.
-  - Displays the AI-generated result.
+### 3. AI Pipeline (`src/lib/vertex/client.ts`)
+1.  **Input:** Base Image URL + User Logo (Base64).
+2.  **Processing:** Client-side canvas resizes logo to max 1536px (JPEG 85%).
+3.  **Prompting:** Constructs a prompt combining the product's `custom_prompt` with strict instructions to preserve logo colors/text.
+4.  **Generation:** Calls Gemini with `responseModalities: ["image"]`.
+5.  **Output:** Returns Base64 image data to frontend.
 
-### 5. AI Generation API (`src/app/api/generate/route.ts` & `src/lib/vertex/client.ts`)
-- **Route:** `/api/generate` (POST)
-- **Process:**
-  1. Receives the uploaded logo and product details.
-  2. Calls `generateMockup` in `src/lib/vertex/client.ts`.
-  3. The client interacts with the Google Generative AI model.
-  4. It constructs a prompt instructing the model to realistically overlay the user's logo onto the specific base product image.
-  5. Returns the generated image data to the frontend.
+## Operational Features
+- **Usage Tracking:** Every generation is logged to Supabase for analytics (monitoring costs and popular items).
+- **Error Handling:** Graceful fallbacks for AI timeouts or "content safety" blocks.
+- **Performance:** Optimized for Vercel Serverless functions (strict 10s/60s timeout management via client-side compression).
 
-## Security Notes
-- **Password Protection:** The current implementation involves fetching the password hash to the client for validation in `src/app/[slug]/page.tsx`, which is insecure. This should be moved to a server-side verification step.
-- **RLS Policies:** Row Level Security is enabled on the `products` table, with policies for public read access (currently too permissive for sensitive fields like `password_hash`) and admin-only write access.
-
-## Development Setup
-1.  Install dependencies: `npm install`
-2.  Configure environment variables for Supabase and Google AI.
-3.  Run development server: `npm run dev`
+## Development Commands
+- `npm run dev`: Start local server.
+- `npm run build`: Check build validity (TypeScript strict mode).
+- `git push`: Triggers Vercel deployment.

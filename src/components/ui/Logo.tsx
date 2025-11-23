@@ -29,12 +29,13 @@ export default function Logo({ className = '', showText = true, variant = 'dark'
     if (hasCustomLogo) {
         return (
             <div className={`flex items-center gap-3 ${className}`}>
-                <div className="relative w-10 h-10">
+                <div className="relative w-8 h-8">
                     <Image
                         src="/logo.png"
-                        alt="Logo"
+                        alt="CopiéCollé Logo"
                         fill
                         className="object-contain"
+                        sizes="32px"
                     />
                 </div>
                 {showText && (

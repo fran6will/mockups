@@ -7,7 +7,11 @@ export async function createProduct(formData: FormData) {
     const slug = formData.get('slug') as string;
     const password = formData.get('password') as string;
     const baseImageUrl = formData.get('baseImageUrl') as string;
+    const galleryImageUrl = formData.get('galleryImageUrl') as string;
     const customPrompt = formData.get('customPrompt') as string;
+    const tagsString = formData.get('tags') as string;
+
+    const tags = tagsString ? tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
 
     if (!title || !slug || !password || !baseImageUrl) {
         return { error: 'Missing fields' };
@@ -19,10 +23,12 @@ export async function createProduct(formData: FormData) {
         .insert({
             title,
             slug,
-            password_hash: password,
+            password_hash: password, // INSECURE: For demo only
             base_image_url: baseImageUrl,
+            gallery_image_url: galleryImageUrl || null,
             custom_prompt: customPrompt || '',
             overlay_config: {},
+            tags: tags
         })
         .select()
         .single();
@@ -33,4 +39,57 @@ export async function createProduct(formData: FormData) {
     }
 
     return { success: true, data };
+}
+
+export async function updateProduct(formData: FormData) {
+    const id = formData.get('id') as string;
+    const title = formData.get('title') as string;
+    const slug = formData.get('slug') as string;
+    const password = formData.get('password') as string;
+    const customPrompt = formData.get('customPrompt') as string;
+    const galleryImageUrl = formData.get('galleryImageUrl') as string;
+    const tagsString = formData.get('tags') as string;
+
+    const tags = tagsString ? tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
+
+    if (!id || !title || !slug || !password) {
+        return { error: 'Missing fields' };
+    }
+
+    const updateData: any = {
+        title,
+        slug,
+        password_hash: password,
+        custom_prompt: customPrompt || '',
+        gallery_image_url: galleryImageUrl || null,
+        tags: tags
+    };
+
+    const { data, error } = await supabaseAdmin
+        .from('products')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    return { success: true, data };
+}
+
+export async function deleteProduct(id: string) {
+    if (!id) return { error: 'Missing ID' };
+
+    const { error } = await supabaseAdmin
+        .from('products')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    return { success: true };
 }
