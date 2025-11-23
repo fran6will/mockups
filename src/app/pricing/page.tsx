@@ -27,9 +27,18 @@ export default function PricingPage() {
         const baseUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL;
         if (baseUrl) {
             let url = baseUrl;
+            // Add user_id to passthrough
             if (userId) {
                 url += `?passthrough[user_id]=${userId}`;
             }
+            
+            // Add redirect_url
+            // We use window.location.origin because this runs on the client
+            const redirectUrl = `${window.location.origin}/dashboard`;
+            // Check if we already have query params (we likely do from passthrough)
+            const separator = url.includes('?') ? '&' : '?';
+            url += `${separator}checkout[redirect_url]=${redirectUrl}`;
+            
             setLemonSqueezyCheckoutUrl(url);
         } else {
             console.error('NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL is not set');
