@@ -34,7 +34,7 @@ export default function PricingPage() {
             
             // Add redirect_url
             // We use window.location.origin because this runs on the client
-            const redirectUrl = `${window.location.origin}/dashboard`;
+            const redirectUrl = encodeURIComponent(`${window.location.origin}/dashboard`);
             // Check if we already have query params (we likely do from passthrough)
             const separator = url.includes('?') ? '&' : '?';
             url += `${separator}checkout[redirect_url]=${redirectUrl}`;
