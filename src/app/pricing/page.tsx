@@ -134,12 +134,28 @@ export default function PricingPage() {
                             ))}
                         </ul>
                         <div className="mt-auto">
-                            <a
-                                href={lemonSqueezyCheckoutUrl}
-                                className="group block w-full py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl flex items-center justify-center gap-2"
-                            >
-                                Get Pro Access <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                            </a>
+                            {userId ? (
+                                <a
+                                    href={lemonSqueezyCheckoutUrl}
+                                    className="group block w-full py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl flex items-center justify-center gap-2"
+                                >
+                                    Get Pro Access <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                </a>
+                            ) : (
+                                <button
+                                    onClick={async () => {
+                                        await supabase.auth.signInWithOAuth({
+                                            provider: 'google',
+                                            options: {
+                                                redirectTo: `${window.location.origin}/pricing`,
+                                            },
+                                        });
+                                    }}
+                                    className="group block w-full py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl flex items-center justify-center gap-2"
+                                >
+                                    Sign in to Subscribe <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                </button>
+                            )}
                         </div>
                         
                         {/* Background Glow */}
