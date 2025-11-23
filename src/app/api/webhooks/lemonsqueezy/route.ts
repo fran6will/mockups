@@ -45,16 +45,19 @@ export async function POST(req: Request) {
       let targetUserId = event.meta.custom_data?.user_id;
 
       if (!targetUserId) {
-         // Fallback: find user by email
-         const { data: users, error: userError } = await supabase
-            .from('auth.users') // This table is not directly accessible usually via client, need admin client
-            .select('id')
-            .eq('email', attributes.user_email)
-            .single();
+         // Fallback: find user by email using Admin Auth API
+         const { data, error: userError } = await supabase.auth.admin.listUsers();
          
-         // Note: accessing auth.users directly via postgrest is not standard. 
-         // Better to rely on custom_data passed during checkout.
-         // For this implementation, we will assume custom_data contains user_id.
+         if (data?.users) {
+             const foundUser = data.users.find(u => u.email === attributes.user_email);
+             if (foundUser) {
+                 targetUserId = foundUser.id;
+             }
+         }
+         
+         if (userError || !targetUserId) {
+             console.warn(`Could not find user for email ${attributes.user_email}:`, userError);
+         }
       }
 
       if (targetUserId) {
