@@ -103,7 +103,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             <div className="flex gap-3 items-start p-4 bg-teal/5 border border-teal/10 rounded-xl text-sm text-ink/70">
                                 <Info size={20} className="shrink-0 text-teal mt-0.5" />
                                 <p>
-                                    <strong>Tip:</strong> AI tools work best with transparent PNG logos.
+        
                                     If the result isn't perfect, try adjusting the scale or rotation and regenerating.
                                 </p>
                             </div>
