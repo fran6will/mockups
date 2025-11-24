@@ -8,8 +8,13 @@ export async function POST(request: Request) {
     let productIdString = null;
 
     try {
-        const { productId, logoUrl, aspectRatio, email } = await request.json();
+        const { productId, logoUrl, aspectRatio, email, imageSize = '1K' } = await request.json();
         productIdString = productId;
+
+        // Calculate Cost
+        let creditCost = 1;
+        if (imageSize === '2K') creditCost = 3;
+        if (imageSize === '4K') creditCost = 5;
 
         if (!productId || !logoUrl || !email) {
             return NextResponse.json({ error: 'Missing required fields (productId, logoUrl, email)' }, { status: 400 });
@@ -69,8 +74,8 @@ export async function POST(request: Request) {
                     return NextResponse.json({ error: 'User not found. Please claim credits first.' }, { status: 403 });
                 }
 
-                if (user.balance < 1) {
-                    return NextResponse.json({ error: 'Insufficient credits. Please purchase more.' }, { status: 402 });
+                if (user.balance < creditCost) {
+                    return NextResponse.json({ error: `Insufficient credits. This requires ${creditCost} credits.` }, { status: 402 });
                 }
                 userCredits = user;
             }
@@ -85,7 +90,8 @@ export async function POST(request: Request) {
             product.base_image_url,
             logoUrl,
             prompt,
-            aspectRatio || '1:1'
+            aspectRatio || '1:1',
+            imageSize
         );
 
         // 3. Log Usage & Deduct Credit
@@ -96,7 +102,7 @@ export async function POST(request: Request) {
             if (!isPro && !product.is_free && userCredits) {
                 await supabaseAdmin
                     .from('user_credits')
-                    .update({ balance: userCredits.balance - 1, total_used: userCredits.total_used + 1 })
+                    .update({ balance: userCredits.balance - creditCost, total_used: userCredits.total_used + creditCost })
                     .eq('user_id', userCredits.user_id);
 
                 // Log Transaction
@@ -104,9 +110,9 @@ export async function POST(request: Request) {
                     .from('transactions')
                     .insert([{
                         user_id: userCredits.user_id,
-                        amount: -1,
+                        amount: -creditCost,
                         type: 'debit',
-                        description: 'Mockup Generation'
+                        description: `Mockup Generation (${imageSize})`
                     }]);
             }
 
@@ -145,7 +151,7 @@ export async function POST(request: Request) {
                     product_id: productId,
                     status: 'success',
                     duration_ms: duration,
-                    meta: { aspect_ratio: aspectRatio, user_email: email },
+                    meta: { aspect_ratio: aspectRatio, user_email: email, image_size: imageSize },
                     user_id: authUser?.id || null, // Link to auth user if logged in
                     image_url: publicUrl
                 });
@@ -160,7 +166,7 @@ export async function POST(request: Request) {
                     status: 'error',
                     duration_ms: duration,
                     error_message: result.error,
-                    meta: { aspect_ratio: aspectRatio, user_email: email },
+                    meta: { aspect_ratio: aspectRatio, user_email: email, image_size: imageSize },
                     user_id: authUser?.id || null
                 });
             } catch (logError) {
@@ -176,7 +182,7 @@ export async function POST(request: Request) {
         return NextResponse.json({
             success: true,
             imageUrl: result.mockUrl,
-            remainingCredits: isPro ? 999 : (userCredits ? userCredits.balance - 1 : 0)
+            remainingCredits: isPro ? 999 : (userCredits ? userCredits.balance - creditCost : 0)
         });
 
     } catch (e: any) {

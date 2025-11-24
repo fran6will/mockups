@@ -10,14 +10,15 @@ export const generateMockup = async (
     baseImageUrl: string,
     logoUrl: string,
     prompt: string,
-    aspectRatio: string = '1:1'
+    aspectRatio: string = '1:1',
+    imageSize: string = '1K'
 ) => {
     if (!apiKey) {
         throw new Error("Missing GEMINI_API_KEY in environment variables.");
     }
 
     try {
-        console.log(`Calling Copié-Collé (Gemini API) with Aspect Ratio: ${aspectRatio}...`);
+        console.log(`Calling Copié-Collé (Gemini API) with Aspect Ratio: ${aspectRatio} and Size: ${imageSize}...`);
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
@@ -26,7 +27,7 @@ export const generateMockup = async (
                 responseModalities: ["IMAGE"],
                 imageConfig: {
                     aspectRatio: aspectRatio,
-                    imageSize: "1K"
+                    imageSize: imageSize
                 }
             } as any
         });
@@ -53,10 +54,9 @@ export const generateMockup = async (
 
         // 1. Prepare Inputs
         // The 'prompt' variable contains either the custom product instruction or a default instruction.
-        const fullPrompt = `Generate a photorealistic 2K product shot. ${prompt} Important: Keep the provided design/logo unchanged, preserving its colors, text, and details exactly as they appear. Apply it realistically to the surface. Ensure high quality, detailed texture, and realistic lighting.`;
-
+        const fullPrompt = `Generate a photorealistic product shot. ${prompt} Important: Keep the provided design/logo unchanged, preserving its colors, text, and details exactly as they appear. Apply it realistically to the surface. Ensure high quality, detailed texture, and realistic lighting.`;
+        
         console.log("Sending request to model with images...");
-
         // 2. Call API
         // Pass the text prompt AND the image parts
         const result = await model.generateContent([

@@ -24,6 +24,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '9:16' | '16:9'>('1:1');
+    const [imageSize, setImageSize] = useState<'1K' | '2K' | '4K'>('1K');
     const [error, setError] = useState<string | null>(null);
 
     // Credit System State
@@ -37,6 +38,14 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const [showCreditPopup, setShowCreditPopup] = useState(false);
 
     const { accessLevel, isLoading: isAccessLoading } = useAccess(productSlug);
+
+    // Determine cost based on resolution
+    const getCost = () => {
+        if (imageSize === '2K') return 3;
+        if (imageSize === '4K') return 5;
+        return 1;
+    };
+    const currentCost = getCost();
 
     useEffect(() => {
         if (isFree) {
@@ -231,7 +240,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     productId,
                     logoUrl: base64Image,
                     aspectRatio,
-                    email: emailInput
+                    email: emailInput,
+                    imageSize
                 }),
             });
 
@@ -449,6 +459,36 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     </div>
                 )}
 
+                {/* Resolution Selector */}
+                <div className="glass p-6 rounded-3xl border border-white/40">
+                    <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-4">
+                        Output Resolution & Cost
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                        {(['1K', '2K', '4K'] as const).map((size) => {
+                            let cost = 1;
+                            if (size === '2K') cost = 3;
+                            if (size === '4K') cost = 5;
+                            
+                            return (
+                                <button
+                                    key={size}
+                                    onClick={() => setImageSize(size)}
+                                    className={`py-3 rounded-xl flex flex-col items-center justify-center transition-all ${imageSize === size
+                                        ? 'bg-teal text-cream shadow-lg shadow-teal/20 scale-105'
+                                        : 'bg-white/40 text-ink/60 hover:bg-white/60'
+                                        }`}
+                                >
+                                    <span className="font-bold text-sm">{size}</span>
+                                    <span className={`text-[10px] font-bold uppercase ${imageSize === size ? 'text-white/80' : 'text-ink/40'}`}>
+                                        {cost} Credit{cost > 1 ? 's' : ''}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 {/* Aspect Ratio Selector */}
                 <div className="glass p-6 rounded-3xl border border-white/40">
                     <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-4">
@@ -563,8 +603,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                         <button
                             onClick={handleGenerate}
-                            disabled={layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < 1)}
-                            className={`w-full py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl ${layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < 1)
+                            disabled={layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < currentCost)}
+                            className={`w-full py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl ${layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < currentCost)
                                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                 : 'bg-gradient-to-r from-teal to-teal/80 text-cream hover:scale-[1.02] hover:shadow-teal/30'
                                 }`}
@@ -579,15 +619,15 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                     <Sparkles className="fill-current" />
                                     Try for Free
                                 </>
-                            ) : (credits !== null && credits < 1) ? (
+                            ) : (credits !== null && credits < currentCost) ? (
                                 <>
                                     <Coins className="fill-current" />
-                                    0 Credits - Buy More
+                                    {credits} Credits - Need {currentCost}
                                 </>
                             ) : (
                                 <>
                                     <Sparkles className="fill-current" />
-                                    Generate (1 Credit)
+                                    Generate ({currentCost} Credit{currentCost > 1 ? 's' : ''})
                                 </>
                             )}
                         </button>
