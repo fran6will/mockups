@@ -479,19 +479,28 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                             if (size === '2K') cost = 3;
                             if (size === '4K') cost = 5;
                             
+                            const isDisabled = isFree && size !== '1K';
+
                             return (
                                 <button
                                     key={size}
-                                    onClick={() => setImageSize(size)}
+                                    onClick={() => !isDisabled && setImageSize(size)}
+                                    disabled={isDisabled}
                                     className={`py-3 rounded-xl flex flex-col items-center justify-center transition-all ${imageSize === size
                                         ? 'bg-teal text-cream shadow-lg shadow-teal/20 scale-105'
-                                        : 'bg-white/40 text-ink/60 hover:bg-white/60'
+                                        : isDisabled 
+                                            ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200' 
+                                            : 'bg-white/40 text-ink/60 hover:bg-white/60'
                                         }`}
                                 >
                                     <span className="font-bold text-sm">{size}</span>
-                                    <span className={`text-[10px] font-bold uppercase ${imageSize === size ? 'text-white/80' : 'text-ink/40'}`}>
-                                        {cost} Credit{cost > 1 ? 's' : ''}
-                                    </span>
+                                    {isDisabled ? (
+                                        <span className="text-[9px] font-bold uppercase text-teal/60 mt-0.5">PRO ONLY</span>
+                                    ) : (
+                                        <span className={`text-[10px] font-bold uppercase ${imageSize === size ? 'text-white/80' : 'text-ink/40'}`}>
+                                            {cost} Credit{cost > 1 ? 's' : ''}
+                                        </span>
+                                    )}
                                 </button>
                             );
                         })}
@@ -528,9 +537,11 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                 Unlock Template
                             </div>
                             <p className="text-sm text-ink/60">
-                                {user
-                                    ? "Step 2: Enter your access code to claim your 5 free generations."
-                                    : "Step 1: Create your free account to unlock this template."
+                                {isFree
+                                    ? "Create a free account to try this mockup."
+                                    : user
+                                        ? "Step 2: Enter your access code to claim your 5 free generations."
+                                        : "Step 1: Create your free account to unlock this template."
                                 }
                             </p>
                         </div>
@@ -538,7 +549,10 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                         {!user ? (
                             <div className="bg-teal/5 p-6 rounded-xl border border-teal/10 space-y-4">
                                 <p className="text-sm text-ink/70 font-medium text-center">
-                                    To ensure your designs and credits are saved, you need a free account.
+                                    {isFree 
+                                        ? "Sign up to generate your mockup instantly."
+                                        : "To ensure your designs and credits are saved, you need a free account."
+                                    }
                                 </p>
                                 <button
                                     type="button"

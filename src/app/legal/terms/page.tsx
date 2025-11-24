@@ -1,6 +1,5 @@
 import Header from '@/components/ui/Header';
 import Banner from '@/components/ui/Banner';
-import Footer from '@/components/ui/Footer';
 
 export default function TermsOfService() {
     return (
@@ -54,7 +53,6 @@ export default function TermsOfService() {
                     </p>
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }

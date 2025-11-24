@@ -46,7 +46,7 @@ export default async function TryItSection() {
                         Try it right now, <span className="text-teal">for free.</span>
                     </h2>
                     <p className="text-lg text-ink/60 max-w-2xl mx-auto">
-                        No account required. Upload your logo and see the results instantly.
+                        Create a free account to try this mockup and see the results instantly.
                     </p>
                 </div>
 

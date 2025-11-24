@@ -1,6 +1,5 @@
 import Header from '@/components/ui/Header';
 import Banner from '@/components/ui/Banner';
-import Footer from '@/components/ui/Footer';
 
 export default function PrivacyPolicy() {
     return (
@@ -51,7 +50,6 @@ export default function PrivacyPolicy() {
                     </p>
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }

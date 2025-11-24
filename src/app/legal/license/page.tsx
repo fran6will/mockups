@@ -1,6 +1,5 @@
 import Header from '@/components/ui/Header';
 import Banner from '@/components/ui/Banner';
-import Footer from '@/components/ui/Footer';
 
 export default function License() {
     return (
@@ -44,7 +43,6 @@ export default function License() {
                     </p>
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }

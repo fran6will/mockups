@@ -61,10 +61,11 @@ export default function Hero() {
                         {/* Floating Cards / Mockup Preview */}
                         <div className="relative w-full max-w-md aspect-[4/5] glass rounded-3xl border border-white/40 shadow-2xl shadow-teal/20 overflow-hidden transform rotate-3 hover:rotate-0 transition-transform duration-700">
                             <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
-                                {/* Placeholder for a hero image - using a div for now */}
-                                <div className="w-full h-full flex items-center justify-center text-ink/10">
-                                    <span className="text-9xl font-bold">AI</span>
-                                </div>
+                                <img 
+                                    src="/hero-wallpaper.png" 
+                                    alt="AI Mockup Preview" 
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
 
                             {/* Floating Badge */}

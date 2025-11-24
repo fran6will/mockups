@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Syne, DM_Sans } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import MetaPixel from "@/components/analytics/MetaPixel";
 import "./globals.css";
 
 import Footer from "@/components/ui/Footer";
@@ -15,8 +17,35 @@ const fontBody = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "CopiéCollé",
-  description: "Premium Product Mockups",
+  metadataBase: new URL('https://copiecolle.com'),
+  title: {
+    default: "CopiéCollé | AI Mockup Generator",
+    template: "%s | CopiéCollé"
+  },
+  description: "Create photorealistic product mockups in seconds with AI. No Photoshop required.",
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://copiecolle.com',
+    siteName: 'CopiéCollé',
+    title: 'CopiéCollé | AI Mockup Generator',
+    description: 'Create photorealistic product mockups in seconds with AI. No Photoshop required.',
+    images: [
+      {
+        url: '/banner.webp',
+        width: 1200,
+        height: 630,
+        alt: 'CopiéCollé AI Mockup Generator',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CopiéCollé | AI Mockup Generator',
+    description: 'Create photorealistic product mockups in seconds with AI. No Photoshop required.',
+    images: ['/banner.webp'],
+    creator: '@copiecolle',
+  },
 };
 
 export default function RootLayout({
@@ -31,6 +60,8 @@ export default function RootLayout({
       >
         {children}
         <Footer />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || "G-9SFRSNL1KC"} />
+        <MetaPixel />
       </body>
     </html>
   );

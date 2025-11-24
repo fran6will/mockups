@@ -24,10 +24,11 @@ export const generateMockup = async (
         const model = genAI.getGenerativeModel({
             model: modelId,
             generationConfig: {
-                responseModalities: ["IMAGE"],
+                // Gemini 3 Pro Image requires both TEXT and IMAGE modalities
+                responseModalities: ["TEXT", "IMAGE"],
                 imageConfig: {
                     aspectRatio: aspectRatio,
-                    imageSize: imageSize
+                    imageSize: imageSize 
                 }
             } as any
         });
