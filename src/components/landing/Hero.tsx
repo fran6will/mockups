@@ -27,7 +27,7 @@ export default function Hero() {
 
                         <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
                             <Link
-                                href="/gallery"
+                                href="/#gallery"
                                 className="bg-teal text-cream font-bold text-lg px-8 py-4 rounded-xl hover:bg-teal/90 hover:shadow-lg hover:shadow-teal/20 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
                             >
                                 Start Creating Free <ArrowRight size={20} />

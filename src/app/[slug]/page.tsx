@@ -61,52 +61,33 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
             <main className="max-w-7xl mx-auto p-4 lg:p-8 pt-8">
 
-                {/* Guest Welcome Card - Only show if NOT Pro */}
+                {/* Product Header */}
+                <div className="text-center mb-10">
+                    <h1 className="text-4xl md:text-5xl font-bold text-ink mb-4 tracking-tight">
+                        {product.title}
+                    </h1>
+                    {product.description && (
+                        <p className="text-lg text-ink/60 max-w-2xl mx-auto line-clamp-2">
+                            {product.description}
+                        </p>
+                    )}
+                </div>
+
+                {/* Guest Access Banner - Compact Version */}
                 {!isPro && (
-                    <div className="glass mb-8 p-8 rounded-3xl border border-white/50 shadow-lg relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-teal/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-
-                        <div className="relative z-10">
-                            <h2 className="text-2xl font-bold mb-4 text-ink flex items-center gap-2">
-                                <span className="text-3xl">✨</span> Premium Mockup Studio
-                            </h2>
-                            <p className="text-lg text-ink/80 mb-6 leading-relaxed max-w-3xl">
-                                You are moments away from a professional product shot.
-                                If you have an access code (from a purchase), enter it below.
-                                Otherwise, sign in to unlock this template.
-                            </p>
-
-                            <div className="grid md:grid-cols-3 gap-6 text-sm text-ink/80 mb-8">
-                                <div className="flex flex-col gap-3 bg-white/30 p-4 rounded-2xl border border-white/40">
-                                    <div className="bg-red-100 text-red-600 w-10 h-10 rounded-full flex items-center justify-center"><Ban size={20} /></div>
-                                    <div>
-                                        <strong>No Photoshop Needed</strong><br />
-                                        Forget complex software. This tool runs entirely in your browser.
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-3 bg-white/30 p-4 rounded-2xl border border-white/40">
-                                    <div className="bg-teal/10 text-teal w-10 h-10 rounded-full flex items-center justify-center"><Zap size={20} /></div>
-                                    <div>
-                                        <strong>AI-Powered Realism</strong><br />
-                                        Our engine automatically handles lighting, texture, and warping.
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-3 bg-white/30 p-4 rounded-2xl border border-white/40">
-                                    <div className="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center"><Star size={20} /></div>
-                                    <div>
-                                        <strong>Professional Quality</strong><br />
-                                        Generate high-resolution images ready for your shop.
-                                    </div>
-                                </div>
+                    <div className="mb-8 p-4 bg-white/60 backdrop-blur-md border border-teal/20 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-teal/10 rounded-full flex items-center justify-center text-teal shrink-0">
+                                <Zap size={20} />
                             </div>
-
-                            <div className="flex gap-3 items-start p-4 bg-teal/5 border border-teal/10 rounded-xl text-sm text-ink/70">
-                                <Info size={20} className="shrink-0 text-teal mt-0.5" />
-                                <p>
-        
-                                    If the result isn't perfect, try adjusting the scale or rotation and regenerating.
-                                </p>
+                            <div>
+                                <h3 className="font-bold text-ink text-sm">Premium Template</h3>
+                                <p className="text-xs text-ink/60">Sign in or use a credit to unlock this 4K mockup.</p>
                             </div>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs font-bold text-ink/50">
+                            <span className="flex items-center gap-1"><Ban size={14} /> No Photoshop</span>
+                            <span className="hidden sm:flex items-center gap-1"><Star size={14} /> Commercial Use</span>
                         </div>
                     </div>
                 )}

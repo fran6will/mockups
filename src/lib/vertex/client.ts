@@ -20,13 +20,13 @@ export const generateMockup = async (
         console.log(`Calling Nano Banana Pro (Gemini API) with Aspect Ratio: ${aspectRatio}...`);
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ 
+        const model = genAI.getGenerativeModel({
             model: modelId,
             generationConfig: {
                 responseModalities: ["TEXT", "IMAGE"],
                 imageConfig: {
                     aspectRatio: aspectRatio,
-                    imageSize: "2K" 
+                    imageSize: "1K"
                 }
             } as any
         });
@@ -54,7 +54,7 @@ export const generateMockup = async (
         // 1. Prepare Inputs
         // The 'prompt' variable contains either the custom product instruction or a default instruction.
         const fullPrompt = `Generate a photorealistic 2K product shot. ${prompt} Important: Keep the provided design/logo unchanged, preserving its colors, text, and details exactly as they appear. Apply it realistically to the surface. Ensure high quality, detailed texture, and realistic lighting.`;
-        
+
         console.log("Sending request to model with images...");
 
         // 2. Call API

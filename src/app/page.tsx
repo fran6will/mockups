@@ -18,18 +18,22 @@ import Hero from '@/components/landing/Hero';
 import TrendingCarousel from '@/components/landing/TrendingCarousel';
 import NewArrivals from '@/components/landing/NewArrivals';
 import Features from '@/components/landing/Features';
+import BackgroundDoodles from '@/components/ui/BackgroundDoodles';
+import TryItSection from '@/components/landing/TryItSection';
 
 export default function HomePage() {
     return (
-        <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-grid-pattern bg-grain">
+        <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-grid-pattern bg-grain relative overflow-hidden">
+            <BackgroundDoodles />
             <Banner />
             <Header />
 
             <main className="relative z-10">
                 <Hero />
                 <TrendingCarousel />
-                <Features />
+                <TryItSection />
                 <NewArrivals />
+                <Features />
                 <Gallery />
             </main>
         </div>

@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Syne, DM_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+import Footer from "@/components/ui/Footer";
+
+const fontHeading = Syne({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-heading",
+});
+
+const fontBody = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-body",
 });
 
 export const metadata: Metadata = {
@@ -20,9 +27,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} font-sans antialiased`}
+        className={`${fontHeading.variable} ${fontBody.variable} font-sans antialiased`}
       >
         {children}
+        <Footer />
       </body>
     </html>
   );

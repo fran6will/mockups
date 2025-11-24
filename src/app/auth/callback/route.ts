@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
@@ -10,6 +11,35 @@ export async function GET(request: Request) {
         const supabase = await createClient();
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
+            // Check and grant free credits for new users
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (user && user.email) {
+                const { data: existingCredits } = await supabaseAdmin
+                    .from('user_credits')
+                    .select('user_id')
+                    .eq('email', user.email)
+                    .single();
+
+                if (!existingCredits) {
+                    // Grant 5 free credits
+                    await supabaseAdmin.from('user_credits').insert({
+                        user_id: user.id, // Sync user_id with Auth ID for RLS
+                        auth_user_id: user.id,
+                        email: user.email,
+                        balance: 5
+                    });
+
+                    // Log Transaction
+                    await supabaseAdmin.from('transactions').insert({
+                        user_id: user.id,
+                        amount: 5,
+                        type: 'credit',
+                        description: 'Welcome Bonus'
+                    });
+                }
+            }
+
             return NextResponse.redirect(`${origin}${next}`);
         }
     }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { Upload, Save, Loader2, ShieldCheck, Edit, Trash2, X, Plus } from 'lucide-react';
+import { Upload, Save, Loader2, ShieldCheck, Edit, Trash2, X, Plus, UploadCloud, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import Header from '@/components/ui/Header';
 
@@ -14,12 +14,17 @@ export default function AdminPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
 
     const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [isFree, setIsFree] = useState(false);
     const [slug, setSlug] = useState('');
     const [password, setPassword] = useState('');
     const [customPrompt, setCustomPrompt] = useState('');
     const [tags, setTags] = useState('');
-    const [file, setFile] = useState<File | null>(null);
-    const [galleryFile, setGalleryFile] = useState<File | null>(null);
+    const [baseImage, setBaseImage] = useState<File | null>(null);
+    const [galleryImage, setGalleryImage] = useState<File | null>(null);
+
+    const [editingProduct, setEditingProduct] = useState<any>(null);
+
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
 
@@ -46,13 +51,16 @@ export default function AdminPage() {
 
     const handleEdit = (product: any) => {
         setEditingId(product.id);
+        setEditingProduct(product);
         setTitle(product.title);
+        setDescription(product.description || '');
+        setIsFree(product.is_free || false);
         setSlug(product.slug);
         setPassword(product.password_hash);
         setCustomPrompt(product.custom_prompt || '');
         setTags(product.tags ? product.tags.join(', ') : '');
-        setFile(null);
-        setGalleryFile(null);
+        setBaseImage(null);
+        setGalleryImage(null);
         setMessage('');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -76,13 +84,16 @@ export default function AdminPage() {
     };
 
     const resetForm = () => {
+        setEditingProduct(null);
         setTitle('');
+        setDescription('');
+        setIsFree(false);
         setSlug('');
         setPassword('');
         setCustomPrompt('');
         setTags('');
-        setFile(null);
-        setGalleryFile(null);
+        setBaseImage(null);
+        setGalleryImage(null);
         setMessage('');
     };
 
@@ -92,7 +103,7 @@ export default function AdminPage() {
             return;
         }
 
-        if (!editingId && !file) {
+        if (!editingId && !baseImage) {
             setMessage('Error: Base image is required for new products');
             return;
         }
@@ -104,14 +115,14 @@ export default function AdminPage() {
             let publicUrl = '';
             let galleryPublicUrl = '';
 
-            if (file) {
-                const fileExt = file.name.split('.').pop();
+            if (baseImage) {
+                const fileExt = baseImage.name.split('.').pop();
                 const fileName = `${Math.random()}.${fileExt}`;
                 const filePath = `${fileName}`;
 
                 const { error: uploadError } = await supabase.storage
                     .from('mockup-bases')
-                    .upload(filePath, file);
+                    .upload(filePath, baseImage);
 
                 if (uploadError) throw uploadError;
 
@@ -121,14 +132,14 @@ export default function AdminPage() {
                 publicUrl = data.publicUrl;
             }
 
-            if (galleryFile) {
-                const fileExt = galleryFile.name.split('.').pop();
+            if (galleryImage) {
+                const fileExt = galleryImage.name.split('.').pop();
                 const fileName = `gallery-${Math.random()}.${fileExt}`;
                 const filePath = `${fileName}`;
 
                 const { error: uploadError } = await supabase.storage
                     .from('mockup-bases')
-                    .upload(filePath, galleryFile);
+                    .upload(filePath, galleryImage);
 
                 if (uploadError) throw uploadError;
 
@@ -140,10 +151,12 @@ export default function AdminPage() {
 
             const formData = new FormData();
             formData.append('title', title);
+            formData.append('description', description);
             formData.append('slug', slug);
             formData.append('password', password);
             formData.append('customPrompt', customPrompt);
             formData.append('tags', tags);
+            formData.append('is_free', String(isFree));
 
             if (publicUrl) {
                 formData.append('baseImageUrl', publicUrl);
@@ -227,6 +240,15 @@ export default function AdminPage() {
                                     />
                                 </div>
                                 <div>
+                                    <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Description</label>
+                                    <textarea
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        className="w-full bg-white/50 border border-white/60 rounded-xl p-3 text-sm text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all h-24 resize-none"
+                                        placeholder="Product description for SEO..."
+                                    />
+                                </div>
+                                <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Slug</label>
                                     <input
                                         type="text"
@@ -265,51 +287,72 @@ export default function AdminPage() {
                                         placeholder="AI Instructions..."
                                     />
                                 </div>
+
+                                {/* Is Free Checkbox */}
+                                <div className="flex items-center gap-2 p-3 bg-teal/5 rounded-xl border border-teal/10">
+                                    <input
+                                        type="checkbox"
+                                        id="isFree"
+                                        checked={isFree}
+                                        onChange={(e) => setIsFree(e.target.checked)}
+                                        className="w-5 h-5 accent-teal rounded cursor-pointer"
+                                    />
+                                    <label htmlFor="isFree" className="font-bold text-ink text-sm cursor-pointer select-none">
+                                        Is Free Product? <span className="text-teal text-xs font-normal">(For Homepage Trial)</span>
+                                    </label>
+                                </div>
+
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Base Image (Required)</label>
-                                    <div className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer ${file ? 'border-teal bg-teal/5' : 'border-ink/20 hover:border-teal/50 hover:bg-white/40'}`}>
+                                    <div
+                                        className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${baseImage ? 'border-teal bg-teal/5' : 'border-ink/10 hover:border-teal/50 hover:bg-white/40'}`}
+                                        onClick={() => document.getElementById('baseImageInput')?.click()}
+                                    >
                                         <input
                                             type="file"
-                                            onChange={(e) => setFile(e.target.files?.[0] || null)}
+                                            id="baseImageInput"
                                             className="hidden"
-                                            id="file-upload"
+                                            accept="image/*"
+                                            onChange={(e) => setBaseImage(e.target.files?.[0] || null)}
                                         />
-                                        <label htmlFor="file-upload" className="cursor-pointer w-full h-full block">
-                                            {file ? (
-                                                <div className="text-teal font-bold text-xs truncate">
-                                                    {file.name}
-                                                </div>
-                                            ) : (
-                                                <div className="text-ink/50 text-xs">
-                                                    <Upload className="mx-auto mb-1 opacity-50" size={16} />
-                                                    <span>{editingId ? 'Change Base Image' : 'Upload Base Image'}</span>
-                                                </div>
-                                            )}
-                                        </label>
+                                        {baseImage ? (
+                                            <div className="flex items-center justify-center gap-2 text-teal font-bold">
+                                                <CheckCircle size={20} />
+                                                {baseImage.name}
+                                            </div>
+                                        ) : (
+                                            <div className="text-ink/40">
+                                                <UploadCloud className="mx-auto mb-2" size={32} />
+                                                <p className="font-bold">Upload Base Image (4K)</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Gallery Image (Optional)</label>
-                                    <div className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer ${galleryFile ? 'border-teal bg-teal/5' : 'border-ink/20 hover:border-teal/50 hover:bg-white/40'}`}>
+                                    <div
+                                        className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${galleryImage ? 'border-teal bg-teal/5' : 'border-ink/10 hover:border-teal/50 hover:bg-white/40'}`}
+                                        onClick={() => document.getElementById('galleryImageInput')?.click()}
+                                    >
                                         <input
                                             type="file"
-                                            onChange={(e) => setGalleryFile(e.target.files?.[0] || null)}
+                                            id="galleryImageInput"
                                             className="hidden"
-                                            id="gallery-file-upload"
+                                            accept="image/*"
+                                            onChange={(e) => setGalleryImage(e.target.files?.[0] || null)}
                                         />
-                                        <label htmlFor="gallery-file-upload" className="cursor-pointer w-full h-full block">
-                                            {galleryFile ? (
-                                                <div className="text-teal font-bold text-xs truncate">
-                                                    {galleryFile.name}
-                                                </div>
-                                            ) : (
-                                                <div className="text-ink/50 text-xs">
-                                                    <Upload className="mx-auto mb-1 opacity-50" size={16} />
-                                                    <span>{editingId ? 'Change Gallery Image' : 'Upload Gallery Image'}</span>
-                                                </div>
-                                            )}
-                                        </label>
+                                        {galleryImage ? (
+                                            <div className="flex items-center justify-center gap-2 text-teal font-bold">
+                                                <CheckCircle size={20} />
+                                                {galleryImage.name}
+                                            </div>
+                                        ) : (
+                                            <div className="text-ink/40">
+                                                <ImageIcon size={32} className="mx-auto mb-2" />
+                                                <p className="font-bold">Upload Gallery Thumbnail (Optional)</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -355,7 +398,12 @@ export default function AdminPage() {
                                                         <img src={product.base_image_url} alt={product.title} className="w-full h-full object-cover" />
                                                     </div>
                                                 </td>
-                                                <td className="py-3 font-bold text-ink">{product.title}</td>
+                                                <td className="py-3 font-bold text-ink">
+                                                    <div>{product.title}</div>
+                                                    {product.is_free && (
+                                                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">FREE</span>
+                                                    )}
+                                                </td>
                                                 <td className="py-3 text-ink/60 font-mono text-xs">{product.slug}</td>
                                                 <td className="py-3">
                                                     <div className="flex flex-wrap gap-1">

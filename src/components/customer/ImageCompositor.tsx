@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image, Lock, ArrowRight, Coins, Mail, RotateCw, Maximize, Layers, Trash2, Plus } from 'lucide-react';
+import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image, Lock, ArrowRight, Coins, Mail, RotateCw, Maximize, Layers, Trash2, Plus, X } from 'lucide-react';
 import { compositeImages, Layer } from '@/lib/utils/image';
 import { supabase } from '@/lib/supabase/client';
 import FabricCanvas from './FabricCanvas';
@@ -13,9 +13,10 @@ interface ImageCompositorProps {
     productSlug: string;
     baseImageUrl: string;
     passwordHash: string;
+    isFree?: boolean;
 }
 
-export default function ImageCompositor({ productId, productSlug, baseImageUrl, passwordHash }: ImageCompositorProps) {
+export default function ImageCompositor({ productId, productSlug, baseImageUrl, passwordHash, isFree = false }: ImageCompositorProps) {
     // Layer State
     const [layers, setLayers] = useState<Layer[]>([]);
     const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
@@ -33,11 +34,15 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const [unlockError, setUnlockError] = useState('');
     const [isClaiming, setIsClaiming] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [showCreditPopup, setShowCreditPopup] = useState(false);
 
     const { accessLevel, isLoading: isAccessLoading } = useAccess(productSlug);
 
     useEffect(() => {
-        if (accessLevel === 'pro') {
+        if (isFree) {
+            setIsUnlocked(true);
+            // No credits needed for free products
+        } else if (accessLevel === 'pro') {
             setIsUnlocked(true);
             setCredits(999); // Infinite credits for pro
         } else if (accessLevel === 'guest') {
@@ -45,7 +50,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             // We don't set credits here because we don't know them yet.
             // They will be updated after the first generation or if we add a fetchCredits call.
         }
-    }, [accessLevel]);
+    }, [accessLevel, isFree]);
 
     // Load state from local storage on mount & Check Auth
     useEffect(() => {
@@ -248,6 +253,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             setGeneratedImage(data.imageUrl);
             if (data.remainingCredits !== undefined) {
                 setCredits(data.remainingCredits);
+                if (data.remainingCredits <= 0) {
+                    setShowCreditPopup(true);
+                }
             }
         } catch (err: any) {
             console.error(err);
@@ -555,8 +563,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                         <button
                             onClick={handleGenerate}
-                            disabled={layers.length === 0 || isGenerating || (credits !== null && credits < 1)}
-                            className={`w-full py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl ${layers.length === 0 || isGenerating || (credits !== null && credits < 1)
+                            disabled={layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < 1)}
+                            className={`w-full py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl ${layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < 1)
                                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                 : 'bg-gradient-to-r from-teal to-teal/80 text-cream hover:scale-[1.02] hover:shadow-teal/30'
                                 }`}
@@ -565,6 +573,11 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                 <>
                                     <Loader2 className="animate-spin" />
                                     Generating Magic...
+                                </>
+                            ) : isFree ? (
+                                <>
+                                    <Sparkles className="fill-current" />
+                                    Try for Free
                                 </>
                             ) : (credits !== null && credits < 1) ? (
                                 <>
@@ -654,6 +667,40 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     </div>
                 )}
             </div>
+
+            {/* Low Credits Popup */}
+            {showCreditPopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative">
+                        <button 
+                            onClick={() => setShowCreditPopup(false)}
+                            className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
+                        >
+                            <X size={24} />
+                        </button>
+                        <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto">
+                            <Coins size={40} />
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-bold text-ink mb-2">Running low on credits!</h3>
+                            <p className="text-ink/60">
+                                You've used your 5 free generations. Upgrade to Pro for unlimited mockups or purchase a credit pack.
+                            </p>
+                        </div>
+                        <div className="grid gap-3">
+                            <a href="/pricing" className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 transition-all flex items-center justify-center gap-2">
+                                <Sparkles size={18} /> Get Unlimited Access
+                            </a>
+                            <button 
+                                onClick={() => setShowCreditPopup(false)}
+                                className="w-full bg-transparent text-ink/50 font-bold py-3 hover:text-ink transition-colors"
+                            >
+                                Maybe later
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
