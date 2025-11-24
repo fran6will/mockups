@@ -66,41 +66,7 @@ export default function PricingPage() {
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-6 max-w-7xl mx-auto items-stretch">
-                    {/* Etsy Guest Card */}
-                    <div className="glass rounded-[2.5rem] p-8 flex flex-col relative md:hover:-translate-y-2 transition-transform duration-500">
-                        <div className="mb-6">
-                            <h2 className="text-xl font-bold mb-2 text-ink">Etsy Guest</h2>
-                            <p className="text-ink/60 text-sm">Perfect for single projects.</p>
-                        </div>
-                        <div className="text-4xl font-bold mb-6 text-ink tracking-tighter">
-                            $5<span className="text-sm text-ink/40 font-bold tracking-normal">/template</span>
-                        </div>
-                        <ul className="space-y-4 mb-8 flex-1 text-sm">
-                            {[
-                                "One high-quality template",
-                                "Lifetime access to item",
-                                "Instant download",
-                                "Standard resolution"
-                            ].map((feature, i) => (
-                                <li key={i} className="flex items-center gap-3 text-ink/80 font-medium">
-                                    <div className="w-5 h-5 rounded-full bg-teal/10 flex items-center justify-center text-teal shrink-0">
-                                        <Check size={12} strokeWidth={3} />
-                                    </div>
-                                    {feature}
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="mt-auto">
-                            <p className="text-xs text-ink/50 mb-3 text-center font-bold">Already bought on Etsy?</p>
-                            <Link
-                                href="/"
-                                className="block w-full py-3 rounded-xl bg-white border border-ink/10 text-ink font-bold text-center hover:border-teal hover:text-teal transition-all shadow-sm text-sm"
-                            >
-                                Enter Access Code
-                            </Link>
-                        </div>
-                    </div>
+                <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
 
                     {/* Pay As You Go Card */}
                     <div className="glass rounded-[2.5rem] p-8 flex flex-col relative md:hover:-translate-y-2 transition-transform duration-500 border-2 border-teal/10">

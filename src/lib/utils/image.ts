@@ -18,7 +18,7 @@ export async function compositeImages(layers: Layer[]): Promise<File> {
         }
 
         const ORIGINAL_WORLD_SIZE = 1024; // This is the coordinate system that moveX, moveY, scale are relative to
-        const NEW_MAX_SIZE = 2048; // Increased from 1024 for higher quality input
+        const NEW_MAX_SIZE = 1536; // Reduced from 2048 to 1536 to avoid 413 Payload Too Large
 
         const canvas = document.createElement('canvas');
         canvas.width = NEW_MAX_SIZE;
@@ -75,11 +75,11 @@ export async function compositeImages(layers: Layer[]): Promise<File> {
                 reject(new Error('Failed to composite images'));
                 return;
             }
-            const compositedFile = new File([blob], "composite.png", { // Changed to PNG
-                type: 'image/png', // Changed to PNG
+            const compositedFile = new File([blob], "composite.webp", { 
+                type: 'image/webp',
                 lastModified: Date.now(),
             });
             resolve(compositedFile);
-        }, 'image/png'); // Changed to PNG, removed quality param as PNG is lossless
+        }, 'image/webp', 0.85); 
     });
 }

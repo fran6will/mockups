@@ -230,7 +230,16 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 }),
             });
 
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                // Handle non-JSON responses (e.g., 413 Content Too Large from Vercel/Nginx)
+                if (response.status === 413) {
+                    throw new Error('Image too large. Please reduce layers or file size.');
+                }
+                throw new Error(`Server error (${response.status}). Please try again.`);
+            }
 
             if (!response.ok) {
                 throw new Error(data.error || 'Failed to generate mockup');
@@ -594,7 +603,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 <img
                     src={baseImageUrl}
                     alt="Base"
-                    className={`absolute inset-0 w-full h-full object-cover opacity-20 transition-opacity duration-700 ${generatedImage ? 'opacity-0' : 'opacity-20'}`}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${generatedImage ? 'opacity-0' : 'opacity-100'}`}
                 />
 
                 {/* Layers Preview (Overlay) */}
