@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const apiKey = process.env.GEMINI_API_KEY;
 
 // Using Copié-Collé (Gemini 3 Pro Image)
-const modelId = 'gemini-image';
+const modelId = 'gemini-3-pro-preview';
 
 export const generateMockup = async (
     baseImageUrl: string,
