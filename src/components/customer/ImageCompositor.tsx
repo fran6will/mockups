@@ -49,11 +49,27 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
     // Load state from local storage on mount & Check Auth
     useEffect(() => {
+        const fetchCredits = async (userId: string) => {
+            const { data, error } = await supabase
+                .from('user_credits')
+                .select('balance')
+                .eq('user_id', userId)
+                .single();
+
+            if (data) {
+                setCredits(data.balance);
+                if (data.balance > 0) {
+                    setIsUnlocked(true);
+                }
+            }
+        };
+
         const checkAuth = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 setUser(session.user);
                 setEmailInput(session.user.email || '');
+                fetchCredits(session.user.id);
 
                 // Admin Bypass (Commented out for testing Guest flow)
                 // const adminEmails = ['francisrheaume@gmail.com', 'francis.w.rheaume@gmail.com'];
@@ -75,11 +91,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             if (session?.user) {
                 setUser(session.user);
                 setEmailInput(session.user.email || '');
-                // const adminEmails = ['francisrheaume@gmail.com', 'francis.w.rheaume@gmail.com'];
-                // if (session.user.email && adminEmails.includes(session.user.email.toLowerCase())) {
-                //     setIsUnlocked(true);
-                //     setCredits(999);
-                // }
+                fetchCredits(session.user.id);
             }
         });
 
