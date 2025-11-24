@@ -111,16 +111,21 @@ export async function POST(req: Request) {
           if (currentCredits) {
             newBalance = (currentCredits.balance || 0) + 50;
 
-            await supabase
+            const { error: updateError } = await supabase
               .from('user_credits')
               .update({
                 balance: newBalance,
                 updated_at: new Date().toISOString()
               })
               .eq('user_id', targetUserId);
+
+            if (updateError) {
+              console.error('Error updating user credits:', updateError);
+              return new Response('Error updating user credits', { status: 500 });
+            }
           } else {
             // Create new credit record
-            await supabase
+            const { error: insertError } = await supabase
               .from('user_credits')
               .insert({
                 user_id: targetUserId,
@@ -130,6 +135,11 @@ export async function POST(req: Request) {
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               });
+
+            if (insertError) {
+              console.error('Error inserting user credits:', insertError);
+              return new Response('Error inserting user credits', { status: 500 });
+            }
           }
 
           // Log Transaction
