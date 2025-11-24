@@ -50,11 +50,14 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     // Load state from local storage on mount & Check Auth
     useEffect(() => {
         const fetchCredits = async (userId: string) => {
+            console.log("DEBUG: Fetching credits for user:", userId);
             const { data, error } = await supabase
                 .from('user_credits')
                 .select('balance')
                 .eq('user_id', userId)
                 .single();
+
+            console.log("DEBUG: Credits fetch result:", { data, error });
 
             if (data) {
                 setCredits(data.balance);

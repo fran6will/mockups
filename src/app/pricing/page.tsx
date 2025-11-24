@@ -129,7 +129,7 @@ export default function PricingPage() {
                         <div className="mt-auto">
                             {userId ? (
                                 <a
-                                    href={`https://copiecolle.lemonsqueezy.com/buy/7e455bb9-014b-442d-b6e3-3e0b39b7b492?passthrough[user_id]=${userId}&checkout[redirect_url]=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`)}`}
+                                    href={`https://copiecolle.lemonsqueezy.com/buy/7e455bb9-014b-442d-b6e3-3e0b39b7b492?checkout[custom][user_id]=${userId}&checkout[redirect_url]=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`)}`}
                                     className="group block w-full py-3 rounded-xl bg-teal/10 text-teal font-bold text-center hover:bg-teal hover:text-white transition-all shadow-sm flex items-center justify-center gap-2 text-sm"
                                 >
                                     Buy 50 Credits <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
