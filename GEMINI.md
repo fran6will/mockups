@@ -9,7 +9,7 @@
 - **Styling:** Tailwind CSS v4 (Custom Glassmorphism Theme)
 - **Database & Auth:** Supabase (PostgreSQL)
 - **Storage:** Supabase Storage (Public Buckets)
-- **AI Model:** Google Gemini 1.5 Pro / 2.0 (via Google Generative AI SDK)
+- **AI Model:** Google Gemini Image Pro (Experimental/Preview)
 - **Icons:** Lucide React
 
 ## Design System
@@ -20,6 +20,14 @@ The application follows a strict **Glassmorphism** aesthetic:
   - Ink Black: `#1A1A1A`
 - **UI Elements:** Frosted glass cards (`backdrop-blur`), floating inputs, and teal gradients.
 - **UX:** Animated loading states with transparency to keep context; client-side image compression for instant uploads.
+
+## AI Model Capabilities (Gemini Image Pro)
+The application leverages the cutting-edge **Gemini Image Pro** model (referenced as `gemini-image` or `gemini-3-pro` in experimental builds) to achieve superior results:
+
+1.  **Photorealism:** The model excels at understanding complex lighting environments, enabling it to wrap flat 2D logos onto 3D curved surfaces (like wrinkles in a hoodie or the curve of a mug) with physically accurate shadowing.
+2.  **Text Fidelity:** Unlike older models, Gemini Image Pro has enhanced OCR-like capabilities for *generation*, meaning it preserves the exact spelling and font weight of text within the uploaded logos, rather than hallucinating gibberish.
+3.  **Instruction Adherence:** It strictly follows "negative prompts" and layout constraints, ensuring the logo is placed exactly where the user intends (e.g., "center chest", "pocket area") without altering the base product's inherent style.
+4.  **High Resolution:** Supports generation up to 1024x1024 (1K) and 2048x2048 (2K), ensuring crisp details suitable for e-commerce zooming.
 
 ## Core Architecture
 
