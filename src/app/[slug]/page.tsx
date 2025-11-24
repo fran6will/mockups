@@ -54,13 +54,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
     return (
         <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-fixed" style={{
-             backgroundImage: 'radial-gradient(circle at 50% -20%, rgba(42, 127, 127, 0.15) 0%, var(--color-cream) 60%)'
+            backgroundImage: 'radial-gradient(circle at 50% -20%, rgba(42, 127, 127, 0.15) 0%, var(--color-cream) 60%)'
         }}>
             <Banner />
             <Header />
 
             <main className="max-w-7xl mx-auto p-4 lg:p-8 pt-8">
-                
+
                 {/* Guest Welcome Card - Only show if NOT Pro */}
                 {!isPro && (
                     <div className="glass mb-8 p-8 rounded-3xl border border-white/50 shadow-lg relative overflow-hidden">
@@ -71,8 +71,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                                 <span className="text-3xl">✨</span> Premium Mockup Studio
                             </h2>
                             <p className="text-lg text-ink/80 mb-6 leading-relaxed max-w-3xl">
-                                You are moments away from a professional product shot. 
-                                If you have an access code (from a purchase), enter it below. 
+                                You are moments away from a professional product shot.
+                                If you have an access code (from a purchase), enter it below.
                                 Otherwise, sign in to unlock this template.
                             </p>
 
@@ -103,7 +103,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             <div className="flex gap-3 items-start p-4 bg-teal/5 border border-teal/10 rounded-xl text-sm text-ink/70">
                                 <Info size={20} className="shrink-0 text-teal mt-0.5" />
                                 <p>
-                                    <strong>Tip:</strong> AI tools work best with transparent PNG logos. 
+                                    <strong>Tip:</strong> AI tools work best with transparent PNG logos.
                                     If the result isn't perfect, try adjusting the scale or rotation and regenerating.
                                 </p>
                             </div>
@@ -113,6 +113,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
                 <ImageCompositor
                     productId={product.id}
+                    productSlug={slug}
                     baseImageUrl={product.base_image_url}
                     passwordHash={product.password_hash}
                 />
@@ -163,7 +164,7 @@ function SimilarProducts({ currentProduct }: { currentProduct: any }) {
                             />
                         </div>
                         <div className="p-4">
-                             <h4 className="text-ink font-bold group-hover:text-teal transition-colors">{product.title}</h4>
+                            <h4 className="text-ink font-bold group-hover:text-teal transition-colors">{product.title}</h4>
                         </div>
                     </a>
                 ))}

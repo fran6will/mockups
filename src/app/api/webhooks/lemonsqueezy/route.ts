@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const digest = Buffer.from(hmac.update(requestBody).digest('hex'), 'utf8');
     const signatureBuffer = Buffer.from(signature, 'utf8');
 
-    if (!crypto.timingSafeEqual(digest, signatureBuffer)) {
+    if (digest.length !== signatureBuffer.length || !crypto.timingSafeEqual(digest, signatureBuffer)) {
       return new Response('Invalid signature', { status: 401 });
     }
 
@@ -35,29 +35,29 @@ export async function POST(req: Request) {
     const eventName = event.meta.event_name;
     const data = event.data;
 
-    if (eventName === 'subscription_created' || eventName === 'subscription_updated') {
+    if (eventName === 'subscription_created' || eventName === 'subscription_updated' || eventName === 'subscription_cancelled' || eventName === 'subscription_expired') {
       const attributes = data.attributes;
       const userId = attributes.user_email; // Assuming email is passed or we need to lookup user by email
-      
+
       // In a real app, we might pass user_id in custom_data. 
       // For now, let's assume we lookup by email or custom_data.
       // Let's try to find user by email if custom_data is not present.
       let targetUserId = event.meta.custom_data?.user_id;
 
       if (!targetUserId) {
-         // Fallback: find user by email using Admin Auth API
-         const { data, error: userError } = await supabase.auth.admin.listUsers();
-         
-         if (data?.users) {
-             const foundUser = data.users.find(u => u.email === attributes.user_email);
-             if (foundUser) {
-                 targetUserId = foundUser.id;
-             }
-         }
-         
-         if (userError || !targetUserId) {
-             console.warn(`Could not find user for email ${attributes.user_email}:`, userError);
-         }
+        // Fallback: find user by email using Admin Auth API
+        const { data, error: userError } = await supabase.auth.admin.listUsers();
+
+        if (data?.users) {
+          const foundUser = data.users.find(u => u.email === attributes.user_email);
+          if (foundUser) {
+            targetUserId = foundUser.id;
+          }
+        }
+
+        if (userError || !targetUserId) {
+          console.warn(`Could not find user for email ${attributes.user_email}:`, userError);
+        }
       }
 
       if (targetUserId) {
@@ -66,9 +66,11 @@ export async function POST(req: Request) {
           .upsert({
             user_id: targetUserId,
             status: attributes.status,
-            variant_id: attributes.variant_id,
+            variant_id: attributes.variant_id, // Ensure this matches your DB column type (text)
             customer_id: attributes.customer_id,
             renews_at: attributes.renews_at,
+            ends_at: attributes.ends_at,
+            customer_portal_url: attributes.urls?.customer_portal,
             updated_at: new Date().toISOString(),
           });
 
@@ -77,7 +79,74 @@ export async function POST(req: Request) {
           return new Response('Database error', { status: 500 });
         }
       } else {
-          console.warn('No user_id found for subscription event');
+        console.warn('No user_id found for subscription event');
+      }
+    } else if (eventName === 'order_created') {
+      const attributes = data.attributes;
+      const productId = attributes.first_order_item.product_id;
+      const creditPackProductId = '703323'; // 50 Credits Pack Product ID
+
+      // Check if this order is for the 50 Credits Pack
+      if (String(productId) === String(creditPackProductId)) {
+        const userEmail = attributes.user_email;
+        let targetUserId = event.meta.custom_data?.user_id;
+
+        // Find user if not in custom_data
+        if (!targetUserId) {
+          const { data: userData } = await supabase.auth.admin.listUsers();
+          const foundUser = userData?.users.find(u => u.email === userEmail);
+          if (foundUser) targetUserId = foundUser.id;
+        }
+
+        if (targetUserId) {
+          // 1. Get current credits
+          const { data: currentCredits } = await supabase
+            .from('user_credits')
+            .select('*')
+            .eq('user_id', targetUserId)
+            .single();
+
+          let newBalance = 50;
+
+          if (currentCredits) {
+            newBalance = (currentCredits.balance || 0) + 50;
+
+            await supabase
+              .from('user_credits')
+              .update({
+                balance: newBalance,
+                updated_at: new Date().toISOString()
+              })
+              .eq('user_id', targetUserId);
+          } else {
+            // Create new credit record
+            await supabase
+              .from('user_credits')
+              .insert({
+                user_id: targetUserId,
+                email: userEmail,
+                balance: 50,
+                total_used: 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+          }
+
+          // Log Transaction
+          await supabase
+            .from('transactions')
+            .insert([{
+              user_id: targetUserId,
+              amount: 50,
+              type: 'credit',
+              description: 'Purchased 50 Credits Pack',
+              metadata: { order_id: data.id, product_id: productId }
+            }]);
+
+          console.log(`Added 50 credits to user ${targetUserId}`);
+        } else {
+          console.warn(`User not found for credit purchase: ${userEmail}`);
+        }
       }
     }
 

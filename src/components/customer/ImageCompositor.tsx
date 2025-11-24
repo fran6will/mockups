@@ -10,11 +10,12 @@ import { useAccess } from '@/hooks/use-access';
 
 interface ImageCompositorProps {
     productId: string;
+    productSlug: string;
     baseImageUrl: string;
     passwordHash: string;
 }
 
-export default function ImageCompositor({ productId, baseImageUrl, passwordHash }: ImageCompositorProps) {
+export default function ImageCompositor({ productId, productSlug, baseImageUrl, passwordHash }: ImageCompositorProps) {
     // Layer State
     const [layers, setLayers] = useState<Layer[]>([]);
     const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
@@ -33,12 +34,16 @@ export default function ImageCompositor({ productId, baseImageUrl, passwordHash 
     const [isClaiming, setIsClaiming] = useState(false);
     const [user, setUser] = useState<any>(null);
 
-    const { accessLevel, isLoading: isAccessLoading } = useAccess(undefined); // We don't check slug for Pro access generally, but could.
+    const { accessLevel, isLoading: isAccessLoading } = useAccess(productSlug);
 
     useEffect(() => {
         if (accessLevel === 'pro') {
             setIsUnlocked(true);
             setCredits(999); // Infinite credits for pro
+        } else if (accessLevel === 'guest') {
+            setIsUnlocked(true);
+            // We don't set credits here because we don't know them yet.
+            // They will be updated after the first generation or if we add a fetchCredits call.
         }
     }, [accessLevel]);
 
@@ -50,12 +55,12 @@ export default function ImageCompositor({ productId, baseImageUrl, passwordHash 
                 setUser(session.user);
                 setEmailInput(session.user.email || '');
 
-                // Admin Bypass
-                const adminEmails = ['francisrheaume@gmail.com', 'francis.w.rheaume@gmail.com'];
-                if (session.user.email && adminEmails.includes(session.user.email.toLowerCase())) {
-                    setIsUnlocked(true);
-                    setCredits(999); // Infinite credits for admin
-                }
+                // Admin Bypass (Commented out for testing Guest flow)
+                // const adminEmails = ['francisrheaume@gmail.com', 'francis.w.rheaume@gmail.com'];
+                // if (session.user.email && adminEmails.includes(session.user.email.toLowerCase())) {
+                //     setIsUnlocked(true);
+                //     setCredits(999); // Infinite credits for admin
+                // }
             } else {
                 const storedEmail = localStorage.getItem(`user_email`);
                 if (storedEmail) {
@@ -70,11 +75,11 @@ export default function ImageCompositor({ productId, baseImageUrl, passwordHash 
             if (session?.user) {
                 setUser(session.user);
                 setEmailInput(session.user.email || '');
-                const adminEmails = ['francisrheaume@gmail.com', 'francis.w.rheaume@gmail.com'];
-                if (session.user.email && adminEmails.includes(session.user.email.toLowerCase())) {
-                    setIsUnlocked(true);
-                    setCredits(999);
-                }
+                // const adminEmails = ['francisrheaume@gmail.com', 'francis.w.rheaume@gmail.com'];
+                // if (session.user.email && adminEmails.includes(session.user.email.toLowerCase())) {
+                //     setIsUnlocked(true);
+                //     setCredits(999);
+                // }
             }
         });
 
@@ -108,6 +113,13 @@ export default function ImageCompositor({ productId, baseImageUrl, passwordHash 
             setCredits(data.balance);
             if (!user) {
                 localStorage.setItem('user_email', emailInput);
+            }
+
+            // Persist unlocked state for this product
+            const unlockedProducts = JSON.parse(localStorage.getItem('unlocked_products') || '[]');
+            if (!unlockedProducts.includes(productSlug)) {
+                unlockedProducts.push(productSlug);
+                localStorage.setItem('unlocked_products', JSON.stringify(unlockedProducts));
             }
 
         } catch (err: any) {
@@ -435,8 +447,8 @@ export default function ImageCompositor({ productId, baseImageUrl, passwordHash 
                                 Unlock Template
                             </div>
                             <p className="text-sm text-ink/60">
-                                {user 
-                                    ? "Step 2: Enter your access code to claim your 5 free generations." 
+                                {user
+                                    ? "Step 2: Enter your access code to claim your 5 free generations."
                                     : "Step 1: Create your free account to unlock this template."
                                 }
                             </p>

@@ -26,18 +26,77 @@ export default async function DashboardPage() {
         .eq('status', 'success')
         .order('created_at', { ascending: false });
 
+    // Fetch subscription
+    const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, ends_at, customer_portal_url')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    const isPro = subscription && (
+        subscription.status === 'active' ||
+        subscription.status === 'on_trial' ||
+        (subscription.status === 'cancelled' && subscription.ends_at && new Date(subscription.ends_at) > new Date())
+    );
+
     return (
         <div className="min-h-screen font-sans text-ink selection:bg-teal/20">
             <Header />
 
             <main className="max-w-7xl mx-auto px-6 pb-20">
-                <div className="mb-12">
-                    <h1 className="text-4xl font-bold text-ink mb-4 tracking-tight">
-                        Your Creations
-                    </h1>
-                    <p className="text-xl text-ink/60">
-                        Welcome back, {user.user_metadata?.full_name || user.email}. Here is your history of generated mockups.
-                    </p>
+                <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <h1 className="text-4xl font-bold text-ink mb-4 tracking-tight">
+                            Dashboard
+                        </h1>
+                        <p className="text-xl text-ink/60">
+                            Welcome back, {user.user_metadata?.full_name || user.email}.
+                        </p>
+                    </div>
+
+                    {/* Membership Status Card */}
+                    <div className="bg-white p-6 rounded-2xl border border-ink/5 shadow-sm flex items-center gap-6">
+                        <div>
+                            <div className="text-sm text-ink/40 font-bold uppercase tracking-wider mb-1">Membership</div>
+                            <div className="flex items-center gap-2">
+                                {isPro ? (
+                                    <>
+                                        <div className="w-3 h-3 rounded-full bg-teal animate-pulse"></div>
+                                        <span className="font-bold text-teal text-lg">Pro Member</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+                                        <span className="font-bold text-ink/60 text-lg">Free Tier</span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                        {isPro && subscription?.customer_portal_url && (
+                            <a
+                                href={subscription.customer_portal_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 bg-ink/5 hover:bg-ink/10 text-ink font-bold rounded-lg text-sm transition-colors"
+                            >
+                                Manage
+                            </a>
+                        )}
+                        {!isPro && (
+                            <a
+                                href="/pricing"
+                                className="px-4 py-2 bg-teal text-cream hover:bg-teal/90 font-bold rounded-lg text-sm transition-colors shadow-lg shadow-teal/20"
+                            >
+                                Upgrade
+                            </a>
+                        )}
+                    </div>
+                </div>
+
+                <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-ink mb-4">Your Creations</h2>
                 </div>
 
                 {generations && generations.length > 0 ? (

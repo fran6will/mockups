@@ -19,22 +19,46 @@ export async function POST(request: Request) {
         const supabase = await createClient();
         const { data: { user: authUser } } = await supabase.auth.getUser();
 
-        // 0.5 Check Credits (Legacy Email System)
-        // We still use the email-based credit system for now, even if logged in.
-        // Ideally we'd merge them, but for now let's keep using the email from the request
-        // to deduct credits, but link the history to the authUser if present.
-        const { data: user, error: userError } = await supabaseAdmin
-            .from('user_credits')
-            .select('*')
-            .eq('email', email)
-            .single();
+        // 0.5 Check Subscription (Pro Access)
+        let isPro = false;
+        if (authUser) {
+            const { data: subscription } = await supabaseAdmin
+                .from('subscriptions')
+                .select('status, ends_at')
+                .eq('user_id', authUser.id)
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
-        if (userError || !user) {
-            return NextResponse.json({ error: 'User not found. Please claim credits first.' }, { status: 403 });
+            if (subscription) {
+                const isActive = subscription.status === 'active' || subscription.status === 'on_trial';
+                const isCancelledButValid = subscription.status === 'cancelled' &&
+                    subscription.ends_at &&
+                    new Date(subscription.ends_at) > new Date();
+
+                if (isActive || isCancelledButValid) {
+                    isPro = true;
+                }
+            }
         }
 
-        if (user.balance < 1) {
-            return NextResponse.json({ error: 'Insufficient credits. Please purchase more.' }, { status: 402 });
+        // 0.6 Check Credits (If NOT Pro)
+        let userCredits = null;
+        if (!isPro) {
+            const { data: user, error: userError } = await supabaseAdmin
+                .from('user_credits')
+                .select('*')
+                .eq('email', email)
+                .single();
+
+            if (userError || !user) {
+                return NextResponse.json({ error: 'User not found. Please claim credits first.' }, { status: 403 });
+            }
+
+            if (user.balance < 1) {
+                return NextResponse.json({ error: 'Insufficient credits. Please purchase more.' }, { status: 402 });
+            }
+            userCredits = user;
         }
 
         // 1. Fetch Product Details (Base Image, Overlay Config)
@@ -64,21 +88,23 @@ export async function POST(request: Request) {
         const duration = Date.now() - startTime;
 
         if (result.success) {
-            // Deduct Credit
-            await supabaseAdmin
-                .from('user_credits')
-                .update({ balance: user.balance - 1, total_used: user.total_used + 1 })
-                .eq('user_id', user.user_id);
+            // Deduct Credit ONLY if not Pro
+            if (!isPro && userCredits) {
+                await supabaseAdmin
+                    .from('user_credits')
+                    .update({ balance: userCredits.balance - 1, total_used: userCredits.total_used + 1 })
+                    .eq('user_id', userCredits.user_id);
 
-            // Log Transaction
-            await supabaseAdmin
-                .from('transactions')
-                .insert([{
-                    user_id: user.user_id,
-                    amount: -1,
-                    type: 'debit',
-                    description: 'Mockup Generation'
-                }]);
+                // Log Transaction
+                await supabaseAdmin
+                    .from('transactions')
+                    .insert([{
+                        user_id: userCredits.user_id,
+                        amount: -1,
+                        type: 'debit',
+                        description: 'Mockup Generation'
+                    }]);
+            }
 
             // 3.5 Upload to Storage (New!)
             let publicUrl = null;
@@ -146,7 +172,7 @@ export async function POST(request: Request) {
         return NextResponse.json({
             success: true,
             imageUrl: result.mockUrl,
-            remainingCredits: user.balance - 1
+            remainingCredits: isPro ? 999 : (userCredits ? userCredits.balance - 1 : 0)
         });
 
     } catch (e: any) {

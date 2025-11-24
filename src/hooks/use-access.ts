@@ -16,15 +16,29 @@ export function useAccess(productSlug?: string) {
                     // Check for active subscription
                     const { data: subscription } = await supabase
                         .from('subscriptions')
-                        .select('status')
+                        .select('status, ends_at')
                         .eq('user_id', user.id)
-                        .eq('status', 'active')
+                        .order('updated_at', { ascending: false })
+                        .limit(1)
                         .maybeSingle();
 
                     if (subscription) {
-                        setAccessLevel('pro');
-                        setIsLoading(false);
-                        return;
+                        console.log("DEBUG: Found subscription:", subscription);
+                        const isActive = subscription.status === 'active' || subscription.status === 'on_trial';
+                        // Check if cancelled but still within the billing period
+                        const isCancelledButValid = subscription.status === 'cancelled' &&
+                            subscription.ends_at &&
+                            new Date(subscription.ends_at) > new Date();
+
+                        console.log("DEBUG: Subscription Status Check:", { isActive, isCancelledButValid, status: subscription.status, endsAt: subscription.ends_at });
+
+                        if (isActive || isCancelledButValid) {
+                            setAccessLevel('pro');
+                            setIsLoading(false);
+                            return;
+                        }
+                    } else {
+                        console.log("DEBUG: No subscription found for user", user.id);
                     }
                 }
 
