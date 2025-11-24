@@ -26,7 +26,7 @@ export const generateMockup = async (
                 responseModalities: ["IMAGE"],
                 imageConfig: {
                     aspectRatio: aspectRatio,
-                    imageSize: "1024x1024"
+                    imageSize: "1K"
                 }
             } as any
         });
