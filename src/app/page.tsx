@@ -21,13 +21,11 @@ import Features from '@/components/landing/Features';
 
 export default function HomePage() {
     return (
-        <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-fixed" style={{
-            backgroundImage: 'radial-gradient(circle at 50% -20%, rgba(42, 127, 127, 0.15) 0%, var(--color-cream) 60%)'
-        }}>
+        <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-grid-pattern bg-grain">
             <Banner />
             <Header />
 
-            <main>
+            <main className="relative z-10">
                 <Hero />
                 <TrendingCarousel />
                 <Features />
