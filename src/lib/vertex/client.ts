@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const apiKey = process.env.GEMINI_API_KEY;
 
 // Using Copié-Collé (Gemini 3 Pro Image)
-const modelId = 'gemini-3-pro-image-preview';
+const modelId = 'gemini-image';
 
 export const generateMockup = async (
     baseImageUrl: string,
@@ -23,10 +23,10 @@ export const generateMockup = async (
         const model = genAI.getGenerativeModel({
             model: modelId,
             generationConfig: {
-                responseModalities: ["TEXT", "IMAGE"],
+                responseModalities: ["IMAGE"],
                 imageConfig: {
                     aspectRatio: aspectRatio,
-                    imageSize: "1K"
+                    imageSize: "1024x1024"
                 }
             } as any
         });
