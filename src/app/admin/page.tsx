@@ -31,8 +31,10 @@ export default function AdminPage() {
     useEffect(() => {
         const checkAdmin = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            const adminEmails = ['francisrheaume@gmail.com', 'francis.w.rheaume@gmail.com'];
+            const adminEmails = ['francis.w.rheaume@gmail.com'];
+            
             if (!session || !session.user.email || !adminEmails.includes(session.user.email.toLowerCase())) {
+                console.warn("Admin access denied. User:", session?.user?.email);
                 router.push('/');
                 return;
             }
