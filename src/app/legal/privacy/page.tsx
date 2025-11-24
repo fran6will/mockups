@@ -13,7 +13,7 @@ export default function PrivacyPolicy() {
                     <p>Last Updated: {new Date().toLocaleDateString()}</p>
 
                     <p>
-                        Welcome to Nano Banana Pro ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about this privacy notice or our practices with regard to your personal information, please contact us.
+                        Welcome to Copié-Collé ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about this privacy notice or our practices with regard to your personal information, please contact us.
                     </p>
 
                     <h3>1. What Information We Collect</h3>

@@ -76,7 +76,7 @@ export async function POST(request: Request) {
             }
         }
 
-        // 2. Call Nano Banana Pro (Vertex AI)
+        // 2. Call Copié-Collé (Vertex AI)
         const prompt = product.custom_prompt && product.custom_prompt.trim() !== ''
             ? product.custom_prompt
             : "Apply the logo to the product with realistic texture and lighting.";

@@ -74,7 +74,7 @@ export default function Footer() {
                 </div>
 
                 <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-cream/60">
-                    <p>© {new Date().getFullYear()} Nano Banana Pro. All rights reserved.</p>
+                    <p>© {new Date().getFullYear()} Copié-Collé. All rights reserved.</p>
                     <p className="flex items-center gap-1">
                         Made with <Heart size={14} className="text-red-400 fill-red-400" /> for creators
                     </p>

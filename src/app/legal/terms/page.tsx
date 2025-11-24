@@ -14,12 +14,12 @@ export default function TermsOfService() {
 
                     <h3>1. Acceptance of Terms</h3>
                     <p>
-                        By accessing or using Nano Banana Pro, you agree to be bound by these Terms of Service. If you do not agree to these terms, you may not use the service.
+                        By accessing or using Copié-Collé, you agree to be bound by these Terms of Service. If you do not agree to these terms, you may not use the service.
                     </p>
 
                     <h3>2. Description of Service</h3>
                     <p>
-                        Nano Banana Pro provides an AI-powered tool for generating product mockups. We reserve the right to modify or discontinue the service at any time without notice.
+                        Copié-Collé provides an AI-powered tool for generating product mockups. We reserve the right to modify or discontinue the service at any time without notice.
                     </p>
 
                     <h3>3. User Accounts</h3>
@@ -32,7 +32,7 @@ export default function TermsOfService() {
                         <strong>Your Content:</strong> You retain full ownership of the logos and designs you upload. You grant us a temporary license to process this content solely for the purpose of generating your mockups.
                     </p>
                     <p>
-                        <strong>Platform:</strong> The interface, code, and proprietary AI implementations are owned by Nano Banana Pro.
+                        <strong>Platform:</strong> The interface, code, and proprietary AI implementations are owned by Copié-Collé.
                     </p>
 
                     <h3>5. Prohibited Use</h3>
@@ -45,7 +45,7 @@ export default function TermsOfService() {
 
                     <h3>6. Limitation of Liability</h3>
                     <p>
-                        The service is provided "as is" without warranties of any kind. Nano Banana Pro shall not be liable for any indirect, incidental, or consequential damages resulting from the use of the service.
+                        The service is provided "as is" without warranties of any kind. Copié-Collé shall not be liable for any indirect, incidental, or consequential damages resulting from the use of the service.
                     </p>
 
                     <h3>7. Governing Law</h3>

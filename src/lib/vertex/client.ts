@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize the Google Gen AI Client
 const apiKey = process.env.GEMINI_API_KEY;
 
-// Using Nano Banana Pro (Gemini 3 Pro Image)
+// Using Copié-Collé (Gemini 3 Pro Image)
 const modelId = 'gemini-3-pro-image-preview';
 
 export const generateMockup = async (
@@ -17,7 +17,7 @@ export const generateMockup = async (
     }
 
     try {
-        console.log(`Calling Nano Banana Pro (Gemini API) with Aspect Ratio: ${aspectRatio}...`);
+        console.log(`Calling Copié-Collé (Gemini API) with Aspect Ratio: ${aspectRatio}...`);
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({

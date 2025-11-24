@@ -1,7 +1,7 @@
-# Project Gemini: Nano Banana Pro Engine (Glassmorphism Edition)
+# Project Gemini: Copié-Collé Engine (Glassmorphism Edition)
 
 ## Overview
-**CopiéCollé (Nano Banana Pro)** is a high-performance, AI-powered mockup generator designed to bridge the gap between static Etsy digital downloads and interactive product visualization. It utilizes Google's Gemini AI (Vertex AI) to realistically composite user-uploaded logos onto high-quality product photography.
+**Copié-Collé** is a high-performance, AI-powered mockup generator designed to bridge the gap between static Etsy digital downloads and interactive product visualization. It utilizes Google's Gemini AI (Vertex AI) to realistically composite user-uploaded logos onto high-quality product photography.
 
 ## Tech Stack
 - **Framework:** Next.js 16 (App Router)
