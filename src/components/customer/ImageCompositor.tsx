@@ -49,8 +49,12 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
     useEffect(() => {
         if (isFree) {
-            setIsUnlocked(true);
-            // No credits needed for free products
+            // Only unlock if user is logged in (to capture email)
+            if (user) {
+                setIsUnlocked(true);
+            } else {
+                setIsUnlocked(false);
+            }
         } else if (accessLevel === 'pro') {
             setIsUnlocked(true);
             setCredits(999); // Infinite credits for pro
@@ -59,7 +63,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             // We don't set credits here because we don't know them yet.
             // They will be updated after the first generation or if we add a fetchCredits call.
         }
-    }, [accessLevel, isFree]);
+    }, [accessLevel, isFree, user]);
 
     // Load state from local storage on mount & Check Auth
     useEffect(() => {
@@ -214,6 +218,11 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
     const handleGenerate = async () => {
         if (layers.length === 0) return;
+        
+        if (!emailInput) {
+            setError("Please sign in to generate mockups.");
+            return;
+        }
 
         setIsGenerating(true);
         setError(null);

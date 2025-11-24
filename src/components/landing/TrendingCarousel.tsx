@@ -11,10 +11,10 @@ export default function TrendingCarousel() {
 
     useEffect(() => {
         const fetchTrending = async () => {
+            // Fallback to simple select if is_trending column is missing or not populated
             const { data, error } = await supabase
                 .from('products')
                 .select('*')
-                .eq('is_trending', true)
                 .limit(10);
 
             if (!error && data) {
