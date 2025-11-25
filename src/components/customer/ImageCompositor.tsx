@@ -19,7 +19,7 @@ interface ImageCompositorProps {
 
 export default function ImageCompositor({ productId, productSlug, baseImageUrl, passwordHash, isFree = false }: ImageCompositorProps) {
     const searchParams = useSearchParams();
-    const showAccessCodeInput = searchParams.get('unlock') === 'true' || searchParams.get('code') !== null;
+    const [showAccessCodeInput, setShowAccessCodeInput] = useState(searchParams.get('unlock') === 'true' || searchParams.get('code') !== null);
 
     // Layer State
     const [layers, setLayers] = useState<Layer[]>([]);
@@ -198,7 +198,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         setError(null);
     }, [layers]);
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+        noClick: true,
         onDrop,
         accept: {
             'image/*': ['.png', '.jpg', '.jpeg', '.webp']
@@ -343,12 +344,16 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             }
 
             const operationName = data.operationName;
-            setAnimationStatus('Generating video frames (this may take a minute)...');
+            setAnimationStatus('Generating video... (this usually takes 1-2 minutes)');
 
             // 2. Poll for Status
             const pollInterval = setInterval(async () => {
                 try {
-                    const statusRes = await fetch(`/api/animate/status?operationName=${operationName}`);
+                    const statusRes = await fetch('/api/animate/status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ operationName })
+                    });
                     const statusData = await statusRes.json();
 
                     if (statusData.status === 'done') {
@@ -375,19 +380,22 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         }
     };
 
-    return (
-        <div className="grid lg:grid-cols-2 gap-8 items-start">
-            {/* Left Column: Controls */}
-            <div className="space-y-6">
+    if (isAuthChecking) {
+        return (
+            <div className="max-w-6xl mx-auto min-h-[400px] flex items-center justify-center">
+                <div className="glass p-12 rounded-3xl border border-white/40 flex flex-col items-center justify-center space-y-4">
+                    <Loader2 className="animate-spin text-teal" size={32} />
+                    <p className="text-ink/50 font-medium">Checking access...</p>
+                </div>
+            </div>
+        );
+    }
 
-                {/* Loading State */}
-                {isAuthChecking ? (
-                    <div className="glass p-12 rounded-3xl border border-white/40 flex flex-col items-center justify-center space-y-4">
-                        <Loader2 className="animate-spin text-teal" size={32} />
-                        <p className="text-ink/50 font-medium">Checking access...</p>
-                    </div>
-                ) : !isUnlocked ? (
-                    /* LOCKED STATE: Show Unlock / Sign In ONLY */
+    if (!isUnlocked) {
+        return (
+            <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-start">
+                {/* Left Column: Locked Controls */}
+                <div className="space-y-6">
                     <div className="glass p-6 rounded-3xl border border-white/40 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div>
                             <div className="flex items-center gap-2 text-ink/80 font-bold mb-2">
@@ -486,429 +494,328 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                         <p className="text-xs text-ink/40 text-center">
                                             Have an Etsy access code? Use your secret link to unlock.
                                         </p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    /* UNLOCKED STATE: Show Editor Controls */
-                    <>
-                        {/* Usability Tip */}
-                        <div className="bg-teal/5 border border-teal/10 rounded-2xl p-4 flex gap-3 items-start animate-in fade-in slide-in-from-bottom-2">
-                            <div className="bg-teal/10 p-1.5 rounded-lg text-teal mt-0.5">
-                                <Info size={16} />
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold text-ink">Pro Tip:</p>
-                                <p className="text-xs text-ink/70 leading-relaxed">
-                                    Roughly place your design using these sliders. The AI will automatically perfect the lighting, shadows, and texture wrapping for a photorealistic result.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Layer Management & Upload */}
-                        <div className="glass p-6 rounded-3xl border border-white/40 space-y-4 animate-in fade-in slide-in-from-bottom-2 delay-75">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
-                                    <Layers size={16} /> Layers ({layers.length}/3)
-                                </h3>
-                                {layers.length < 3 && (
-                                    <div {...getRootProps()} className="cursor-pointer">
-                                        <input {...inputProps} />
-                                        <button className="text-xs bg-teal/10 text-teal px-2 py-1 rounded-full font-bold flex items-center gap-1 hover:bg-teal/20 transition-colors">
-                                            <Plus size={12} /> Add Layer
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-
-                            {layers.length === 0 ? (
-                                <div
-                                    {...getRootProps()}
-                                    className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${isDragActive ? 'border-teal bg-teal/5' : 'border-ink/10 hover:border-teal/50 hover:bg-white/40'}`}
-                                >
-                                    <input {...inputProps} />
-                                    <UploadCloud className="mx-auto mb-2 text-ink/30" size={24} />
-                                    <p className="text-xs text-ink/50 font-bold">Upload up to 3 images</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    {layers.map((layer) => (
-                                        <div
-                                            key={layer.id}
-                                            onClick={() => setActiveLayerId(layer.id)}
-                                            className={`flex items-center gap-3 p-2 rounded-xl border transition-all cursor-pointer ${activeLayerId === layer.id
-                                                ? 'bg-teal/10 border-teal/50 shadow-sm'
-                                                : 'bg-white/40 border-transparent hover:bg-white/60'
-                                                }`}
-                                        >
-                                            <div className="w-10 h-10 rounded-lg bg-white overflow-hidden border border-ink/5 flex-shrink-0">
-                                                <img src={layer.previewUrl} alt="Layer" className="w-full h-full object-contain" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-bold text-ink truncate">{layer.file.name}</p>
-                                                <p className="text-[10px] text-ink/50">
-                                                    Scale: {layer.scale}x • Rot: {layer.rotation}°
-                                                </p>
-                                            </div>
-                                            <button
-                                                onClick={(e) => deleteLayer(layer.id, e)}
-                                                className="p-1.5 text-ink/30 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Transform Controls (Only visible if a layer is active) */}
-                        {activeLayer && (
-                            <div className="glass p-6 rounded-3xl border border-white/40 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <h3 className="text-sm font-bold text-ink uppercase tracking-wider border-b border-ink/10 pb-2 flex items-center gap-2">
-                                    ✨ Edit: <span className="text-teal truncate max-w-[220px]" title={activeLayer.file.name}>{activeLayer.file.name}</span>
-                                </h3>
-
-                                {/* Position Group */}
-                                <div className="space-y-4">
-                                    <label className="text-xs font-bold text-ink/50 uppercase tracking-wider">Position (Move)</label>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <div className="flex justify-between mb-1">
-                                                <span className="text-xs text-ink/70">X ({activeLayer.moveX}px)</span>
-                                                <button onClick={() => updateActiveLayer({ moveX: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                            </div>
-                                            <input
-                                                type="range"
-                                                min="-400"
-                                                max="400"
-                                                value={activeLayer.moveX}
-                                                onChange={(e) => updateActiveLayer({ moveX: Number(e.target.value) })}
-                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="flex justify-between mb-1">
-                                                <span className="text-xs text-ink/70">Y ({activeLayer.moveY}px)</span>
-                                                <button onClick={() => updateActiveLayer({ moveY: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                            </div>
-                                            <input
-                                                type="range"
-                                                min="-400"
-                                                max="400"
-                                                value={activeLayer.moveY}
-                                                onChange={(e) => updateActiveLayer({ moveY: Number(e.target.value) })}
-                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Transform Group */}
-                                <div className="space-y-4 pt-2 border-t border-ink/5">
-                                    <label className="text-xs font-bold text-ink/50 uppercase tracking-wider">Transform</label>
-
-                                    {/* Rotation & Scale */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <div className="flex justify-between mb-1">
-                                                <span className="text-xs text-ink/70 flex items-center gap-1"><RotateCw size={10} /> Rotate ({activeLayer.rotation}°)</span>
-                                                <button onClick={() => updateActiveLayer({ rotation: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                            </div>
-                                            <input
-                                                type="range"
-                                                min="-180"
-                                                max="180"
-                                                value={activeLayer.rotation}
-                                                onChange={(e) => updateActiveLayer({ rotation: Number(e.target.value) })}
-                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="flex justify-between mb-1">
-                                                <span className="text-xs text-ink/70 flex items-center gap-1"><Maximize size={10} /> Scale ({activeLayer.scale}x)</span>
-                                                <button onClick={() => updateActiveLayer({ scale: 1 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                            </div>
-                                            <input
-                                                type="range"
-                                                min="0.1"
-                                                max="3"
-                                                step="0.1"
-                                                value={activeLayer.scale}
-                                                onChange={(e) => updateActiveLayer({ scale: Number(e.target.value) })}
-                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Skew (Perspective) */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <div className="flex justify-between mb-1">
-                                                <span className="text-xs text-ink/70">Skew X ({activeLayer.skewX}°)</span>
-                                                <button onClick={() => updateActiveLayer({ skewX: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                            </div>
-                                            <input
-                                                type="range"
-                                                min="-45"
-                                                max="45"
-                                                value={activeLayer.skewX}
-                                                onChange={(e) => updateActiveLayer({ skewX: Number(e.target.value) })}
-                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="flex justify-between mb-1">
-                                                <span className="text-xs text-ink/70">Skew Y ({activeLayer.skewY}°)</span>
-                                                <button onClick={() => updateActiveLayer({ skewY: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                            </div>
-                                            <input
-                                                type="range"
-                                                min="-45"
-                                                max="45"
-                                                value={activeLayer.skewY}
-                                                onChange={(e) => updateActiveLayer({ skewY: Number(e.target.value) })}
-                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Resolution Selector */}
-                        <div className="glass p-6 rounded-3xl border border-white/40 animate-in fade-in slide-in-from-bottom-2 delay-100">
-                            <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-4">
-                                Output Resolution & Cost
-                            </label>
-                            <div className="grid grid-cols-3 gap-3">
-                                {(['1K', '2K', '4K'] as const).map((size) => {
-                                    let cost = 1;
-                                    if (size === '2K') cost = 3;
-                                    if (size === '4K') cost = 5;
-
-                                    const isDisabled = isFree && size !== '1K';
-
-                                    return (
                                         <button
-                                            key={size}
-                                            onClick={() => !isDisabled && setImageSize(size)}
-                                            disabled={isDisabled}
-                                            className={`py-3 rounded-xl flex flex-col items-center justify-center transition-all ${imageSize === size
-                                                ? 'bg-teal text-cream shadow-lg shadow-teal/20 scale-105'
-                                                : isDisabled
-                                                    ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
-                                                    : 'bg-white/40 text-ink/60 hover:bg-white/60'
-                                                }`}
+                                            onClick={() => setShowAccessCodeInput(true)}
+                                            className="w-full text-teal font-bold text-sm hover:underline"
                                         >
-                                            <span className="font-bold text-sm">{size}</span>
-                                            {isDisabled ? (
-                                                <span className="text-[9px] font-bold uppercase text-teal/60 mt-0.5">PRO ONLY</span>
-                                            ) : (
-                                                <span className={`text-[10px] font-bold uppercase ${imageSize === size ? 'text-white/80' : 'text-ink/40'}`}>
-                                                    {cost} Credit{cost > 1 ? 's' : ''}
-                                                </span>
-                                            )}
+                                            Enter Access Code
                                         </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Aspect Ratio Selector */}
-                        <div className="glass p-6 rounded-3xl border border-white/40 animate-in fade-in slide-in-from-bottom-2 delay-150">
-                            <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-4">
-                                Target Aspect Ratio
-                            </label>
-                            <div className="grid grid-cols-3 gap-3">
-                                {(['1:1', '9:16', '16:9'] as const).map((ratio) => (
-                                    <button
-                                        key={ratio}
-                                        onClick={() => setAspectRatio(ratio)}
-                                        className={`py-3 rounded-xl font-bold text-sm transition-all ${aspectRatio === ratio
-                                            ? 'bg-teal text-cream shadow-lg shadow-teal/20 scale-105'
-                                            : 'bg-white/40 text-ink/60 hover:bg-white/60'
-                                            }`}
-                                    >
-                                        {ratio}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Generate Button */}
-                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 delay-200">
-                            <div className="flex items-center justify-between px-2">
-                                <div className="text-sm font-bold text-ink/60">
-                                    Account: <span className="text-ink">{emailInput}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold border border-amber-200">
-                                    <Coins size={14} />
-                                    <Coins size={14} />
-                                    {accessLevel === 'pro' ? 'Unlimited' : `${credits} Credits`}
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={handleGenerate}
-                                disabled={layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < currentCost)}
-                                className={`w-full py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl ${layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < currentCost)
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-teal to-teal/80 text-cream hover:scale-[1.02] hover:shadow-teal/30'
-                                    }`}
-                            >
-                                {isGenerating ? (
-                                    <>
-                                        <Loader2 className="animate-spin" />
-                                        Generating Magic...
-                                    </>
-                                ) : isFree ? (
-                                    <>
-                                        <Sparkles className="fill-current" />
-                                        Try for Free
-                                    </>
-                                ) : (credits !== null && credits < currentCost) ? (
-                                    <>
-                                        <Coins className="fill-current" />
-                                        {credits} Credits - Need {currentCost}
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="fill-current" />
-                                        Generate ({currentCost} Credit{currentCost > 1 ? 's' : ''})
-                                    </>
+                                    </div>
                                 )}
-                            </button>
-                        </div>
-                    </>
-                )}
-
-                {error && (
-                    <div className="p-4 bg-red-100 text-red-600 rounded-2xl text-sm font-bold text-center animate-pulse">
-                        {error}
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
+
+                {/* Right Column: Locked Preview */}
+                <div className="glass p-4 rounded-[2rem] border border-white/40 shadow-2xl bg-white/30 min-h-[500px] flex items-center justify-center relative overflow-hidden">
+                    <img src={baseImageUrl} className="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm" />
+                    <div className="relative z-10 bg-white/80 backdrop-blur px-6 py-3 rounded-full font-bold text-ink shadow-lg flex items-center gap-2">
+                        <Lock size={18} /> Preview Locked
+                    </div>
+                </div>
             </div>
+        );
+    }
 
-            {/* Right Column: Preview */}
-            <div className="glass p-4 rounded-[2rem] border border-white/40 shadow-2xl bg-white/30 min-h-[500px] flex items-center justify-center relative overflow-hidden">
-                {!generatedImage && layers.length === 0 && (
-                    <div className="text-center text-ink/30">
-                        <div className="w-24 h-24 bg-ink/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Image size={40} />
+    // UNLOCKED STATE
+    return (
+        <div className="max-w-6xl mx-auto space-y-8">
+            {/* Top Section: Canvas / Preview */}
+            <div className="max-w-3xl mx-auto w-full">
+                <div {...getRootProps()} className="glass p-4 rounded-[2.5rem] border border-white/40 shadow-2xl bg-white/30 aspect-square flex items-center justify-center relative overflow-hidden group">
+                    <input {...inputProps} />
+                    {!generatedImage && layers.length === 0 && (
+                        <div className="text-center text-ink/30 pointer-events-none">
+                            <div className="w-24 h-24 bg-ink/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Image size={40} />
+                            </div>
+                            <p className="font-medium">Drag & Drop your logo here</p>
+                            <p className="text-sm opacity-60 mt-2">or use the controls below</p>
                         </div>
-                        <p className="font-medium">Preview will appear here</p>
-                    </div>
-                )}
+                    )}
 
-                {/* Base Image (Always visible as background context) */}
-                <img
-                    src={baseImageUrl}
-                    alt="Base"
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${generatedImage ? 'opacity-0' : 'opacity-100'}`}
-                />
+                    {/* Base Image */}
+                    <img
+                        src={baseImageUrl}
+                        alt="Base"
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${generatedImage ? 'opacity-0' : 'opacity-100'}`}
+                    />
 
-                {/* Layers Preview (Overlay) */}
-                {layers.length > 0 && !generatedImage && (
-                    <div className="absolute inset-0 z-10">
-                        <FabricCanvas
-                            layers={layers}
-                            activeLayerId={activeLayerId}
-                            onSelectLayer={setActiveLayerId}
-                            onUpdateLayer={(id: string, updates: Partial<Layer>) => {
-                                setLayers(prev => prev.map(layer =>
-                                    layer.id === id ? { ...layer, ...updates } : layer
-                                ));
-                            }}
-                            aspectRatio={aspectRatio}
-                        />
-                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur px-4 py-1 rounded-full text-xs font-bold text-ink/60 shadow-sm pointer-events-none">
-                            Your Design ({layers.length} layers)
+                    {/* Layers / Dropzone Area */}
+                    {layers.length > 0 && !generatedImage && (
+                        <div className="absolute inset-0 z-10">
+                            <FabricCanvas
+                                layers={layers}
+                                activeLayerId={activeLayerId}
+                                onSelectLayer={setActiveLayerId}
+                                onUpdateLayer={(id: string, updates: Partial<Layer>) => {
+                                    setLayers(prev => prev.map(layer =>
+                                        layer.id === id ? { ...layer, ...updates } : layer
+                                    ));
+                                }}
+                                aspectRatio={aspectRatio}
+                            />
+                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur px-4 py-1.5 rounded-full text-xs font-bold text-ink/60 shadow-sm pointer-events-none border border-white/20">
+                                Interactive Canvas • Drag to Move • Pinch to Scale
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Generated Result */}
-                {generatedImage && !videoUrl && (
-                    <div className="relative w-full h-full group">
-                        <img
-                            src={generatedImage}
-                            alt="Generated Mockup"
-                            className="w-full h-full object-contain rounded-2xl shadow-inner"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 rounded-2xl backdrop-blur-sm">
-                            <a
-                                href={generatedImage}
-                                download="mockup.png"
-                                className="bg-white text-ink font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl"
-                            >
-                                <Download size={18} />
-                                Download 4K
-                            </a>
-                            <button
-                                onClick={() => setShowAnimateDialog(true)}
-                                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl border border-white/20"
-                            >
-                                <Video size={18} />
-                                Animate (10 Credits)
-                            </button>
+                    {/* Dropzone Overlay (when dragging) */}
+                    {/* Dropzone Overlay (when dragging) */}
+                    {isDragActive && (
+                        <div className="absolute inset-0 z-20 outline-none bg-teal/20 backdrop-blur-sm flex items-center justify-center border-4 border-teal border-dashed rounded-[2rem] m-4 pointer-events-none">
+                            <div className="bg-white text-teal font-bold px-8 py-4 rounded-2xl shadow-xl transform scale-110 transition-transform">
+                                Drop to Add Layer
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Video Player */}
-                {videoUrl && (
-                    <div className="relative w-full h-full group">
-                        <video
-                            src={videoUrl}
-                            controls
-                            autoPlay
-                            loop
-                            className="w-full h-full object-contain rounded-2xl shadow-inner bg-black"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 rounded-2xl backdrop-blur-sm pointer-events-none">
-                            <div className="pointer-events-auto flex flex-col gap-4">
+                    {/* Generated Result */}
+                    {generatedImage && !videoUrl && (
+                        <div className="relative w-full h-full z-30">
+                            <img
+                                src={generatedImage}
+                                alt="Generated Mockup"
+                                className="w-full h-full object-contain rounded-2xl"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 rounded-2xl backdrop-blur-sm">
                                 <a
-                                    href={videoUrl}
-                                    download="mockup-video.mp4"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                    href={generatedImage}
+                                    download="mockup.png"
                                     className="bg-white text-ink font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl"
                                 >
                                     <Download size={18} />
-                                    Download Video
+                                    Download 4K
                                 </a>
                                 <button
-                                    onClick={() => setVideoUrl(null)}
-                                    className="bg-black/50 text-white px-6 py-3 rounded-full hover:bg-black/70 backdrop-blur-md flex items-center gap-2 justify-center"
+                                    onClick={() => setShowAnimateDialog(true)}
+                                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl border border-white/20"
                                 >
-                                    <X size={18} /> Close
+                                    <Video size={18} />
+                                    Animate (10 Credits)
                                 </button>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Animation Loading State */}
-                {isAnimating && (
-                    <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-white p-8 text-center">
-                        <div className="w-20 h-20 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-6"></div>
-                        <h3 className="text-2xl font-bold mb-2">Creating Video</h3>
-                        <p className="text-white/60 animate-pulse">{animationStatus}</p>
-                    </div>
-                )}
+                    {/* Video Player */}
+                    {videoUrl && (
+                        <div className="relative w-full h-full z-30 bg-black">
+                            <video
+                                src={videoUrl}
+                                controls
+                                autoPlay
+                                loop
+                                className="w-full h-full object-contain"
+                            />
+                            <button
+                                onClick={() => setVideoUrl(null)}
+                                className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 backdrop-blur-md"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                    )}
 
-                {isGenerating && (
-                    <div className="absolute inset-0 z-20 bg-white/60 backdrop-blur-md flex flex-col items-center justify-center">
-                        <div className="w-20 h-20 border-4 border-teal/20 border-t-teal rounded-full animate-spin mb-4"></div>
-                        <p className="font-bold text-teal animate-pulse">Designing your product...</p>
-                    </div>
-                )}
+                    {/* Loading States */}
+                    {(isGenerating || isAnimating) && (
+                        <div className="absolute inset-0 z-40 bg-white/80 backdrop-blur-md flex flex-col items-center justify-center">
+                            <div className="w-20 h-20 border-4 border-teal/20 border-t-teal rounded-full animate-spin mb-4"></div>
+                            <p className="font-bold text-teal animate-pulse text-lg">
+                                {isAnimating ? animationStatus : 'Designing your product...'}
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Low Credits Popup (Pro/Credits) */}
+            {/* Bottom Section: Controls */}
+            <div className="grid md:grid-cols-3 gap-8 items-start">
+                {/* Col 1: Layers & Upload */}
+                <div className="space-y-6 bg-white rounded-[2rem] p-6 border border-ink/5 shadow-sm h-full">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-ink flex items-center gap-2">
+                            <Layers size={18} className="text-teal" /> Layers
+                        </h3>
+                        <span className="text-xs text-ink/40">{layers.length}/3</span>
+                    </div>
+
+                    {/* Upload Button */}
+                    <div {...getRootProps()} onClick={open} className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${isDragActive ? 'border-teal bg-teal/5' : 'border-ink/10 hover:border-teal/50 hover:bg-teal/5'}`}>
+                        <input {...inputProps} />
+                        <div className="w-10 h-10 bg-teal/10 text-teal rounded-full flex items-center justify-center mx-auto mb-2">
+                            <Plus size={20} />
+                        </div>
+                        <p className="text-sm font-bold text-ink">Add Design</p>
+                        <p className="text-xs text-ink/40">Drop or click to upload</p>
+                    </div>
+
+                    {/* Layer List */}
+                    <div className="space-y-2">
+                        {layers.map((layer, index) => (
+                            <div
+                                key={layer.id}
+                                onClick={() => setActiveLayerId(layer.id)}
+                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${activeLayerId === layer.id ? 'bg-teal/5 border-teal/30 shadow-sm' : 'bg-gray-50 border-transparent hover:bg-gray-100'}`}
+                            >
+                                <img src={layer.previewUrl} className="w-10 h-10 rounded-lg object-cover bg-white border border-ink/5" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-ink truncate">{layer.file.name}</p>
+                                    <p className="text-xs text-ink/40">Layer {index + 1}</p>
+                                </div>
+                                <button
+                                    onClick={(e) => deleteLayer(layer.id, e)}
+                                    className="text-ink/20 hover:text-red-500 transition-colors p-1"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Active Layer Controls (Compact) */}
+                    {activeLayer && (
+                        <div className="pt-4 border-t border-ink/5 space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Scale</label>
+                                    <input
+                                        type="range"
+                                        min="0.1" max="3" step="0.1"
+                                        value={activeLayer.scale}
+                                        onChange={(e) => updateActiveLayer({ scale: Number(e.target.value) })}
+                                        className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Rotate</label>
+                                    <input
+                                        type="range"
+                                        min="-180" max="180"
+                                        value={activeLayer.rotation}
+                                        onChange={(e) => updateActiveLayer({ rotation: Number(e.target.value) })}
+                                        className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Col 2: Settings */}
+                <div className="space-y-6 bg-white rounded-[2rem] p-6 border border-ink/5 shadow-sm h-full">
+                    <h3 className="font-bold text-ink flex items-center gap-2 mb-2">
+                        <Sparkles size={18} className="text-teal" /> Settings
+                    </h3>
+
+                    {/* Resolution */}
+                    <div>
+                        <label className="text-xs font-bold text-ink/50 uppercase tracking-wider mb-3 block">Resolution</label>
+                        <div className="grid grid-cols-1 gap-2">
+                            {(['1K', '2K', '4K'] as const).map((size) => {
+                                let cost = 2;
+                                if (size === '2K') cost = 4;
+                                if (size === '4K') cost = 6;
+
+                                const isDisabled = isFree && size !== '1K';
+                                return (
+                                    <button
+                                        key={size}
+                                        onClick={() => !isDisabled && setImageSize(size)}
+                                        disabled={isDisabled}
+                                        className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${imageSize === size
+                                            ? 'bg-teal/5 border-teal text-teal font-bold'
+                                            : isDisabled
+                                                ? 'bg-gray-50 border-transparent text-gray-300 cursor-not-allowed'
+                                                : 'bg-white border-ink/10 text-ink/60 hover:border-teal/30'
+                                            }`}
+                                    >
+                                        <span>{size}</span>
+                                        {isDisabled ? <span className="text-[10px] font-bold bg-gray-200 px-2 py-0.5 rounded text-gray-400">PRO</span> : null}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Aspect Ratio */}
+                    <div>
+                        <label className="text-xs font-bold text-ink/50 uppercase tracking-wider mb-3 block">Aspect Ratio</label>
+                        <div className="flex gap-2">
+                            {(['1:1', '9:16', '16:9'] as const).map((ratio) => (
+                                <button
+                                    key={ratio}
+                                    onClick={() => setAspectRatio(ratio)}
+                                    className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-all ${aspectRatio === ratio
+                                        ? 'bg-teal/5 border-teal text-teal'
+                                        : 'bg-white border-ink/10 text-ink/60 hover:border-teal/30'
+                                        }`}
+                                >
+                                    {ratio}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Col 3: Action */}
+                <div className="space-y-6">
+                    {/* Pro Tip Box */}
+                    <div className="bg-gradient-to-br from-teal/10 to-teal/5 border border-teal/10 rounded-[2rem] p-6">
+                        <div className="flex items-start gap-3">
+                            <div className="bg-white p-2 rounded-full shadow-sm text-teal">
+                                <Info size={16} />
+                            </div>
+                            <div>
+                                <p className="font-bold text-teal text-sm mb-1">Pro Tip</p>
+                                <p className="text-xs text-ink/60 leading-relaxed">
+                                    Roughly place your design. The AI will automatically perfect the lighting, shadows, and texture wrapping.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Generate Action */}
+                    <div className="bg-white rounded-[2rem] p-6 border border-ink/5 shadow-sm space-y-4">
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-ink/40">Account</span>
+                            <span className="font-bold text-ink truncate max-w-[120px]">{emailInput || 'Guest'}</span>
+                        </div>
+
+                        <div className="h-px bg-ink/5"></div>
+
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-ink/40">Cost</span>
+                            <span className="font-bold text-teal">{isFree ? 'Free' : `${currentCost} Credits`}</span>
+                        </div>
+
+                        <button
+                            onClick={handleGenerate}
+                            disabled={layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < currentCost)}
+                            className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg ${layers.length === 0 || isGenerating
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                                : 'bg-teal text-white hover:bg-teal/90 shadow-teal/20 hover:-translate-y-0.5'
+                                }`}
+                        >
+                            {isGenerating ? (
+                                <Loader2 className="animate-spin" />
+                            ) : (
+                                <Sparkles className="fill-current" />
+                            )}
+                            {isGenerating ? 'Generating...' : 'Generate'}
+                        </button>
+
+                        <p className="text-[10px] text-ink/40 text-center leading-tight">
+                            AI generation is experimental. Results may vary. <br />
+                            Credits are consumed per generation.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Modals */}
             {showCreditPopup && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
                     <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative">
@@ -942,7 +849,6 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 </div>
             )}
 
-            {/* Animate Dialog */}
             {showAnimateDialog && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
                     <div className="bg-white rounded-[2rem] p-8 max-w-md w-full space-y-6 shadow-2xl border border-purple-500/20 relative overflow-hidden">
@@ -994,31 +900,26 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     </div>
                 </div>
             )}
-            {/* Free Limit Reached Popup (Witty) */}
+
             {showLimitPopup && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white rounded-[2rem] p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative overflow-hidden">
-                        {/* Background Decor */}
                         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-teal via-purple-500 to-teal"></div>
-
                         <button
                             onClick={() => setShowLimitPopup(false)}
                             className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
                         >
                             <X size={24} />
                         </button>
-
                         <div className="w-24 h-24 bg-teal/10 text-teal rounded-full flex items-center justify-center mx-auto animate-bounce">
                             <Sparkles size={48} />
                         </div>
-
                         <div>
                             <h3 className="text-3xl font-bold text-ink mb-3 tracking-tight">Whoa, slow down Picasso! 🎨</h3>
                             <p className="text-lg text-ink/60 leading-relaxed">
                                 You've used up your free samples. Ready to create without limits?
                             </p>
                         </div>
-
                         <div className="grid gap-3 pt-2">
                             <a href="/pricing" className="w-full bg-gradient-to-r from-teal to-teal/80 text-cream font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal/20">
                                 <Sparkles size={18} /> Get Unlimited Access

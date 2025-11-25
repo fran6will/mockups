@@ -1,17 +1,16 @@
 import { supabase } from '@/lib/supabase/client';
-import ImageCompositor from '@/components/customer/ImageCompositor';
 import TryItGate from '@/components/landing/TryItGate';
+import TryItPlayground from '@/components/landing/TryItPlayground';
 import { Sparkles } from 'lucide-react';
 
 export default async function TryItSection() {
-    const { data: freeProduct } = await supabase
+    const { data: freeProducts } = await supabase
         .from('products')
-        .select('*')
+        .select('id, slug, title, base_image_url, password_hash')
         .eq('is_free', true)
-        .limit(1)
-        .maybeSingle();
+        .limit(5);
 
-    if (!freeProduct) {
+    if (!freeProducts || freeProducts.length === 0) {
         return null;
     }
 
@@ -21,7 +20,7 @@ export default async function TryItSection() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-teal/5 rounded-full blur-3xl -z-10"></div>
 
             <div className="max-w-7xl mx-auto px-6">
-                <div className="text-center mb-16">
+                <div className="text-center mb-12">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal/10 text-teal font-bold text-sm mb-6">
                         <Sparkles size={16} />
                         <span>Experience the Magic</span>
@@ -34,17 +33,9 @@ export default async function TryItSection() {
                     </p>
                 </div>
 
-                <div className="bg-white/50 backdrop-blur-xl border border-white/60 rounded-[2.5rem] p-8 shadow-2xl shadow-teal/5">
-                    <TryItGate>
-                        <ImageCompositor
-                            productId={freeProduct.id}
-                            productSlug={freeProduct.slug}
-                            baseImageUrl={freeProduct.base_image_url}
-                            passwordHash={freeProduct.password_hash}
-                            isFree={true}
-                        />
-                    </TryItGate>
-                </div>
+                <TryItGate>
+                    <TryItPlayground products={freeProducts} />
+                </TryItGate>
             </div>
         </section>
     );

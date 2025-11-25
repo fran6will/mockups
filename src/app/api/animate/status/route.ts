@@ -2,9 +2,8 @@ import { NextResponse } from 'next/server';
 import { checkVideoStatus } from '@/lib/vertex/video';
 import { supabaseAdmin } from '@/lib/supabase/admin'; // Use admin to bypass RLS if needed, or client if public
 
-export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const operationName = searchParams.get('operationName');
+export async function POST(request: Request) {
+    const { operationName } = await request.json();
 
     if (!operationName) {
         return NextResponse.json({ error: 'Missing operationName' }, { status: 400 });
@@ -13,22 +12,31 @@ export async function GET(request: Request) {
     const result = await checkVideoStatus(operationName);
 
     if (result.status === 'done' && result.videoUri) {
-        // Update generation record
-        // We use a JSON containment query to find the record with this operationName in meta
+        // 1. Fetch existing record to get current meta
+        const { data: existingGen, error: fetchError } = await supabaseAdmin
+            .from('generations')
+            .select('meta')
+            .contains('meta', { operationName: operationName })
+            .single();
+
+        if (fetchError || !existingGen) {
+            console.error("Failed to fetch generation for update:", fetchError);
+            return NextResponse.json(result);
+        }
+
+        // 2. Merge meta
+        const updatedMeta = {
+            ...existingGen.meta,
+            videoUrl: result.videoUri,
+            type: 'video' // Ensure type is set
+        };
+
+        // 3. Update with merged meta
         const { error } = await supabaseAdmin
             .from('generations')
             .update({
                 status: 'success',
-                // We store video URL in meta since image_url might be expected to be an image
-                // But wait, if we want it to show up in dashboard easily, maybe we should put it in image_url?
-                // But it's a video. Let's put it in meta and update dashboard.
-                // Actually, let's put it in BOTH if possible, or just meta.
-                // Let's update meta.
-                meta: {
-                    operationName, // Keep existing
-                    videoUrl: result.videoUri,
-                    type: 'video'
-                }
+                meta: updatedMeta
             })
             .contains('meta', { operationName: operationName });
 

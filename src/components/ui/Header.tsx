@@ -11,6 +11,7 @@ export default function Header({ className = "" }: { className?: string }) {
                         <Logo showText={true} />
                     </Link>
                     <nav className="hidden md:flex items-center gap-6">
+                        <Link href="/animate" className="text-ink/60 hover:text-teal font-medium transition-colors">Animate</Link>
                         <Link href="/#gallery" className="text-ink/60 hover:text-teal font-medium transition-colors">Gallery</Link>
                         <Link href="/pricing" className="text-ink/60 hover:text-teal font-medium transition-colors">Pricing</Link>
                     </nav>

@@ -1,22 +1,30 @@
 import { NextResponse } from 'next/server';
 import { generateVideo } from '@/lib/vertex/video';
-import { generateMockup } from '@/lib/vertex/client';
-import { supabase } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
     try {
-        const { imageUrl, prompt, aspectRatio, userId, productId } = await request.json();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!imageUrl || !prompt || !userId) {
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { imageUrl, prompt, aspectRatio, productId } = await request.json();
+        const userId = user.id;
+
+        if (!imageUrl || !prompt) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
         const VIDEO_COST = 25;
 
-        // 1. Check & Deduct Credits
-        const { data: creditData, error: creditError } = await supabase
+        // 1. Check & Deduct Credits (using Admin to ensure it works)
+        const { data: creditData, error: creditError } = await supabaseAdmin
             .from('user_credits')
             .select('balance')
             .eq('user_id', userId)
@@ -31,7 +39,7 @@ export async function POST(request: Request) {
         }
 
         // Deduct credits
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseAdmin
             .from('user_credits')
             .update({ balance: creditData.balance - VIDEO_COST })
             .eq('user_id', userId);
@@ -76,7 +84,7 @@ export async function POST(request: Request) {
 
         if (!result.success) {
             // Refund credits if failed immediately
-            await supabase
+            await supabaseAdmin
                 .from('user_credits')
                 .update({ balance: creditData.balance }) // Restore original
                 .eq('user_id', userId);
@@ -86,7 +94,7 @@ export async function POST(request: Request) {
 
         // 4. Log Generation (Processing)
         // We store the operationName in meta to look it up later
-        const { error: genError } = await supabase
+        const { error: genError } = await supabaseAdmin
             .from('generations')
             .insert({
                 user_id: userId,

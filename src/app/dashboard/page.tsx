@@ -181,16 +181,22 @@ export default async function DashboardPage() {
                             <div key={gen.id} className="group relative bg-white rounded-3xl overflow-hidden shadow-sm border border-ink/5 hover:shadow-xl hover:shadow-teal/10 transition-all duration-300">
                                 <div className="aspect-square bg-gray-100 relative overflow-hidden">
                                     {gen.meta?.type === 'video' ? (
-                                        <>
-                                            <img
-                                                src={gen.meta?.source_image || gen.products?.base_image_url}
-                                                alt="Video Thumbnail"
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                            />
-                                            <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 backdrop-blur-sm">
-                                                <Film size={12} /> Video
+                                        (gen.meta?.source_image || gen.products?.base_image_url) ? (
+                                            <>
+                                                <img
+                                                    src={gen.meta?.source_image || gen.products?.base_image_url}
+                                                    alt="Video Thumbnail"
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                />
+                                                <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 backdrop-blur-sm">
+                                                    <Film size={12} /> Video
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-ink/20 bg-gray-50">
+                                                <Film size={48} />
                                             </div>
-                                        </>
+                                        )
                                     ) : gen.image_url ? (
                                         <img
                                             src={gen.image_url}
@@ -234,7 +240,7 @@ export default async function DashboardPage() {
                                 <div className="p-6">
                                     <div className="flex items-start justify-between mb-2">
                                         <h3 className="font-bold text-lg text-ink truncate pr-4">
-                                            {gen.products?.title || 'Unknown Product'}
+                                            {gen.products?.title || 'Custom Animation'}
                                         </h3>
                                         <span className="text-xs font-mono bg-ink/5 px-2 py-1 rounded text-ink/50">
                                             {gen.meta?.aspect_ratio || '1:1'}
