@@ -2,11 +2,12 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image, Lock, ArrowRight, Coins, Mail, RotateCw, Maximize, Layers, Trash2, Plus, X } from 'lucide-react';
+import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image, Lock, ArrowRight, Coins, Mail, RotateCw, Maximize, Layers, Trash2, Plus, X, Info, Video, Play, Film } from 'lucide-react';
 import { compositeImages, Layer } from '@/lib/utils/image';
 import { supabase } from '@/lib/supabase/client';
 import FabricCanvas from './FabricCanvas';
 import { useAccess } from '@/hooks/use-access';
+import { useSearchParams } from 'next/navigation';
 
 interface ImageCompositorProps {
     productId: string;
@@ -17,6 +18,9 @@ interface ImageCompositorProps {
 }
 
 export default function ImageCompositor({ productId, productSlug, baseImageUrl, passwordHash, isFree = false }: ImageCompositorProps) {
+    const searchParams = useSearchParams();
+    const showAccessCodeInput = searchParams.get('unlock') === 'true' || searchParams.get('code') !== null;
+
     // Layer State
     const [layers, setLayers] = useState<Layer[]>([]);
     const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
@@ -36,18 +40,27 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const [isClaiming, setIsClaiming] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [showCreditPopup, setShowCreditPopup] = useState(false);
+    const [isAuthChecking, setIsAuthChecking] = useState(true);
+
     const [showLimitPopup, setShowLimitPopup] = useState(false);
+
+    // Video Generation State
+    const [isAnimating, setIsAnimating] = useState(false);
+    const [videoUrl, setVideoUrl] = useState<string | null>(null);
+    const [showAnimateDialog, setShowAnimateDialog] = useState(false);
+    const [videoPrompt, setVideoPrompt] = useState('');
+    const [animationStatus, setAnimationStatus] = useState<string>('');
 
     const { accessLevel, isLoading: isAccessLoading } = useAccess(productSlug);
 
 
     // Determine cost based on resolution
-    const getCost = () => {
-        if (imageSize === '2K') return 3;
-        if (imageSize === '4K') return 5;
-        return 1;
+    const getCost = (size: '1K' | '2K' | '4K') => {
+        if (size === '2K') return 4;
+        if (size === '4K') return 6;
+        return 2;
     };
-    const currentCost = getCost();
+    const currentCost = getCost(imageSize);
 
     useEffect(() => {
         if (isFree) {
@@ -88,23 +101,20 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         };
 
         const checkAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                setUser(session.user);
-                setEmailInput(session.user.email || '');
-                fetchCredits(session.user.id);
-
-                // Admin Bypass (Commented out for testing Guest flow)
-                // const adminEmails = ['francisrheaume@gmail.com', 'francis.w.rheaume@gmail.com'];
-                // if (session.user.email && adminEmails.includes(session.user.email.toLowerCase())) {
-                //     setIsUnlocked(true);
-                //     setCredits(999); // Infinite credits for admin
-                // }
-            } else {
-                const storedEmail = localStorage.getItem(`user_email`);
-                if (storedEmail) {
-                    setEmailInput(storedEmail);
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    setUser(session.user);
+                    setEmailInput(session.user.email || '');
+                    await fetchCredits(session.user.id);
+                } else {
+                    const storedEmail = localStorage.getItem(`user_email`);
+                    if (storedEmail) {
+                        setEmailInput(storedEmail);
+                    }
                 }
+            } finally {
+                setIsAuthChecking(false);
             }
         };
         checkAuth();
@@ -299,255 +309,102 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         });
     };
 
+    const handleAnimate = async () => {
+        if (!generatedImage || !user) return;
+
+        setIsAnimating(true);
+        setShowAnimateDialog(false);
+        setAnimationStatus('Initializing video engine...');
+        setError(null);
+
+        try {
+            // 1. Start Generation
+            const response = await fetch('/api/animate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    imageUrl: generatedImage,
+                    prompt: videoPrompt,
+                    aspectRatio,
+                    userId: user.id,
+                    email: user.email,
+                    productId: productId // Pass productId for dashboard tracking
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to start animation');
+            }
+
+            if (data.remainingCredits !== undefined) {
+                setCredits(data.remainingCredits);
+            }
+
+            const operationName = data.operationName;
+            setAnimationStatus('Generating video frames (this may take a minute)...');
+
+            // 2. Poll for Status
+            const pollInterval = setInterval(async () => {
+                try {
+                    const statusRes = await fetch(`/api/animate/status?operationName=${operationName}`);
+                    const statusData = await statusRes.json();
+
+                    if (statusData.status === 'done') {
+                        clearInterval(pollInterval);
+                        setVideoUrl(statusData.videoUri);
+                        setIsAnimating(false);
+                        setAnimationStatus('');
+                    } else if (statusData.status === 'error') {
+                        clearInterval(pollInterval);
+                        throw new Error(statusData.error || 'Video generation failed');
+                    }
+                    // If processing, continue polling
+                } catch (pollError: any) {
+                    clearInterval(pollInterval);
+                    setError(pollError.message);
+                    setIsAnimating(false);
+                }
+            }, 5000); // Poll every 5 seconds
+
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message);
+            setIsAnimating(false);
+        }
+    };
+
     return (
         <div className="grid lg:grid-cols-2 gap-8 items-start">
             {/* Left Column: Controls */}
             <div className="space-y-6">
-                {/* Layer Management & Upload */}
-                <div className="glass p-6 rounded-3xl border border-white/40 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
-                            <Layers size={16} /> Layers ({layers.length}/3)
-                        </h3>
-                        {layers.length < 3 && (
-                            <div {...getRootProps()} className="cursor-pointer">
-                                <input {...inputProps} />
-                                <button className="text-xs bg-teal/10 text-teal px-2 py-1 rounded-full font-bold flex items-center gap-1 hover:bg-teal/20 transition-colors">
-                                    <Plus size={12} /> Add Layer
-                                </button>
-                            </div>
-                        )}
+
+                {/* Loading State */}
+                {isAuthChecking ? (
+                    <div className="glass p-12 rounded-3xl border border-white/40 flex flex-col items-center justify-center space-y-4">
+                        <Loader2 className="animate-spin text-teal" size={32} />
+                        <p className="text-ink/50 font-medium">Checking access...</p>
                     </div>
-
-                    {layers.length === 0 ? (
-                        <div
-                            {...getRootProps()}
-                            className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${isDragActive ? 'border-teal bg-teal/5' : 'border-ink/10 hover:border-teal/50 hover:bg-white/40'}`}
-                        >
-                            <input {...inputProps} />
-                            <UploadCloud className="mx-auto mb-2 text-ink/30" size={24} />
-                            <p className="text-xs text-ink/50 font-bold">Upload up to 3 images</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            {layers.map((layer) => (
-                                <div
-                                    key={layer.id}
-                                    onClick={() => setActiveLayerId(layer.id)}
-                                    className={`flex items-center gap-3 p-2 rounded-xl border transition-all cursor-pointer ${activeLayerId === layer.id
-                                        ? 'bg-teal/10 border-teal/50 shadow-sm'
-                                        : 'bg-white/40 border-transparent hover:bg-white/60'
-                                        }`}
-                                >
-                                    <div className="w-10 h-10 rounded-lg bg-white overflow-hidden border border-ink/5 flex-shrink-0">
-                                        <img src={layer.previewUrl} alt="Layer" className="w-full h-full object-contain" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold text-ink truncate">{layer.file.name}</p>
-                                        <p className="text-[10px] text-ink/50">
-                                            Scale: {layer.scale}x • Rot: {layer.rotation}°
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={(e) => deleteLayer(layer.id, e)}
-                                        className="p-1.5 text-ink/30 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                    >
-                                        <Trash2 size={14} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Transform Controls (Only visible if a layer is active) */}
-                {activeLayer && (
-                    <div className="glass p-6 rounded-3xl border border-white/40 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <h3 className="text-sm font-bold text-ink uppercase tracking-wider border-b border-ink/10 pb-2 flex items-center gap-2">
-                            ✨ Edit: <span className="text-teal truncate max-w-[220px]" title={activeLayer.file.name}>{activeLayer.file.name}</span>
-                        </h3>
-
-                        {/* Position Group */}
-                        <div className="space-y-4">
-                            <label className="text-xs font-bold text-ink/50 uppercase tracking-wider">Position (Move)</label>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <div className="flex justify-between mb-1">
-                                        <span className="text-xs text-ink/70">X ({activeLayer.moveX}px)</span>
-                                        <button onClick={() => updateActiveLayer({ moveX: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="-400"
-                                        max="400"
-                                        value={activeLayer.moveX}
-                                        onChange={(e) => updateActiveLayer({ moveX: Number(e.target.value) })}
-                                        className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                    />
-                                </div>
-                                <div>
-                                    <div className="flex justify-between mb-1">
-                                        <span className="text-xs text-ink/70">Y ({activeLayer.moveY}px)</span>
-                                        <button onClick={() => updateActiveLayer({ moveY: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="-400"
-                                        max="400"
-                                        value={activeLayer.moveY}
-                                        onChange={(e) => updateActiveLayer({ moveY: Number(e.target.value) })}
-                                        className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Transform Group */}
-                        <div className="space-y-4 pt-2 border-t border-ink/5">
-                            <label className="text-xs font-bold text-ink/50 uppercase tracking-wider">Transform</label>
-
-                            {/* Rotation & Scale */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <div className="flex justify-between mb-1">
-                                        <span className="text-xs text-ink/70 flex items-center gap-1"><RotateCw size={10} /> Rotate ({activeLayer.rotation}°)</span>
-                                        <button onClick={() => updateActiveLayer({ rotation: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="-180"
-                                        max="180"
-                                        value={activeLayer.rotation}
-                                        onChange={(e) => updateActiveLayer({ rotation: Number(e.target.value) })}
-                                        className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                    />
-                                </div>
-                                <div>
-                                    <div className="flex justify-between mb-1">
-                                        <span className="text-xs text-ink/70 flex items-center gap-1"><Maximize size={10} /> Scale ({activeLayer.scale}x)</span>
-                                        <button onClick={() => updateActiveLayer({ scale: 1 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="0.1"
-                                        max="3"
-                                        step="0.1"
-                                        value={activeLayer.scale}
-                                        onChange={(e) => updateActiveLayer({ scale: Number(e.target.value) })}
-                                        className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Skew (Perspective) */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <div className="flex justify-between mb-1">
-                                        <span className="text-xs text-ink/70">Skew X ({activeLayer.skewX}°)</span>
-                                        <button onClick={() => updateActiveLayer({ skewX: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="-45"
-                                        max="45"
-                                        value={activeLayer.skewX}
-                                        onChange={(e) => updateActiveLayer({ skewX: Number(e.target.value) })}
-                                        className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                    />
-                                </div>
-                                <div>
-                                    <div className="flex justify-between mb-1">
-                                        <span className="text-xs text-ink/70">Skew Y ({activeLayer.skewY}°)</span>
-                                        <button onClick={() => updateActiveLayer({ skewY: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="-45"
-                                        max="45"
-                                        value={activeLayer.skewY}
-                                        onChange={(e) => updateActiveLayer({ skewY: Number(e.target.value) })}
-                                        className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Resolution Selector */}
-                <div className="glass p-6 rounded-3xl border border-white/40">
-                    <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-4">
-                        Output Resolution & Cost
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
-                        {(['1K', '2K', '4K'] as const).map((size) => {
-                            let cost = 1;
-                            if (size === '2K') cost = 3;
-                            if (size === '4K') cost = 5;
-
-                            const isDisabled = isFree && size !== '1K';
-
-                            return (
-                                <button
-                                    key={size}
-                                    onClick={() => !isDisabled && setImageSize(size)}
-                                    disabled={isDisabled}
-                                    className={`py-3 rounded-xl flex flex-col items-center justify-center transition-all ${imageSize === size
-                                        ? 'bg-teal text-cream shadow-lg shadow-teal/20 scale-105'
-                                        : isDisabled
-                                            ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
-                                            : 'bg-white/40 text-ink/60 hover:bg-white/60'
-                                        }`}
-                                >
-                                    <span className="font-bold text-sm">{size}</span>
-                                    {isDisabled ? (
-                                        <span className="text-[9px] font-bold uppercase text-teal/60 mt-0.5">PRO ONLY</span>
-                                    ) : (
-                                        <span className={`text-[10px] font-bold uppercase ${imageSize === size ? 'text-white/80' : 'text-ink/40'}`}>
-                                            {cost} Credit{cost > 1 ? 's' : ''}
-                                        </span>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Aspect Ratio Selector */}
-                <div className="glass p-6 rounded-3xl border border-white/40">
-                    <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-4">
-                        Target Aspect Ratio
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
-                        {(['1:1', '9:16', '16:9'] as const).map((ratio) => (
-                            <button
-                                key={ratio}
-                                onClick={() => setAspectRatio(ratio)}
-                                className={`py-3 rounded-xl font-bold text-sm transition-all ${aspectRatio === ratio
-                                    ? 'bg-teal text-cream shadow-lg shadow-teal/20 scale-105'
-                                    : 'bg-white/40 text-ink/60 hover:bg-white/60'
-                                    }`}
-                            >
-                                {ratio}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Action Button (Unlock or Generate) */}
-                {!isUnlocked ? (
-                    <div className="glass p-6 rounded-3xl border border-white/40 space-y-6">
+                ) : !isUnlocked ? (
+                    /* LOCKED STATE: Show Unlock / Sign In ONLY */
+                    <div className="glass p-6 rounded-3xl border border-white/40 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div>
                             <div className="flex items-center gap-2 text-ink/80 font-bold mb-2">
                                 <Lock size={20} className="text-teal" />
                                 Unlock Template
                             </div>
+                            <div className="flex items-center gap-2 text-ink/60 mb-6 bg-ink/5 p-3 rounded-xl">
+                                <Coins size={18} className="text-teal" />
+                                <span className="font-bold">Cost: 25 Credits</span>
+                                <span className="text-xs">(Balance: {credits ?? 0})</span>
+                            </div>
                             <p className="text-sm text-ink/60">
                                 {isFree
                                     ? "Create a free account to try this mockup."
                                     : user
-                                        ? "Step 2: Enter your access code to claim your 5 free generations."
-                                        : "Step 1: Create your free account to unlock this template."
+                                        ? "Unlock this premium template to start creating."
+                                        : "Join CopiéCollé to unlock this template."
                                 }
                             </p>
                         </div>
@@ -575,7 +432,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                 </button>
                             </div>
                         ) : (
-                            <form onSubmit={handleUnlockAndClaim} className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
                                 <div className="p-3 bg-teal/5 rounded-xl flex items-center gap-3 border border-teal/10">
                                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-teal font-bold text-xs border border-teal/10">
                                         <CheckCircle size={16} />
@@ -586,81 +443,346 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                     </div>
                                 </div>
 
-                                <div className="space-y-1">
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" size={16} />
-                                        <input
-                                            type="password"
-                                            value={passwordInput}
-                                            onChange={(e) => {
-                                                setPasswordInput(e.target.value);
-                                                setUnlockError('');
-                                            }}
-                                            className="w-full bg-white/50 border border-white/60 rounded-xl pl-10 pr-4 py-3 text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all font-mono placeholder:font-sans"
-                                            placeholder="Enter Access Code"
-                                            required
-                                        />
+                                {showAccessCodeInput ? (
+                                    <form onSubmit={handleUnlockAndClaim} className="space-y-4">
+                                        <div className="relative">
+                                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" size={16} />
+                                            <input
+                                                type="password"
+                                                value={passwordInput}
+                                                onChange={(e) => {
+                                                    setPasswordInput(e.target.value);
+                                                    setUnlockError('');
+                                                }}
+                                                className="w-full bg-white/50 border border-white/60 rounded-xl pl-10 pr-4 py-3 text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all font-mono placeholder:font-sans"
+                                                placeholder="Enter Access Code"
+                                                required
+                                            />
+                                        </div>
+
+                                        {unlockError && (
+                                            <p className="text-red-500 text-xs font-bold ml-1">{unlockError}</p>
+                                        )}
+
+                                        <button
+                                            type="submit"
+                                            disabled={isClaiming}
+                                            className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 hover:shadow-lg hover:shadow-teal/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            {isClaiming ? <Loader2 className="animate-spin" /> : <>Unlock Template <ArrowRight size={18} /></>}
+                                        </button>
+                                    </form>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <p className="text-sm text-ink/70 text-center">
+                                            This is a premium template.
+                                        </p>
+                                        <a
+                                            href="/pricing"
+                                            className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 hover:shadow-lg hover:shadow-teal/20 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <Sparkles size={18} /> Get Unlimited Access
+                                        </a>
+                                        <p className="text-xs text-ink/40 text-center">
+                                            Have an Etsy access code? Use your secret link to unlock.
+                                        </p>
                                     </div>
-                                </div>
-
-                                {unlockError && (
-                                    <p className="text-red-500 text-xs font-bold ml-1">{unlockError}</p>
                                 )}
-
-                                <button
-                                    type="submit"
-                                    disabled={isClaiming}
-                                    className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 hover:shadow-lg hover:shadow-teal/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                                >
-                                    {isClaiming ? <Loader2 className="animate-spin" /> : <>Unlock Template <ArrowRight size={18} /></>}
-                                </button>
-                            </form>
+                            </div>
                         )}
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between px-2">
-                            <div className="text-sm font-bold text-ink/60">
-                                Account: <span className="text-ink">{emailInput}</span>
+                    /* UNLOCKED STATE: Show Editor Controls */
+                    <>
+                        {/* Usability Tip */}
+                        <div className="bg-teal/5 border border-teal/10 rounded-2xl p-4 flex gap-3 items-start animate-in fade-in slide-in-from-bottom-2">
+                            <div className="bg-teal/10 p-1.5 rounded-lg text-teal mt-0.5">
+                                <Info size={16} />
                             </div>
-                            <div className="flex items-center gap-1.5 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold border border-amber-200">
-                                <Coins size={14} />
-                                <Coins size={14} />
-                                {accessLevel === 'pro' ? 'Unlimited' : `${credits} Credits`}
+                            <div>
+                                <p className="text-sm font-bold text-ink">Pro Tip:</p>
+                                <p className="text-xs text-ink/70 leading-relaxed">
+                                    Roughly place your design using these sliders. The AI will automatically perfect the lighting, shadows, and texture wrapping for a photorealistic result.
+                                </p>
                             </div>
                         </div>
 
-                        <button
-                            onClick={handleGenerate}
-                            disabled={layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < currentCost)}
-                            className={`w-full py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl ${layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < currentCost)
-                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-teal to-teal/80 text-cream hover:scale-[1.02] hover:shadow-teal/30'
-                                }`}
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <Loader2 className="animate-spin" />
-                                    Generating Magic...
-                                </>
-                            ) : isFree ? (
-                                <>
-                                    <Sparkles className="fill-current" />
-                                    Try for Free
-                                </>
-                            ) : (credits !== null && credits < currentCost) ? (
-                                <>
-                                    <Coins className="fill-current" />
-                                    {credits} Credits - Need {currentCost}
-                                </>
+                        {/* Layer Management & Upload */}
+                        <div className="glass p-6 rounded-3xl border border-white/40 space-y-4 animate-in fade-in slide-in-from-bottom-2 delay-75">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+                                    <Layers size={16} /> Layers ({layers.length}/3)
+                                </h3>
+                                {layers.length < 3 && (
+                                    <div {...getRootProps()} className="cursor-pointer">
+                                        <input {...inputProps} />
+                                        <button className="text-xs bg-teal/10 text-teal px-2 py-1 rounded-full font-bold flex items-center gap-1 hover:bg-teal/20 transition-colors">
+                                            <Plus size={12} /> Add Layer
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {layers.length === 0 ? (
+                                <div
+                                    {...getRootProps()}
+                                    className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${isDragActive ? 'border-teal bg-teal/5' : 'border-ink/10 hover:border-teal/50 hover:bg-white/40'}`}
+                                >
+                                    <input {...inputProps} />
+                                    <UploadCloud className="mx-auto mb-2 text-ink/30" size={24} />
+                                    <p className="text-xs text-ink/50 font-bold">Upload up to 3 images</p>
+                                </div>
                             ) : (
-                                <>
-                                    <Sparkles className="fill-current" />
-                                    Generate ({currentCost} Credit{currentCost > 1 ? 's' : ''})
-                                </>
+                                <div className="space-y-2">
+                                    {layers.map((layer) => (
+                                        <div
+                                            key={layer.id}
+                                            onClick={() => setActiveLayerId(layer.id)}
+                                            className={`flex items-center gap-3 p-2 rounded-xl border transition-all cursor-pointer ${activeLayerId === layer.id
+                                                ? 'bg-teal/10 border-teal/50 shadow-sm'
+                                                : 'bg-white/40 border-transparent hover:bg-white/60'
+                                                }`}
+                                        >
+                                            <div className="w-10 h-10 rounded-lg bg-white overflow-hidden border border-ink/5 flex-shrink-0">
+                                                <img src={layer.previewUrl} alt="Layer" className="w-full h-full object-contain" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-bold text-ink truncate">{layer.file.name}</p>
+                                                <p className="text-[10px] text-ink/50">
+                                                    Scale: {layer.scale}x • Rot: {layer.rotation}°
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={(e) => deleteLayer(layer.id, e)}
+                                                className="p-1.5 text-ink/30 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             )}
-                        </button>
-                    </div>
+                        </div>
+
+                        {/* Transform Controls (Only visible if a layer is active) */}
+                        {activeLayer && (
+                            <div className="glass p-6 rounded-3xl border border-white/40 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <h3 className="text-sm font-bold text-ink uppercase tracking-wider border-b border-ink/10 pb-2 flex items-center gap-2">
+                                    ✨ Edit: <span className="text-teal truncate max-w-[220px]" title={activeLayer.file.name}>{activeLayer.file.name}</span>
+                                </h3>
+
+                                {/* Position Group */}
+                                <div className="space-y-4">
+                                    <label className="text-xs font-bold text-ink/50 uppercase tracking-wider">Position (Move)</label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <div className="flex justify-between mb-1">
+                                                <span className="text-xs text-ink/70">X ({activeLayer.moveX}px)</span>
+                                                <button onClick={() => updateActiveLayer({ moveX: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="-400"
+                                                max="400"
+                                                value={activeLayer.moveX}
+                                                onChange={(e) => updateActiveLayer({ moveX: Number(e.target.value) })}
+                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                            />
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between mb-1">
+                                                <span className="text-xs text-ink/70">Y ({activeLayer.moveY}px)</span>
+                                                <button onClick={() => updateActiveLayer({ moveY: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="-400"
+                                                max="400"
+                                                value={activeLayer.moveY}
+                                                onChange={(e) => updateActiveLayer({ moveY: Number(e.target.value) })}
+                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Transform Group */}
+                                <div className="space-y-4 pt-2 border-t border-ink/5">
+                                    <label className="text-xs font-bold text-ink/50 uppercase tracking-wider">Transform</label>
+
+                                    {/* Rotation & Scale */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <div className="flex justify-between mb-1">
+                                                <span className="text-xs text-ink/70 flex items-center gap-1"><RotateCw size={10} /> Rotate ({activeLayer.rotation}°)</span>
+                                                <button onClick={() => updateActiveLayer({ rotation: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="-180"
+                                                max="180"
+                                                value={activeLayer.rotation}
+                                                onChange={(e) => updateActiveLayer({ rotation: Number(e.target.value) })}
+                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                            />
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between mb-1">
+                                                <span className="text-xs text-ink/70 flex items-center gap-1"><Maximize size={10} /> Scale ({activeLayer.scale}x)</span>
+                                                <button onClick={() => updateActiveLayer({ scale: 1 })} className="text-[10px] text-teal hover:underline">Reset</button>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="0.1"
+                                                max="3"
+                                                step="0.1"
+                                                value={activeLayer.scale}
+                                                onChange={(e) => updateActiveLayer({ scale: Number(e.target.value) })}
+                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Skew (Perspective) */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <div className="flex justify-between mb-1">
+                                                <span className="text-xs text-ink/70">Skew X ({activeLayer.skewX}°)</span>
+                                                <button onClick={() => updateActiveLayer({ skewX: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="-45"
+                                                max="45"
+                                                value={activeLayer.skewX}
+                                                onChange={(e) => updateActiveLayer({ skewX: Number(e.target.value) })}
+                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                            />
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between mb-1">
+                                                <span className="text-xs text-ink/70">Skew Y ({activeLayer.skewY}°)</span>
+                                                <button onClick={() => updateActiveLayer({ skewY: 0 })} className="text-[10px] text-teal hover:underline">Reset</button>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="-45"
+                                                max="45"
+                                                value={activeLayer.skewY}
+                                                onChange={(e) => updateActiveLayer({ skewY: Number(e.target.value) })}
+                                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Resolution Selector */}
+                        <div className="glass p-6 rounded-3xl border border-white/40 animate-in fade-in slide-in-from-bottom-2 delay-100">
+                            <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-4">
+                                Output Resolution & Cost
+                            </label>
+                            <div className="grid grid-cols-3 gap-3">
+                                {(['1K', '2K', '4K'] as const).map((size) => {
+                                    let cost = 1;
+                                    if (size === '2K') cost = 3;
+                                    if (size === '4K') cost = 5;
+
+                                    const isDisabled = isFree && size !== '1K';
+
+                                    return (
+                                        <button
+                                            key={size}
+                                            onClick={() => !isDisabled && setImageSize(size)}
+                                            disabled={isDisabled}
+                                            className={`py-3 rounded-xl flex flex-col items-center justify-center transition-all ${imageSize === size
+                                                ? 'bg-teal text-cream shadow-lg shadow-teal/20 scale-105'
+                                                : isDisabled
+                                                    ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
+                                                    : 'bg-white/40 text-ink/60 hover:bg-white/60'
+                                                }`}
+                                        >
+                                            <span className="font-bold text-sm">{size}</span>
+                                            {isDisabled ? (
+                                                <span className="text-[9px] font-bold uppercase text-teal/60 mt-0.5">PRO ONLY</span>
+                                            ) : (
+                                                <span className={`text-[10px] font-bold uppercase ${imageSize === size ? 'text-white/80' : 'text-ink/40'}`}>
+                                                    {cost} Credit{cost > 1 ? 's' : ''}
+                                                </span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Aspect Ratio Selector */}
+                        <div className="glass p-6 rounded-3xl border border-white/40 animate-in fade-in slide-in-from-bottom-2 delay-150">
+                            <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-4">
+                                Target Aspect Ratio
+                            </label>
+                            <div className="grid grid-cols-3 gap-3">
+                                {(['1:1', '9:16', '16:9'] as const).map((ratio) => (
+                                    <button
+                                        key={ratio}
+                                        onClick={() => setAspectRatio(ratio)}
+                                        className={`py-3 rounded-xl font-bold text-sm transition-all ${aspectRatio === ratio
+                                            ? 'bg-teal text-cream shadow-lg shadow-teal/20 scale-105'
+                                            : 'bg-white/40 text-ink/60 hover:bg-white/60'
+                                            }`}
+                                    >
+                                        {ratio}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Generate Button */}
+                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 delay-200">
+                            <div className="flex items-center justify-between px-2">
+                                <div className="text-sm font-bold text-ink/60">
+                                    Account: <span className="text-ink">{emailInput}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold border border-amber-200">
+                                    <Coins size={14} />
+                                    <Coins size={14} />
+                                    {accessLevel === 'pro' ? 'Unlimited' : `${credits} Credits`}
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleGenerate}
+                                disabled={layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < currentCost)}
+                                className={`w-full py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl ${layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < currentCost)
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-teal to-teal/80 text-cream hover:scale-[1.02] hover:shadow-teal/30'
+                                    }`}
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <Loader2 className="animate-spin" />
+                                        Generating Magic...
+                                    </>
+                                ) : isFree ? (
+                                    <>
+                                        <Sparkles className="fill-current" />
+                                        Try for Free
+                                    </>
+                                ) : (credits !== null && credits < currentCost) ? (
+                                    <>
+                                        <Coins className="fill-current" />
+                                        {credits} Credits - Need {currentCost}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="fill-current" />
+                                        Generate ({currentCost} Credit{currentCost > 1 ? 's' : ''})
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </>
                 )}
 
                 {error && (
@@ -709,14 +831,14 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 )}
 
                 {/* Generated Result */}
-                {generatedImage && (
+                {generatedImage && !videoUrl && (
                     <div className="relative w-full h-full group">
                         <img
                             src={generatedImage}
                             alt="Generated Mockup"
                             className="w-full h-full object-contain rounded-2xl shadow-inner"
                         />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 rounded-2xl backdrop-blur-sm">
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 rounded-2xl backdrop-blur-sm">
                             <a
                                 href={generatedImage}
                                 download="mockup.png"
@@ -725,7 +847,56 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                 <Download size={18} />
                                 Download 4K
                             </a>
+                            <button
+                                onClick={() => setShowAnimateDialog(true)}
+                                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl border border-white/20"
+                            >
+                                <Video size={18} />
+                                Animate (10 Credits)
+                            </button>
                         </div>
+                    </div>
+                )}
+
+                {/* Video Player */}
+                {videoUrl && (
+                    <div className="relative w-full h-full group">
+                        <video
+                            src={videoUrl}
+                            controls
+                            autoPlay
+                            loop
+                            className="w-full h-full object-contain rounded-2xl shadow-inner bg-black"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 rounded-2xl backdrop-blur-sm pointer-events-none">
+                            <div className="pointer-events-auto flex flex-col gap-4">
+                                <a
+                                    href={videoUrl}
+                                    download="mockup-video.mp4"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-white text-ink font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl"
+                                >
+                                    <Download size={18} />
+                                    Download Video
+                                </a>
+                                <button
+                                    onClick={() => setVideoUrl(null)}
+                                    className="bg-black/50 text-white px-6 py-3 rounded-full hover:bg-black/70 backdrop-blur-md flex items-center gap-2 justify-center"
+                                >
+                                    <X size={18} /> Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Animation Loading State */}
+                {isAnimating && (
+                    <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-white p-8 text-center">
+                        <div className="w-20 h-20 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-6"></div>
+                        <h3 className="text-2xl font-bold mb-2">Creating Video</h3>
+                        <p className="text-white/60 animate-pulse">{animationStatus}</p>
                     </div>
                 )}
 
@@ -771,6 +942,58 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 </div>
             )}
 
+            {/* Animate Dialog */}
+            {showAnimateDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+                    <div className="bg-white rounded-[2rem] p-8 max-w-md w-full space-y-6 shadow-2xl border border-purple-500/20 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-500"></div>
+
+                        <button
+                            onClick={() => setShowAnimateDialog(false)}
+                            className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
+                        >
+                            <X size={24} />
+                        </button>
+
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
+                                <Film size={32} />
+                            </div>
+                            <h3 className="text-2xl font-bold text-ink">Animate Mockup</h3>
+                            <p className="text-ink/60 mt-2">
+                                Turn your static design into a cinematic video using Google Veo.
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-2">
+                                    Camera Movement Prompt
+                                </label>
+                                <textarea
+                                    value={videoPrompt}
+                                    onChange={(e) => setVideoPrompt(e.target.value)}
+                                    placeholder="e.g. Slow camera dolly in, cinematic lighting, 4k..."
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-ink focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all h-32 resize-none"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between text-sm bg-amber-50 text-amber-800 p-3 rounded-xl border border-amber-100">
+                                <span className="font-bold flex items-center gap-2"><Coins size={14} /> Cost</span>
+                                <span className="font-bold">10 Credits</span>
+                            </div>
+
+                            <button
+                                onClick={handleAnimate}
+                                disabled={!videoPrompt.trim() || (credits !== null && credits < 10)}
+                                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            >
+                                <Play size={18} className="fill-current" /> Generate Video
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Free Limit Reached Popup (Witty) */}
             {showLimitPopup && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
@@ -798,11 +1021,14 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                         <div className="grid gap-3 pt-2">
                             <a href="/pricing" className="w-full bg-gradient-to-r from-teal to-teal/80 text-cream font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal/20">
-                                <Lock size={18} /> Unlock Everything for $19
+                                <Sparkles size={18} /> Get Unlimited Access
                             </a>
-                            <p className="text-xs text-ink/40 font-medium">
-                                Includes unlimited generations, 4K downloads, and commercial license.
-                            </p>
+                            <button
+                                onClick={() => setShowLimitPopup(false)}
+                                className="text-sm font-bold text-ink/40 hover:text-ink transition-colors"
+                            >
+                                No thanks, I'll wait
+                            </button>
                         </div>
                     </div>
                 </div>

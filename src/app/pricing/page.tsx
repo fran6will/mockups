@@ -10,8 +10,22 @@ import { supabase } from '@/lib/supabase/client';
 
 export default function PricingPage() {
     const [userId, setUserId] = useState<string | null>(null);
-    const [lemonSqueezyCheckoutUrl, setLemonSqueezyCheckoutUrl] = useState<string>('#');
+    const SUBSCRIPTION_URL = 'https://copiecolle.lemonsqueezy.com/buy/f172479e-0f82-4792-ae89-0cff2ade9534';
+    const STARTER_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/7e455bb9-014b-442d-b6e3-3e0b39b7b492';
+    const CREATOR_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/e79e2d50-3970-4b1d-87b8-d3eabbe835b2';
+    const AGENCY_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/74e4a089-b9ab-47b0-bd27-1b4d5937d7e8';
 
+    const getCheckoutUrl = (baseUrl: string) => {
+        if (!baseUrl) return '#';
+        let url = baseUrl;
+        if (userId) {
+            url += `?checkout[custom][user_id]=${userId}`;
+        }
+        const redirectUrl = encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`);
+        const separator = url.includes('?') ? '&' : '?';
+        url += `${separator}checkout[redirect_url]=${redirectUrl}`;
+        return url;
+    };
 
     useEffect(() => {
         const getSession = async () => {
@@ -22,29 +36,6 @@ export default function PricingPage() {
         };
         getSession();
     }, []);
-
-    useEffect(() => {
-        const baseUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL;
-        if (baseUrl) {
-            let url = baseUrl;
-            // Add user_id to custom data
-            if (userId) {
-                url += `?checkout[custom][user_id]=${userId}`;
-            }
-
-            // Add redirect_url
-            // We use window.location.origin because this runs on the client
-            console.log('Current origin:', window.location.origin);
-            const redirectUrl = encodeURIComponent(`${window.location.origin}/dashboard`);
-            // Check if we already have query params (we likely do from passthrough)
-            const separator = url.includes('?') ? '&' : '?';
-            url += `${separator}checkout[redirect_url]=${redirectUrl}`;
-
-            setLemonSqueezyCheckoutUrl(url);
-        } else {
-            console.error('NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL is not set');
-        }
-    }, [userId]);
 
     return (
         <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-fixed" style={{
@@ -66,116 +57,168 @@ export default function PricingPage() {
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
+                {/* Pro Member Card (Featured) */}
+                <div className="max-w-4xl mx-auto mb-20">
+                    <div className="bg-gradient-to-b from-teal to-[#1F6666] text-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-teal/30 relative overflow-hidden border border-white/10">
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
 
-                    {/* Pay As You Go Card */}
-                    <div className="glass rounded-[2.5rem] p-8 flex flex-col relative md:hover:-translate-y-2 transition-transform duration-500 border-2 border-teal/10">
-                        <div className="mb-6">
-                            <h2 className="text-xl font-bold mb-2 text-ink">Pay As You Go</h2>
-                            <p className="text-ink/60 text-sm">Flexible credits.</p>
-                        </div>
-                        <div className="text-4xl font-bold mb-6 text-ink tracking-tighter">
-                            $4.99<span className="text-sm text-ink/40 font-bold tracking-normal">/50 credits</span>
-                        </div>
-                        <ul className="space-y-4 mb-8 flex-1 text-sm">
-                            {[
-                                "50 generations included",
-                                "Credits never expire",
-                                "No monthly commitment",
-                                "Access to all tools"
-                            ].map((feature, i) => (
-                                <li key={i} className="flex items-center gap-3 text-ink/80 font-medium">
-                                    <div className="w-5 h-5 rounded-full bg-teal/10 flex items-center justify-center text-teal shrink-0">
-                                        <Check size={12} strokeWidth={3} />
-                                    </div>
-                                    {feature}
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="mt-auto">
-                            {userId ? (
-                                <a
-                                    href={`https://copiecolle.lemonsqueezy.com/buy/7e455bb9-014b-442d-b6e3-3e0b39b7b492?checkout[custom][user_id]=${userId}&checkout[redirect_url]=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`)}`}
-                                    className="group block w-full py-3 rounded-xl bg-teal/10 text-teal font-bold text-center hover:bg-teal hover:text-white transition-all shadow-sm flex items-center justify-center gap-2 text-sm"
-                                >
-                                    Buy 50 Credits <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                                </a>
-                            ) : (
-                                <button
-                                    onClick={async () => {
-                                        await supabase.auth.signInWithOAuth({
-                                            provider: 'google',
-                                            options: {
-                                                redirectTo: `${window.location.origin}/pricing`,
-                                            },
-                                        });
-                                    }}
-                                    className="group block w-full py-3 rounded-xl bg-teal/10 text-teal font-bold text-center hover:bg-teal hover:text-white transition-all shadow-sm flex items-center justify-center gap-2 text-sm"
-                                >
-                                    Sign in to Buy <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
+                            <div className="flex-1 text-center md:text-left">
+                                <div className="inline-block bg-white text-teal text-xs font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wider mb-6">
+                                    <Sparkles size={12} fill="currentColor" className="inline mr-1" /> Most Popular
+                                </div>
+                                <h2 className="text-3xl md:text-4xl font-bold mb-4">Pro Membership</h2>
+                                <p className="text-white/80 text-lg mb-8">
+                                    The ultimate toolkit for professional creators. Unlimited possibilities.
+                                </p>
+                                <div className="text-5xl font-bold mb-2 tracking-tighter">
+                                    $19.99<span className="text-lg text-white/60 font-bold tracking-normal">/mo CAD</span>
+                                </div>
+                                <p className="text-white/60 text-sm mb-8">Cancel anytime. Local currency at checkout.</p>
 
-                    {/* Pro Member Card */}
-                    <div className="bg-gradient-to-b from-teal to-[#1F6666] text-white rounded-[2.5rem] p-8 shadow-2xl shadow-teal/30 transform md:scale-105 relative flex flex-col border border-white/10 z-10">
-                        <div className="absolute -top-4 inset-x-0 flex justify-center">
-                            <div className="bg-white text-teal text-[10px] font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wider flex items-center gap-1">
-                                <Sparkles size={12} fill="currentColor" /> Most Popular
+                                {userId ? (
+                                    <a
+                                        href={getCheckoutUrl(SUBSCRIPTION_URL)}
+                                        className="group inline-flex w-full md:w-auto px-8 py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl items-center justify-center gap-2"
+                                    >
+                                        Get Pro Access <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                    </a>
+                                ) : (
+                                    <button
+                                        onClick={async () => {
+                                            await supabase.auth.signInWithOAuth({
+                                                provider: 'google',
+                                                options: { redirectTo: `${window.location.origin}/pricing` },
+                                            });
+                                        }}
+                                        className="group inline-flex w-full md:w-auto px-8 py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl items-center justify-center gap-2"
+                                    >
+                                        Sign in to Subscribe <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="flex-1 w-full max-w-sm bg-white/10 rounded-3xl p-6 backdrop-blur-sm border border-white/10">
+                                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                                    <Check size={18} className="text-teal-300" /> Everything in Pro:
+                                </h3>
+                                <ul className="space-y-4 text-sm">
+                                    {[
+                                        "Unlimited Image Generation",
+                                        "100 Bonus Credits / mo (≈ 4 Videos)",
+                                        "Videos: 25 credits each",
+                                        "Access to ALL templates",
+                                        "Priority generation speed",
+                                        "Commercial license included",
+                                        "Premium 4K export"
+                                    ].map((feature, i) => (
+                                        <li key={i} className="flex items-start gap-3 text-white/90">
+                                            <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white shrink-0 mt-0.5">
+                                                <Check size={12} strokeWidth={3} />
+                                            </div>
+                                            {feature}
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div className="mb-6">
-                            <h2 className="text-xl font-bold mb-2">Pro Member</h2>
-                            <p className="text-white/80 text-sm">Unlimited creative freedom.</p>
-                        </div>
-                        <div className="text-4xl font-bold mb-6 tracking-tighter">
-                            $19<span className="text-sm text-white/60 font-bold tracking-normal">/month</span>
-                        </div>
-                        <ul className="space-y-4 mb-8 flex-1 text-sm">
-                            {[
-                                "Access to ALL templates",
-                                "Priority generation speed",
-                                "Early access to new drops",
-                                "Commercial license included",
-                                "Premium 4K export"
-                            ].map((feature, i) => (
-                                <li key={i} className="flex items-center gap-3 font-medium">
-                                    <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white shrink-0">
-                                        <Check size={12} strokeWidth={3} />
-                                    </div>
-                                    {feature}
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="mt-auto">
+                {/* Credit Packs Section */}
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-ink mb-4">Need more credits?</h2>
+                        <p className="text-ink/60">Top up your balance anytime. Credits never expire.</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {/* Starter Pack */}
+                        <div className="glass rounded-3xl p-8 border border-teal/10 hover:-translate-y-1 transition-transform duration-300">
+                            <h3 className="text-xl font-bold text-ink mb-2">Starter Pack</h3>
+                            <div className="text-3xl font-bold text-ink mb-1">$9.99 <span className="text-sm text-ink/40 font-normal">CAD</span></div>
+                            <div className="text-teal font-bold mb-6">100 Credits</div>
+                            <ul className="space-y-3 text-sm text-ink/70 mb-8">
+                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 50 Images</li>
+                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 4 Videos</li>
+                            </ul>
                             {userId ? (
-                                <a
-                                    href={lemonSqueezyCheckoutUrl}
-                                    className="group block w-full py-3 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl flex items-center justify-center gap-2 text-sm"
-                                >
-                                    Get Pro Access <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                                <a href={getCheckoutUrl(STARTER_PACK_URL)} className="block w-full py-3 rounded-xl bg-ink/5 text-ink font-bold text-center hover:bg-teal hover:text-white transition-all">
+                                    Buy Starter
                                 </a>
                             ) : (
                                 <button
                                     onClick={async () => {
                                         await supabase.auth.signInWithOAuth({
                                             provider: 'google',
-                                            options: {
-                                                redirectTo: `${window.location.origin}/pricing`,
-                                            },
+                                            options: { redirectTo: `${window.location.origin}/pricing` },
                                         });
                                     }}
-                                    className="group block w-full py-3 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl flex items-center justify-center gap-2 text-sm"
+                                    className="block w-full py-3 rounded-xl bg-ink/5 text-ink font-bold text-center hover:bg-teal hover:text-white transition-all"
                                 >
-                                    Sign in to Subscribe <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                                    Sign in to Buy
                                 </button>
                             )}
                         </div>
 
-                        {/* Background Glow */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                        {/* Creator Pack */}
+                        <div className="glass rounded-3xl p-8 border-2 border-teal/20 relative transform md:-translate-y-4 shadow-xl">
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-teal text-white text-xs font-bold px-3 py-1 rounded-full">
+                                BEST VALUE
+                            </div>
+                            <h3 className="text-xl font-bold text-ink mb-2">Creator Pack</h3>
+                            <div className="text-3xl font-bold text-ink mb-1">$34.99 <span className="text-sm text-ink/40 font-normal">CAD</span></div>
+                            <div className="text-teal font-bold mb-6">500 Credits</div>
+                            <ul className="space-y-3 text-sm text-ink/70 mb-8">
+                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 250 Images</li>
+                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 20 Videos</li>
+                            </ul>
+                            {userId ? (
+                                <a href={getCheckoutUrl(CREATOR_PACK_URL)} className="block w-full py-3 rounded-xl bg-teal text-white font-bold text-center hover:bg-teal/90 transition-all shadow-lg shadow-teal/20">
+                                    Buy Creator
+                                </a>
+                            ) : (
+                                <button
+                                    onClick={async () => {
+                                        await supabase.auth.signInWithOAuth({
+                                            provider: 'google',
+                                            options: { redirectTo: `${window.location.origin}/pricing` },
+                                        });
+                                    }}
+                                    className="block w-full py-3 rounded-xl bg-teal text-white font-bold text-center hover:bg-teal/90 transition-all shadow-lg shadow-teal/20"
+                                >
+                                    Sign in to Buy
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Agency Pack */}
+                        <div className="glass rounded-3xl p-8 border border-teal/10 hover:-translate-y-1 transition-transform duration-300">
+                            <h3 className="text-xl font-bold text-ink mb-2">Agency Pack</h3>
+                            <div className="text-3xl font-bold text-ink mb-1">$59.99 <span className="text-sm text-ink/40 font-normal">CAD</span></div>
+                            <div className="text-teal font-bold mb-6">1000 Credits</div>
+                            <ul className="space-y-3 text-sm text-ink/70 mb-8">
+                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 500 Images</li>
+                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 40 Videos</li>
+                            </ul>
+                            {userId ? (
+                                <a href={getCheckoutUrl(AGENCY_PACK_URL)} className="block w-full py-3 rounded-xl bg-ink/5 text-ink font-bold text-center hover:bg-teal hover:text-white transition-all">
+                                    Buy Agency
+                                </a>
+                            ) : (
+                                <button
+                                    onClick={async () => {
+                                        await supabase.auth.signInWithOAuth({
+                                            provider: 'google',
+                                            options: { redirectTo: `${window.location.origin}/pricing` },
+                                        });
+                                    }}
+                                    className="block w-full py-3 rounded-xl bg-ink/5 text-ink font-bold text-center hover:bg-teal hover:text-white transition-all"
+                                >
+                                    Sign in to Buy
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 

@@ -18,7 +18,7 @@ export async function compositeImages(layers: Layer[]): Promise<File> {
         }
 
         const ORIGINAL_WORLD_SIZE = 1024; // This is the coordinate system that moveX, moveY, scale are relative to
-        const NEW_MAX_SIZE = 1536; // Reduced from 2048 to 1536 to avoid 413 Payload Too Large
+        const NEW_MAX_SIZE = 2048; // Increased to 2048 for better quality with Gemini Pro
 
         const canvas = document.createElement('canvas');
         canvas.width = NEW_MAX_SIZE;
@@ -75,11 +75,11 @@ export async function compositeImages(layers: Layer[]): Promise<File> {
                 reject(new Error('Failed to composite images'));
                 return;
             }
-            const compositedFile = new File([blob], "composite.webp", { 
+            const compositedFile = new File([blob], "composite.webp", {
                 type: 'image/webp',
                 lastModified: Date.now(),
             });
             resolve(compositedFile);
-        }, 'image/webp', 0.85); 
+        }, 'image/webp', 0.85);
     });
 }

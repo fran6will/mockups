@@ -27,7 +27,7 @@ export default async function TryItSection() {
                         <span>Experience the Magic</span>
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold text-ink mb-6 tracking-tight">
-                        See your logo on a product. <span className="text-teal">Right now.</span>
+                        See your design on a product. <span className="text-teal">Right now.</span>
                     </h2>
                     <p className="text-lg text-ink/60 max-w-2xl mx-auto">
                         No credit card. No Photoshop. Just pure magic. (And yes, it's actually free to try).

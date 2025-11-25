@@ -12,9 +12,9 @@ export async function POST(request: Request) {
         productIdString = productId;
 
         // Calculate Cost
-        let creditCost = 1;
-        if (imageSize === '2K') creditCost = 3;
-        if (imageSize === '4K') creditCost = 5;
+        let creditCost = 2;
+        if (imageSize === '2K') creditCost = 4;
+        if (imageSize === '4K') creditCost = 6;
 
         if (!productId || !logoUrl || !email) {
             return NextResponse.json({ error: 'Missing required fields (productId, logoUrl, email)' }, { status: 400 });

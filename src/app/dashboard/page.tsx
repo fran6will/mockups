@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/ui/Header';
-import { Download, Calendar, Image as ImageIcon, Heart } from 'lucide-react';
+import { Download, Calendar, Image as ImageIcon, Heart, Film } from 'lucide-react';
 import FavoriteButton from '@/components/ui/FavoriteButton';
 
 export default async function DashboardPage() {
@@ -180,7 +180,18 @@ export default async function DashboardPage() {
                         {generations.map((gen: any) => (
                             <div key={gen.id} className="group relative bg-white rounded-3xl overflow-hidden shadow-sm border border-ink/5 hover:shadow-xl hover:shadow-teal/10 transition-all duration-300">
                                 <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                                    {gen.image_url ? (
+                                    {gen.meta?.type === 'video' ? (
+                                        <>
+                                            <img
+                                                src={gen.meta?.source_image || gen.products?.base_image_url}
+                                                alt="Video Thumbnail"
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                            />
+                                            <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 backdrop-blur-sm">
+                                                <Film size={12} /> Video
+                                            </div>
+                                        </>
+                                    ) : gen.image_url ? (
                                         <img
                                             src={gen.image_url}
                                             alt="Generated Mockup"
@@ -194,7 +205,18 @@ export default async function DashboardPage() {
 
                                     {/* Overlay Actions */}
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm">
-                                        {gen.image_url && (
+                                        {gen.meta?.type === 'video' && gen.meta?.videoUrl ? (
+                                            <a
+                                                href={gen.meta.videoUrl}
+                                                download={`video-${gen.id}.mp4`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="bg-white text-ink font-bold py-3 px-6 rounded-full flex items-center gap-2 hover:bg-teal hover:text-cream transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300"
+                                            >
+                                                <Download size={18} />
+                                                Download Video
+                                            </a>
+                                        ) : gen.image_url ? (
                                             <a
                                                 href={gen.image_url}
                                                 download={`mockup-${gen.id}.png`}
@@ -205,7 +227,7 @@ export default async function DashboardPage() {
                                                 <Download size={18} />
                                                 Download
                                             </a>
-                                        )}
+                                        ) : null}
                                     </div>
                                 </div>
 

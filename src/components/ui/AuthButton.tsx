@@ -2,18 +2,37 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { LogIn, LogOut, User, LayoutDashboard } from 'lucide-react';
+import { LogIn, LogOut, User, LayoutDashboard, Coins } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AuthButton() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [credits, setCredits] = useState<number | null>(null);
+
+    const fetchCredits = async (userId: string) => {
+        const { data } = await supabase
+            .from('user_credits')
+            .select('balance')
+            .eq('user_id', userId)
+            .single();
+
+        if (data) {
+            setCredits(data.balance);
+        }
+    };
 
     useEffect(() => {
         // Check active session
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            setUser(session?.user || null);
+            const currentUser = session?.user || null;
+            setUser(currentUser);
+
+            if (currentUser) {
+                fetchCredits(currentUser.id);
+            }
+
             setLoading(false);
         };
 
@@ -21,7 +40,13 @@ export default function AuthButton() {
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user || null);
+            const currentUser = session?.user || null;
+            setUser(currentUser);
+            if (currentUser) {
+                fetchCredits(currentUser.id);
+            } else {
+                setCredits(null);
+            }
         });
 
         return () => subscription.unsubscribe();
@@ -48,6 +73,13 @@ export default function AuthButton() {
     if (user) {
         return (
             <div className="flex items-center gap-4">
+                {credits !== null && (
+                    <div className="hidden sm:flex items-center gap-1.5 bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">
+                        <Coins size={14} />
+                        <span>{credits}</span>
+                    </div>
+                )}
+
                 <Link
                     href="/dashboard"
                     className="flex items-center gap-2 text-sm font-bold text-ink hover:text-teal transition-colors"
