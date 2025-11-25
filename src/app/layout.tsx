@@ -17,7 +17,7 @@ const fontBody = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://copiecolle.com'),
+  metadataBase: new URL('https://copiecolle.ai'),
   title: {
     default: "CopiéCollé | AI Mockup Generator",
     template: "%s | CopiéCollé"
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://copiecolle.com',
+    url: 'https://copiecolle.ai',
     siteName: 'CopiéCollé',
     title: 'CopiéCollé | AI Mockup Generator',
     description: 'Create photorealistic product mockups in seconds with AI. No Photoshop required.',
