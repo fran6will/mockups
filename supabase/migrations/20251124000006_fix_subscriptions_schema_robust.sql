@@ -13,11 +13,22 @@ WHERE id IN (
   WHERE t.r > 1
 );
 
--- 2. Add lemon_squeezy_id column if it doesn't exist
+-- 2. Add missing columns (safely)
 DO $$
 BEGIN
+    -- lemon_squeezy_id
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'subscriptions' AND column_name = 'lemon_squeezy_id') THEN
         ALTER TABLE subscriptions ADD COLUMN lemon_squeezy_id text;
+    END IF;
+
+    -- customer_portal_url
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'subscriptions' AND column_name = 'customer_portal_url') THEN
+        ALTER TABLE subscriptions ADD COLUMN customer_portal_url text;
+    END IF;
+
+    -- ends_at
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'subscriptions' AND column_name = 'ends_at') THEN
+        ALTER TABLE subscriptions ADD COLUMN ends_at timestamp with time zone;
     END IF;
 END $$;
 
