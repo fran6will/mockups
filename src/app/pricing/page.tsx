@@ -27,9 +27,9 @@ export default function PricingPage() {
         const baseUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_URL;
         if (baseUrl) {
             let url = baseUrl;
-            // Add user_id to passthrough
+            // Add user_id to custom data
             if (userId) {
-                url += `?passthrough[user_id]=${userId}`;
+                url += `?checkout[custom][user_id]=${userId}`;
             }
 
             // Add redirect_url
