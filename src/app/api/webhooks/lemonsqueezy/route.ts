@@ -75,7 +75,7 @@ export async function POST(req: Request) {
             ends_at: attributes.ends_at,
             customer_portal_url: attributes.urls?.customer_portal,
             updated_at: new Date().toISOString(),
-          }, { onConflict: 'lemon_squeezy_id' });
+          }, { onConflict: 'user_id' });
 
         if (error) {
           console.error('Error updating subscription:', error);
