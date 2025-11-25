@@ -66,6 +66,7 @@ export async function POST(req: Request) {
         const { error } = await supabase
           .from('subscriptions')
           .upsert({
+            lemon_squeezy_id: data.id, // Use Lemon Squeezy ID as unique key
             user_id: targetUserId,
             status: attributes.status,
             variant_id: String(attributes.variant_id), // Ensure string format
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
             ends_at: attributes.ends_at,
             customer_portal_url: attributes.urls?.customer_portal,
             updated_at: new Date().toISOString(),
-          });
+          }, { onConflict: 'lemon_squeezy_id' });
 
         if (error) {
           console.error('Error updating subscription:', error);
