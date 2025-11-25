@@ -46,10 +46,12 @@ export async function POST(req: Request) {
 
       if (!targetUserId) {
         // Fallback: find user by email using Admin Auth API
-        const { data, error: userError } = await supabase.auth.admin.listUsers();
+        // Note: listUsers defaults to 50 users. We increase limit to 1000 to ensure we find the user.
+        // In a production app with >1000 users, you should strictly rely on custom_data or implement pagination.
+        const { data, error: userError } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
 
         if (data?.users) {
-          const foundUser = data.users.find(u => u.email === attributes.user_email);
+          const foundUser = data.users.find(u => u.email?.toLowerCase() === attributes.user_email.toLowerCase());
           if (foundUser) {
             targetUserId = foundUser.id;
           }
@@ -66,8 +68,8 @@ export async function POST(req: Request) {
           .upsert({
             user_id: targetUserId,
             status: attributes.status,
-            variant_id: attributes.variant_id, // Ensure this matches your DB column type (text)
-            customer_id: attributes.customer_id,
+            variant_id: String(attributes.variant_id), // Ensure string format
+            customer_id: String(attributes.customer_id),
             renews_at: attributes.renews_at,
             ends_at: attributes.ends_at,
             customer_portal_url: attributes.urls?.customer_portal,
