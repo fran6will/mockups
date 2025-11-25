@@ -22,12 +22,12 @@ export default function Hero() {
                         </h1>
 
                         <p className="text-xl text-ink/60 mb-8 leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-                            Stop wasting hours on photoshoots. Upload your design and get professional, 4K product images in seconds. Perfect for Etsy, Shopify, and POD.
+                            Stop wasting hours on photoshoots or settling for poor quality Canva mockups. Upload your design and get professional, 4K product images in seconds.
                         </p>
 
-                        <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
+                        <div className="flex flex-col sm:flex-row gap-4">
                             <Link
-                                href="/#gallery"
+                                href="/#try-it"
                                 className="bg-teal text-cream font-bold text-lg px-8 py-4 rounded-xl hover:bg-teal/90 hover:shadow-lg hover:shadow-teal/20 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
                             >
                                 Start Creating Free <ArrowRight size={20} />
@@ -61,9 +61,9 @@ export default function Hero() {
                         {/* Floating Cards / Mockup Preview */}
                         <div className="relative w-full max-w-md aspect-[4/5] glass rounded-3xl border border-white/40 shadow-2xl shadow-teal/20 overflow-hidden transform rotate-3 hover:rotate-0 transition-transform duration-700">
                             <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
-                                <img 
-                                    src="/hero-wallpaper.png" 
-                                    alt="AI Mockup Preview" 
+                                <img
+                                    src="/hero-wallpaper.png"
+                                    alt="AI Mockup Preview"
                                     className="w-full h-full object-cover"
                                 />
                             </div>
