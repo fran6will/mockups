@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { Search, Filter, ArrowRight, Lock, Sparkles, CheckCircle } from 'lucide-react';
+import { Search, Filter, ArrowRight, Lock, Sparkles, CheckCircle, Heart } from 'lucide-react';
+import FavoriteButton from '@/components/ui/FavoriteButton';
+import { getFavorites } from '@/app/actions';
 
 import { useAccess } from '@/hooks/use-access';
 
@@ -13,13 +15,14 @@ export default function Gallery() {
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [allTags, setAllTags] = useState<string[]>([]);
+    const [favorites, setFavorites] = useState<string[]>([]);
 
     // Check global pro access
     const { accessLevel } = useAccess();
     const isPro = accessLevel === 'pro';
 
     useEffect(() => {
-        const fetchProducts = async () => {
+        const fetchData = async () => {
             const { data, error } = await supabase
                 .from('products')
                 .select('*')
@@ -31,7 +34,6 @@ export default function Gallery() {
                 setProducts(data || []);
 
                 // Extract unique tags
-                // Extract unique tags (Primary tag only - first one)
                 const tags = new Set<string>();
                 data?.forEach(p => {
                     if (p.tags && Array.isArray(p.tags) && p.tags.length > 0) {
@@ -40,13 +42,24 @@ export default function Gallery() {
                 });
                 setAllTags(Array.from(tags));
             }
+
+            // Fetch favorites
+            const favs = await getFavorites();
+            setFavorites(favs);
+
             setLoading(false);
         };
 
-        fetchProducts();
+        fetchData();
     }, []);
 
     const filteredProducts = products.filter(p => {
+        if (selectedTag === 'favorites') {
+            const matchesSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.tags?.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+            return favorites.includes(p.id) && matchesSearch;
+        }
+
         const matchesTag = selectedTag ? p.tags?.[0] === selectedTag : true;
         const matchesSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.tags?.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -101,6 +114,19 @@ export default function Gallery() {
                             All Mockups
                             {selectedTag === null && <ArrowRight size={14} className="hidden lg:block" />}
                         </button>
+
+                        {/* Favorites Filter */}
+                        <button
+                            onClick={() => setSelectedTag('favorites')}
+                            className={`whitespace-nowrap px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-all flex items-center justify-between group ${selectedTag === 'favorites'
+                                ? 'bg-teal text-cream shadow-md shadow-teal/20'
+                                : 'bg-white/50 text-ink/60 hover:bg-white hover:text-ink hover:pl-5'
+                                }`}
+                        >
+                            <span className="flex items-center gap-2"><Heart size={14} className={selectedTag === 'favorites' ? 'fill-current' : ''} /> Favorites</span>
+                            {selectedTag === 'favorites' && <ArrowRight size={14} className="hidden lg:block" />}
+                        </button>
+
                         {allTags.map(tag => (
                             <button
                                 key={tag}
@@ -173,6 +199,14 @@ export default function Gallery() {
                                                     <Lock size={12} className="text-teal" /> Premium
                                                 </div>
                                             )}
+                                        </div>
+
+                                        {/* Favorite Button */}
+                                        <div className="absolute top-4 left-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <FavoriteButton
+                                                productId={product.id}
+                                                initialIsFavorited={favorites.includes(product.id)}
+                                            />
                                         </div>
                                     </div>
 

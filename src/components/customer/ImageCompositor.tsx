@@ -36,8 +36,10 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const [isClaiming, setIsClaiming] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [showCreditPopup, setShowCreditPopup] = useState(false);
+    const [showLimitPopup, setShowLimitPopup] = useState(false);
 
     const { accessLevel, isLoading: isAccessLoading } = useAccess(productSlug);
+
 
     // Determine cost based on resolution
     const getCost = () => {
@@ -218,7 +220,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
     const handleGenerate = async () => {
         if (layers.length === 0) return;
-        
+
         if (!emailInput) {
             setError("Please sign in to generate mockups.");
             return;
@@ -266,6 +268,10 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             }
 
             if (!response.ok) {
+                if (data.code === 'FREE_LIMIT_REACHED') {
+                    setShowLimitPopup(true);
+                    return;
+                }
                 throw new Error(data.error || 'Failed to generate mockup');
             }
 
@@ -478,7 +484,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                             let cost = 1;
                             if (size === '2K') cost = 3;
                             if (size === '4K') cost = 5;
-                            
+
                             const isDisabled = isFree && size !== '1K';
 
                             return (
@@ -488,8 +494,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                     disabled={isDisabled}
                                     className={`py-3 rounded-xl flex flex-col items-center justify-center transition-all ${imageSize === size
                                         ? 'bg-teal text-cream shadow-lg shadow-teal/20 scale-105'
-                                        : isDisabled 
-                                            ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200' 
+                                        : isDisabled
+                                            ? 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200'
                                             : 'bg-white/40 text-ink/60 hover:bg-white/60'
                                         }`}
                                 >
@@ -549,7 +555,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                         {!user ? (
                             <div className="bg-teal/5 p-6 rounded-xl border border-teal/10 space-y-4">
                                 <p className="text-sm text-ink/70 font-medium text-center">
-                                    {isFree 
+                                    {isFree
                                         ? "Sign up to generate your mockup instantly."
                                         : "To ensure your designs and credits are saved, you need a free account."
                                     }
@@ -731,11 +737,11 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 )}
             </div>
 
-            {/* Low Credits Popup */}
+            {/* Low Credits Popup (Pro/Credits) */}
             {showCreditPopup && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
                     <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative">
-                        <button 
+                        <button
                             onClick={() => setShowCreditPopup(false)}
                             className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
                         >
@@ -754,12 +760,49 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                             <a href="/pricing" className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 transition-all flex items-center justify-center gap-2">
                                 <Sparkles size={18} /> Get Unlimited Access
                             </a>
-                            <button 
+                            <button
                                 onClick={() => setShowCreditPopup(false)}
                                 className="w-full bg-transparent text-ink/50 font-bold py-3 hover:text-ink transition-colors"
                             >
                                 Maybe later
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Free Limit Reached Popup (Witty) */}
+            {showLimitPopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[2rem] p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative overflow-hidden">
+                        {/* Background Decor */}
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-teal via-purple-500 to-teal"></div>
+
+                        <button
+                            onClick={() => setShowLimitPopup(false)}
+                            className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
+                        >
+                            <X size={24} />
+                        </button>
+
+                        <div className="w-24 h-24 bg-teal/10 text-teal rounded-full flex items-center justify-center mx-auto animate-bounce">
+                            <Sparkles size={48} />
+                        </div>
+
+                        <div>
+                            <h3 className="text-3xl font-bold text-ink mb-3 tracking-tight">Whoa, slow down Picasso! 🎨</h3>
+                            <p className="text-lg text-ink/60 leading-relaxed">
+                                You've used up your free samples. Ready to create without limits?
+                            </p>
+                        </div>
+
+                        <div className="grid gap-3 pt-2">
+                            <a href="/pricing" className="w-full bg-gradient-to-r from-teal to-teal/80 text-cream font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal/20">
+                                <Lock size={18} /> Unlock Everything for $19
+                            </a>
+                            <p className="text-xs text-ink/40 font-medium">
+                                Includes unlimited generations, 4K downloads, and commercial license.
+                            </p>
                         </div>
                     </div>
                 </div>

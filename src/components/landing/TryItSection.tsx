@@ -43,10 +43,10 @@ export default async function TryItSection() {
                         <span>Experience the Magic</span>
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold text-ink mb-6 tracking-tight">
-                        Try it right now, <span className="text-teal">for free.</span>
+                        See your logo on a product. <span className="text-teal">Right now.</span>
                     </h2>
                     <p className="text-lg text-ink/60 max-w-2xl mx-auto">
-                        Create a free account to try this mockup and see the results instantly.
+                        No credit card. No Photoshop. Just pure magic. (And yes, it's actually free to try).
                     </p>
                 </div>
 

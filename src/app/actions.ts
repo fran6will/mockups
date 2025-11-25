@@ -52,6 +52,7 @@ export async function updateProduct(formData: FormData) {
     const slug = formData.get('slug') as string;
     const password = formData.get('password') as string;
     const customPrompt = formData.get('customPrompt') as string;
+    const baseImageUrl = formData.get('baseImageUrl') as string;
     const galleryImageUrl = formData.get('galleryImageUrl') as string;
     const description = formData.get('description') as string;
     const tagsString = formData.get('tags') as string;
@@ -73,6 +74,10 @@ export async function updateProduct(formData: FormData) {
         tags: tags,
         is_free: isFree
     };
+
+    if (baseImageUrl) {
+        updateData.base_image_url = baseImageUrl;
+    }
 
     const { data, error } = await supabaseAdmin
         .from('products')
@@ -101,4 +106,68 @@ export async function deleteProduct(id: string) {
     }
 
     return { success: true };
+}
+
+import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
+
+export async function toggleFavorite(productId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { error: 'Unauthorized' };
+    }
+
+    // Check if already favorited
+    const { data: existing } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+        .single();
+
+    if (existing) {
+        // Remove favorite
+        const { error } = await supabase
+            .from('favorites')
+            .delete()
+            .eq('id', existing.id);
+
+        if (error) return { error: error.message };
+        revalidatePath('/dashboard');
+        revalidatePath('/gallery');
+        revalidatePath(`/${productId}`); // Ideally we'd know the slug, but this might not work perfectly without it. 
+        // Actually, we can just revalidate the path where the user is, or general paths.
+        return { favorited: false };
+    } else {
+        // Add favorite
+        const { error } = await supabase
+            .from('favorites')
+            .insert({
+                user_id: user.id,
+                product_id: productId
+            });
+
+        if (error) return { error: error.message };
+        revalidatePath('/dashboard');
+        revalidatePath('/gallery');
+        return { favorited: true };
+    }
+}
+
+export async function getFavorites() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return [];
+    }
+
+    const { data } = await supabase
+        .from('favorites')
+        .select('product_id')
+        .eq('user_id', user.id);
+
+    return data?.map(f => f.product_id) || [];
 }

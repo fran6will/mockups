@@ -25,10 +25,10 @@ export default function Footer() {
 
                     {/* Brand Column */}
                     <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-cream/10 w-fit p-2 rounded-xl backdrop-blur-sm">
-                            <Logo showText={true} />
+                        <div className="bg-cream/10 w-fit p-2 rounded-xl backdrop-blur-sm scale-150 origin-left ml-2">
+                            <Logo showText={true} variant="light" />
                         </div>
-                        <p className="text-cream/80 leading-relaxed">
+                        <p className="text-cream/80 leading-relaxed mt-6">
                             Professional, AI-powered product mockups for modern sellers. Stop wasting time on photoshoots.
                         </p>
                         <div className="flex items-center gap-4">

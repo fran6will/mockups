@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import Header from '@/components/ui/Header';
-import { Download, Calendar, Image as ImageIcon } from 'lucide-react';
+import { Download, Calendar, Image as ImageIcon, Heart } from 'lucide-react';
+import FavoriteButton from '@/components/ui/FavoriteButton';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -40,6 +42,24 @@ export default async function DashboardPage() {
         subscription.status === 'on_trial' ||
         (subscription.status === 'cancelled' && subscription.ends_at && new Date(subscription.ends_at) > new Date())
     );
+
+    // Fetch favorites
+    const { data: favorites } = await supabase
+        .from('favorites')
+        .select(`
+            product_id,
+            products (
+                id,
+                title,
+                slug,
+                base_image_url,
+                gallery_image_url,
+                description,
+                tags
+            )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
     return (
         <div className="min-h-screen font-sans text-ink selection:bg-teal/20">
@@ -94,6 +114,62 @@ export default async function DashboardPage() {
                         )}
                     </div>
                 </div>
+
+                {/* Favorites Section */}
+                {favorites && favorites.length > 0 && (
+                    <div className="mb-16">
+                        <h2 className="text-2xl font-bold text-ink mb-6 flex items-center gap-2">
+                            <Heart className="text-red-500 fill-red-500" size={24} /> Your Favorites
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {favorites.map((fav: any) => {
+                                const product = fav.products;
+                                if (!product) return null;
+                                return (
+                                    <Link
+                                        key={product.id}
+                                        href={`/${product.slug}`}
+                                        className="group block relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-teal/10 hover:-translate-y-1 transition-all duration-500 border border-ink/5"
+                                    >
+                                        {/* Image Container */}
+                                        <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
+                                            <div className="absolute inset-0 bg-teal/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 mix-blend-multiply"></div>
+                                            <img
+                                                src={product.gallery_image_url || product.base_image_url}
+                                                alt={product.title}
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                            />
+
+                                            {/* Favorite Button */}
+                                            <div className="absolute top-4 left-4 z-20">
+                                                <FavoriteButton
+                                                    productId={product.id}
+                                                    initialIsFavorited={true}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Card Content */}
+                                        <div className="p-5 relative">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <h3 className="font-bold text-lg text-ink mb-1 group-hover:text-teal transition-colors line-clamp-1">
+                                                        {product.title}
+                                                    </h3>
+                                                    {product.description && (
+                                                        <p className="text-sm text-ink/60 mb-3 line-clamp-2">
+                                                            {product.description}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 <div className="mb-8">
                     <h2 className="text-2xl font-bold text-ink mb-4">Your Creations</h2>

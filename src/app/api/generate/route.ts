@@ -39,45 +39,72 @@ export async function POST(request: Request) {
         let isPro = false;
         let userCredits = null;
 
-        // SKIP CHECKS IF PRODUCT IS FREE
-        if (!product.is_free) {
-            if (authUser) {
-                const { data: subscription } = await supabaseAdmin
-                    .from('subscriptions')
-                    .select('status, ends_at')
-                    .eq('user_id', authUser.id)
-                    .order('updated_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
+        if (authUser) {
+            const { data: subscription } = await supabaseAdmin
+                .from('subscriptions')
+                .select('status, ends_at')
+                .eq('user_id', authUser.id)
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
-                if (subscription) {
-                    const isActive = subscription.status === 'active' || subscription.status === 'on_trial';
-                    const isCancelledButValid = subscription.status === 'cancelled' &&
-                        subscription.ends_at &&
-                        new Date(subscription.ends_at) > new Date();
+            if (subscription) {
+                const isActive = subscription.status === 'active' || subscription.status === 'on_trial';
+                const isCancelledButValid = subscription.status === 'cancelled' &&
+                    subscription.ends_at &&
+                    new Date(subscription.ends_at) > new Date();
 
-                    if (isActive || isCancelledButValid) {
-                        isPro = true;
-                    }
+                if (isActive || isCancelledButValid) {
+                    isPro = true;
                 }
             }
+        }
 
-            // 0.6 Check Credits (If NOT Pro)
+        // Check Credits (If NOT Pro)
+        if (!isPro) {
+            const { data: user, error: userError } = await supabaseAdmin
+                .from('user_credits')
+                .select('*')
+                .eq('email', email)
+                .single();
+
+            if (user && !userError) {
+                userCredits = user;
+            }
+        }
+
+        // SKIP CHECKS IF PRODUCT IS FREE
+        if (!product.is_free) {
+            // Enforce Payment for Paid Products
             if (!isPro) {
-                const { data: user, error: userError } = await supabaseAdmin
-                    .from('user_credits')
-                    .select('*')
-                    .eq('email', email)
-                    .single();
-
-                if (userError || !user) {
+                if (!userCredits) {
                     return NextResponse.json({ error: 'User not found. Please claim credits first.' }, { status: 403 });
                 }
 
-                if (user.balance < creditCost) {
+                if (userCredits.balance < creditCost) {
                     return NextResponse.json({ error: `Insufficient credits. This requires ${creditCost} credits.` }, { status: 402 });
                 }
-                userCredits = user;
+            }
+        } else {
+            // FREE PRODUCT LIMIT CHECK
+            // Bypass limit if Pro or has ANY credits
+            const hasCredits = userCredits && userCredits.balance > 0;
+
+            if (!isPro && !hasCredits && email) {
+                const { count, error: countError } = await supabaseAdmin
+                    .from('generations')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'success')
+                    .contains('meta', { user_email: email });
+
+                if (countError) {
+                    console.error("Error checking free limit:", countError);
+                } else if (count !== null && count >= 3) {
+                    return NextResponse.json({
+                        error: 'Free limit reached',
+                        code: 'FREE_LIMIT_REACHED'
+                    }, { status: 403 });
+                }
             }
         }
 

@@ -7,6 +7,8 @@ import { Zap, Ban, Star } from 'lucide-react';
 import Banner from '@/components/ui/Banner';
 import Header from '@/components/ui/Header';
 import { useAccess } from '@/hooks/use-access';
+import FavoriteButton from '@/components/ui/FavoriteButton';
+import { getFavorites } from '@/app/actions';
 
 interface ProductClientProps {
     product: any;
@@ -16,10 +18,21 @@ interface ProductClientProps {
 export default function ProductClient({ product: initialProduct, slug }: ProductClientProps) {
     // We use the initialProduct passed from the server, so no loading state needed for the main product
     const [product] = useState<any>(initialProduct);
-    
+    const [isFavorited, setIsFavorited] = useState(false);
+
     // Check Pro Access
     const { accessLevel } = useAccess();
     const isPro = accessLevel === 'pro';
+
+    useEffect(() => {
+        const checkFavorite = async () => {
+            const favorites = await getFavorites();
+            if (favorites.includes(product.id)) {
+                setIsFavorited(true);
+            }
+        };
+        checkFavorite();
+    }, [product.id]);
 
     // If for some reason product is missing (should be handled by server page returning 404), show error
     if (!product) return (
@@ -39,7 +52,14 @@ export default function ProductClient({ product: initialProduct, slug }: Product
             <main className="max-w-7xl mx-auto p-4 lg:p-8 pt-8">
 
                 {/* Product Header */}
-                <div className="text-center mb-10">
+                <div className="text-center mb-10 relative">
+                    <div className="absolute top-0 right-0 md:right-20">
+                        <FavoriteButton
+                            productId={product.id}
+                            initialIsFavorited={isFavorited}
+                            className="bg-white shadow-sm"
+                        />
+                    </div>
                     <h1 className="text-4xl md:text-5xl font-bold text-ink mb-4 tracking-tight">
                         {product.title}
                     </h1>
