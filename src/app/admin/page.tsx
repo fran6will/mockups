@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { Upload, Save, Loader2, ShieldCheck, Edit, Trash2, X, Plus, UploadCloud, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { Upload, Save, Loader2, ShieldCheck, Edit, Trash2, X, Plus, UploadCloud, CheckCircle, Image as ImageIcon, Layers } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import Header from '@/components/ui/Header';
 
@@ -23,6 +23,11 @@ export default function AdminPage() {
     const [baseImage, setBaseImage] = useState<File | null>(null);
     const [galleryImage, setGalleryImage] = useState<File | null>(null);
 
+    const [variants, setVariants] = useState<any[]>([]);
+    const [variantName, setVariantName] = useState('');
+    const [variantImage, setVariantImage] = useState<File | null>(null);
+    const [variantLoading, setVariantLoading] = useState(false);
+
     const [editingProduct, setEditingProduct] = useState<any>(null);
 
     const [loading, setLoading] = useState(false);
@@ -32,7 +37,7 @@ export default function AdminPage() {
         const checkAdmin = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             const adminEmails = ['francis.w.rheaume@gmail.com'];
-            
+
             if (!session || !session.user.email || !adminEmails.includes(session.user.email.toLowerCase())) {
                 console.warn("Admin access denied. User:", session?.user?.email);
                 router.push('/');
@@ -64,7 +69,58 @@ export default function AdminPage() {
         setBaseImage(null);
         setGalleryImage(null);
         setMessage('');
+        fetchVariants(product.id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const fetchVariants = async (productId: string) => {
+        const { data } = await supabase
+            .from('product_variants')
+            .select('*')
+            .eq('product_id', productId)
+            .order('created_at', { ascending: true });
+        setVariants(data || []);
+    };
+
+    const handleCreateVariant = async () => {
+        if (!variantName || !variantImage || !editingId) return;
+        setVariantLoading(true);
+
+        try {
+            const fileExt = variantImage.name.split('.').pop();
+            const fileName = `variant-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('mockup-bases')
+                .upload(filePath, variantImage);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('mockup-bases')
+                .getPublicUrl(filePath);
+
+            const { createVariant } = await import('../actions');
+            const result = await createVariant(editingId, variantName, data.publicUrl);
+
+            if (result.error) throw new Error(result.error);
+
+            setVariantName('');
+            setVariantImage(null);
+            fetchVariants(editingId);
+        } catch (error: any) {
+            alert('Error creating variant: ' + error.message);
+        } finally {
+            setVariantLoading(false);
+        }
+    };
+
+    const handleDeleteVariant = async (id: string) => {
+        if (!confirm('Delete variant?')) return;
+        const { deleteVariant } = await import('../actions');
+        await deleteVariant(id);
+        if (editingId) fetchVariants(editingId);
     };
 
     const handleCancelEdit = () => {
@@ -96,6 +152,9 @@ export default function AdminPage() {
         setTags('');
         setBaseImage(null);
         setGalleryImage(null);
+        setVariants([]);
+        setVariantName('');
+        setVariantImage(null);
         setMessage('');
     };
 
@@ -366,6 +425,52 @@ export default function AdminPage() {
                                     {loading ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                                     {editingId ? 'Update Product' : 'Create Product'}
                                 </button>
+
+                                {editingId && (
+                                    <div className="mt-8 pt-8 border-t border-ink/10">
+                                        <h3 className="font-bold text-ink mb-4 flex items-center gap-2">
+                                            <Layers size={18} className="text-teal" /> Variants
+                                        </h3>
+
+                                        <div className="space-y-4 mb-6">
+                                            {variants.map(v => (
+                                                <div key={v.id} className="flex items-center gap-3 bg-white p-2 rounded-lg border border-ink/5">
+                                                    <img src={v.base_image_url} alt={v.name} className="w-10 h-10 rounded object-cover bg-gray-100" />
+                                                    <span className="font-bold text-sm flex-1">{v.name}</span>
+                                                    <button
+                                                        onClick={() => handleDeleteVariant(v.id)}
+                                                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="space-y-3 bg-teal/5 p-4 rounded-xl border border-teal/10">
+                                            <input
+                                                type="text"
+                                                value={variantName}
+                                                onChange={(e) => setVariantName(e.target.value)}
+                                                placeholder="Variant Name (e.g. Red)"
+                                                className="w-full bg-white border border-white/60 rounded-lg p-2 text-sm outline-none focus:border-teal"
+                                            />
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => setVariantImage(e.target.files?.[0] || null)}
+                                                className="text-xs w-full"
+                                            />
+                                            <button
+                                                onClick={handleCreateVariant}
+                                                disabled={variantLoading || !variantName || !variantImage}
+                                                className="w-full bg-teal text-white font-bold py-2 rounded-lg text-xs hover:bg-teal/90 disabled:opacity-50"
+                                            >
+                                                {variantLoading ? 'Uploading...' : 'Add Variant'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {message && (
                                     <div className={`p-3 rounded-xl text-center font-bold text-xs ${message.startsWith('Error') ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>

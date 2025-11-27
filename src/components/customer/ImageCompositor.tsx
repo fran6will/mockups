@@ -22,6 +22,28 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const searchParams = useSearchParams();
     const [showAccessCodeInput, setShowAccessCodeInput] = useState(searchParams.get('unlock') === 'true' || searchParams.get('code') !== null);
 
+    // Variant State
+    const [variants, setVariants] = useState<any[]>([]);
+    const [selectedVariant, setSelectedVariant] = useState<any>(null);
+    const [currentBaseImage, setCurrentBaseImage] = useState(baseImageUrl);
+
+    useEffect(() => {
+        const fetchVariants = async () => {
+            const { data } = await supabase
+                .from('product_variants')
+                .select('*')
+                .eq('product_id', productId)
+                .order('created_at', { ascending: true });
+            setVariants(data || []);
+        };
+        fetchVariants();
+    }, [productId]);
+
+    const handleVariantSelect = (variant: any | null) => {
+        setSelectedVariant(variant);
+        setCurrentBaseImage(variant ? variant.base_image_url : baseImageUrl);
+    };
+
     // Layer State
     const [layers, setLayers] = useState<Layer[]>([]);
     const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
@@ -512,7 +534,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                 {/* Right Column: Locked Preview */}
                 <div className="glass p-4 rounded-[2rem] border border-white/40 shadow-2xl bg-white/30 min-h-[500px] flex items-center justify-center relative overflow-hidden">
-                    <img src={baseImageUrl} className="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm" />
+                    <img src={currentBaseImage} className="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm" />
                     <div className="relative z-10 bg-white/80 backdrop-blur px-6 py-3 rounded-full font-bold text-ink shadow-lg flex items-center gap-2">
                         <Lock size={18} /> Preview Locked
                     </div>
@@ -526,6 +548,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         <div className="max-w-6xl mx-auto space-y-8">
             {/* Top Section: Canvas / Preview */}
             <div className="max-w-3xl mx-auto w-full">
+
                 <div {...getRootProps()} className="glass p-4 rounded-[2.5rem] border border-white/40 shadow-2xl bg-white/30 aspect-square flex items-center justify-center relative overflow-hidden group">
                     <input {...inputProps} />
                     {!generatedImage && layers.length === 0 && (
@@ -540,7 +563,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                     {/* Base Image */}
                     <img
-                        src={baseImageUrl}
+                        src={currentBaseImage}
                         alt="Base"
                         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${generatedImage ? 'opacity-0' : 'opacity-100'}`}
                     />
@@ -646,6 +669,49 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                         </div>
                     )}
                 </div>
+
+                {/* Variant Carousel */}
+                {variants.length > 0 && (
+                    <div className="mt-8">
+                        <p className="text-center text-xs font-bold text-ink/40 uppercase tracking-wider mb-4">Select Style</p>
+                        <div className="flex justify-center gap-4 overflow-x-auto pb-4 no-scrollbar snap-x">
+                            {/* Default Variant */}
+                            <button
+                                onClick={() => handleVariantSelect(null)}
+                                className={`snap-center shrink-0 relative w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 group ${!selectedVariant
+                                    ? 'border-teal ring-4 ring-teal/10 scale-110 shadow-lg'
+                                    : 'border-transparent opacity-70 hover:opacity-100 hover:scale-105'}`}
+                            >
+                                <img src={baseImageUrl} className="w-full h-full object-cover" />
+                                <div className={`absolute inset-0 bg-black/20 transition-opacity ${!selectedVariant ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'}`}></div>
+                                {!selectedVariant && (
+                                    <div className="absolute bottom-0 inset-x-0 bg-teal/90 text-white text-[8px] font-bold py-0.5 text-center uppercase tracking-wider">
+                                        Default
+                                    </div>
+                                )}
+                            </button>
+
+                            {/* Other Variants */}
+                            {variants.map(v => (
+                                <button
+                                    key={v.id}
+                                    onClick={() => handleVariantSelect(v)}
+                                    className={`snap-center shrink-0 relative w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 group ${selectedVariant?.id === v.id
+                                        ? 'border-teal ring-4 ring-teal/10 scale-110 shadow-lg'
+                                        : 'border-transparent opacity-70 hover:opacity-100 hover:scale-105'}`}
+                                >
+                                    <img src={v.base_image_url} className="w-full h-full object-cover" />
+                                    <div className={`absolute inset-0 bg-black/20 transition-opacity ${selectedVariant?.id === v.id ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'}`}></div>
+                                    {selectedVariant?.id === v.id && (
+                                        <div className="absolute bottom-0 inset-x-0 bg-teal/90 text-white text-[8px] font-bold py-0.5 text-center uppercase tracking-wider truncate px-1">
+                                            {v.name}
+                                        </div>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Bottom Section: Controls */}

@@ -171,3 +171,40 @@ export async function getFavorites() {
 
     return data?.map(f => f.product_id) || [];
 }
+
+export async function createVariant(productId: string, name: string, baseImageUrl: string) {
+    if (!productId || !name || !baseImageUrl) {
+        return { error: 'Missing fields' };
+    }
+
+    const { data, error } = await supabaseAdmin
+        .from('product_variants')
+        .insert({
+            product_id: productId,
+            name,
+            base_image_url: baseImageUrl
+        })
+        .select()
+        .single();
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    return { success: true, data };
+}
+
+export async function deleteVariant(id: string) {
+    if (!id) return { error: 'Missing ID' };
+
+    const { error } = await supabaseAdmin
+        .from('product_variants')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    return { success: true };
+}
