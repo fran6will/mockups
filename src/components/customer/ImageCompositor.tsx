@@ -305,7 +305,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/auth/callback?next=${window.location.pathname}`
+                redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname + window.location.search)}`
             }
         });
     };
