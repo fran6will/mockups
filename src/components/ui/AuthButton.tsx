@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase/client';
 import { LogIn, LogOut, User, LayoutDashboard, Coins, Mail, X, Check, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
+import { trackPixelEvent } from '@/components/analytics/MetaPixel';
+
 export default function AuthButton() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -60,6 +62,7 @@ export default function AuthButton() {
     }, []);
 
     const handleGoogleLogin = async () => {
+        trackPixelEvent('CompleteRegistration', { content_name: 'Google OAuth' });
         await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
@@ -72,6 +75,7 @@ export default function AuthButton() {
         e.preventDefault();
         if (!email) return;
 
+        trackPixelEvent('CompleteRegistration', { content_name: 'Magic Link' });
         setIsMagicLinkLoading(true);
         const { error } = await supabase.auth.signInWithOtp({
             email,

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Header from '@/components/ui/Header';
 import { Download, Calendar, Image as ImageIcon, Heart, Film } from 'lucide-react';
 import FavoriteButton from '@/components/ui/FavoriteButton';
+import PurchaseTracker from '@/components/analytics/PurchaseTracker';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -64,6 +65,7 @@ export default async function DashboardPage() {
     return (
         <div className="min-h-screen font-sans text-ink selection:bg-teal/20">
             <Header />
+            <PurchaseTracker />
 
             <main className="max-w-7xl mx-auto px-6 pb-20">
                 <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">

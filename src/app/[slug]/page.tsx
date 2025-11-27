@@ -10,7 +10,7 @@ type Props = {
 // 1. Generate Dynamic Metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
-    
+
     const { data: product } = await supabaseAdmin
         .from('products')
         .select('title, description, gallery_image_url, base_image_url')
@@ -65,5 +65,27 @@ export default async function Page({ params }: Props) {
     }
 
     // Pass data to the client component
-    return <ProductClient product={product} slug={slug} />;
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.title,
+        description: product.description || `Create a professional ${product.title} mockup in seconds.`,
+        image: product.gallery_image_url || product.base_image_url,
+        offers: {
+            '@type': 'Offer',
+            price: '0.00', // Or dynamic if paid
+            priceCurrency: 'CAD',
+            availability: 'https://schema.org/InStock',
+        },
+    };
+
+    return (
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <ProductClient product={product} slug={slug} />
+        </>
+    );
 }

@@ -7,6 +7,7 @@ import Banner from '@/components/ui/Banner';
 import { useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabase/client';
+import { trackPixelEvent } from '@/components/analytics/MetaPixel';
 
 export default function PricingPage() {
     const [userId, setUserId] = useState<string | null>(null);
@@ -15,16 +16,32 @@ export default function PricingPage() {
     const CREATOR_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/e79e2d50-3970-4b1d-87b8-d3eabbe835b2';
     const AGENCY_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/74e4a089-b9ab-47b0-bd27-1b4d5937d7e8';
 
-    const getCheckoutUrl = (baseUrl: string) => {
+    const getCheckoutUrl = (baseUrl: string, price?: number) => {
         if (!baseUrl) return '#';
         let url = baseUrl;
         if (userId) {
             url += `?checkout[custom][user_id]=${userId}`;
         }
-        const redirectUrl = encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard`);
+
+        // Construct redirect URL with success flags for the Pixel
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        let redirectPath = `${origin}/dashboard?payment_success=true`;
+        if (price) {
+            redirectPath += `&value=${price}`;
+        }
+
+        const redirectUrl = encodeURIComponent(redirectPath);
         const separator = url.includes('?') ? '&' : '?';
         url += `${separator}checkout[redirect_url]=${redirectUrl}`;
         return url;
+    };
+
+    const handleInitiateCheckout = (name: string, value: number) => {
+        trackPixelEvent('InitiateCheckout', {
+            content_name: name,
+            value: value,
+            currency: 'CAD'
+        });
     };
 
     useEffect(() => {
@@ -78,7 +95,8 @@ export default function PricingPage() {
 
                                 {userId ? (
                                     <a
-                                        href={getCheckoutUrl(SUBSCRIPTION_URL)}
+                                        href={getCheckoutUrl(SUBSCRIPTION_URL, 19.99)}
+                                        onClick={() => handleInitiateCheckout('Pro Membership', 19.99)}
                                         className="group inline-flex w-full md:w-auto px-8 py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl items-center justify-center gap-2"
                                     >
                                         Get Pro Access <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -86,6 +104,7 @@ export default function PricingPage() {
                                 ) : (
                                     <button
                                         onClick={async () => {
+                                            handleInitiateCheckout('Pro Membership', 19.99);
                                             await supabase.auth.signInWithOAuth({
                                                 provider: 'google',
                                                 options: { redirectTo: `${window.location.origin}/pricing` },
@@ -143,12 +162,17 @@ export default function PricingPage() {
                                 <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 4 Videos</li>
                             </ul>
                             {userId ? (
-                                <a href={getCheckoutUrl(STARTER_PACK_URL)} className="block w-full py-3 rounded-xl bg-ink/5 text-ink font-bold text-center hover:bg-teal hover:text-white transition-all">
+                                <a
+                                    href={getCheckoutUrl(STARTER_PACK_URL, 9.99)}
+                                    onClick={() => handleInitiateCheckout('Starter Pack', 9.99)}
+                                    className="block w-full py-3 rounded-xl bg-ink/5 text-ink font-bold text-center hover:bg-teal hover:text-white transition-all"
+                                >
                                     Buy Starter
                                 </a>
                             ) : (
                                 <button
                                     onClick={async () => {
+                                        handleInitiateCheckout('Starter Pack', 9.99);
                                         await supabase.auth.signInWithOAuth({
                                             provider: 'google',
                                             options: { redirectTo: `${window.location.origin}/pricing` },
@@ -174,12 +198,17 @@ export default function PricingPage() {
                                 <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 20 Videos</li>
                             </ul>
                             {userId ? (
-                                <a href={getCheckoutUrl(CREATOR_PACK_URL)} className="block w-full py-3 rounded-xl bg-teal text-white font-bold text-center hover:bg-teal/90 transition-all shadow-lg shadow-teal/20">
+                                <a
+                                    href={getCheckoutUrl(CREATOR_PACK_URL, 34.99)}
+                                    onClick={() => handleInitiateCheckout('Creator Pack', 34.99)}
+                                    className="block w-full py-3 rounded-xl bg-teal text-white font-bold text-center hover:bg-teal/90 transition-all shadow-lg shadow-teal/20"
+                                >
                                     Buy Creator
                                 </a>
                             ) : (
                                 <button
                                     onClick={async () => {
+                                        handleInitiateCheckout('Creator Pack', 34.99);
                                         await supabase.auth.signInWithOAuth({
                                             provider: 'google',
                                             options: { redirectTo: `${window.location.origin}/pricing` },
@@ -202,12 +231,17 @@ export default function PricingPage() {
                                 <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 40 Videos</li>
                             </ul>
                             {userId ? (
-                                <a href={getCheckoutUrl(AGENCY_PACK_URL)} className="block w-full py-3 rounded-xl bg-ink/5 text-ink font-bold text-center hover:bg-teal hover:text-white transition-all">
+                                <a
+                                    href={getCheckoutUrl(AGENCY_PACK_URL, 59.99)}
+                                    onClick={() => handleInitiateCheckout('Agency Pack', 59.99)}
+                                    className="block w-full py-3 rounded-xl bg-ink/5 text-ink font-bold text-center hover:bg-teal hover:text-white transition-all"
+                                >
                                     Buy Agency
                                 </a>
                             ) : (
                                 <button
                                     onClick={async () => {
+                                        handleInitiateCheckout('Agency Pack', 59.99);
                                         await supabase.auth.signInWithOAuth({
                                             provider: 'google',
                                             options: { redirectTo: `${window.location.origin}/pricing` },

@@ -6,13 +6,17 @@ import { useEffect } from "react";
 
 const PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
 
+export const trackPixelEvent = (eventName: string, options?: any) => {
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('track', eventName, options);
+  }
+};
+
 export default function MetaPixel() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (typeof window.fbq !== "undefined") {
-      window.fbq("track", "PageView");
-    }
+    trackPixelEvent("PageView");
   }, [pathname]);
 
   if (!PIXEL_ID) return null;

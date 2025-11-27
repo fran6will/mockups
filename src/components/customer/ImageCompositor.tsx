@@ -2,12 +2,13 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image, Lock, ArrowRight, Coins, Mail, RotateCw, Maximize, Layers, Trash2, Plus, X, Info, Video, Play, Film } from 'lucide-react';
+import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image, Lock, ArrowRight, Coins, Mail, RotateCw, Maximize, Layers, Trash2, Plus, X, Info, Video, Play, Film, Share2 } from 'lucide-react';
 import { compositeImages, Layer } from '@/lib/utils/image';
 import { supabase } from '@/lib/supabase/client';
 import FabricCanvas from './FabricCanvas';
 import { useAccess } from '@/hooks/use-access';
 import { useSearchParams } from 'next/navigation';
+import ShareModal from '@/components/ui/ShareModal';
 
 interface ImageCompositorProps {
     productId: string;
@@ -50,6 +51,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const [showAnimateDialog, setShowAnimateDialog] = useState(false);
     const [videoPrompt, setVideoPrompt] = useState('');
     const [animationStatus, setAnimationStatus] = useState<string>('');
+
+    const [showShareModal, setShowShareModal] = useState(false);
 
     const { accessLevel, isLoading: isAccessLoading } = useAccess(productSlug);
 
@@ -596,9 +599,23 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                     <Video size={18} />
                                     Animate (10 Credits)
                                 </button>
+                                <button
+                                    onClick={() => setShowShareModal(true)}
+                                    className="bg-white text-ink font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl"
+                                >
+                                    <Share2 size={18} />
+                                    Share
+                                </button>
                             </div>
                         </div>
                     )}
+
+                    <ShareModal
+                        isOpen={showShareModal}
+                        onClose={() => setShowShareModal(false)}
+                        imageUrl={generatedImage || ''}
+                        productTitle={productSlug}
+                    />
 
                     {/* Video Player */}
                     {videoUrl && (
