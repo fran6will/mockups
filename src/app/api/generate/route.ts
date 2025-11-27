@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     let productIdString = null;
 
     try {
-        const { productId, logoUrl, aspectRatio, email, imageSize = '1K' } = await request.json();
+        const { productId, logoUrl, aspectRatio, email, imageSize = '1K', variantImageUrl } = await request.json();
         productIdString = productId;
 
         // Calculate Cost
@@ -113,8 +113,11 @@ export async function POST(request: Request) {
             ? product.custom_prompt
             : "Apply the logo to the product with realistic texture and lighting.";
 
+        // Use variant image if provided, otherwise fallback to product base image
+        const baseImageToUse = variantImageUrl || product.base_image_url;
+
         const result = await generateMockup(
-            product.base_image_url,
+            baseImageToUse,
             logoUrl,
             prompt,
             aspectRatio || '1:1',

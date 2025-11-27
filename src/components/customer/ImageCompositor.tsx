@@ -288,7 +288,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     logoUrl: base64Image,
                     aspectRatio,
                     email: emailInput,
-                    imageSize
+                    imageSize,
+                    variantImageUrl: currentBaseImage !== baseImageUrl ? currentBaseImage : undefined
                 }),
             });
 
@@ -547,7 +548,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     return (
         <div className="max-w-6xl mx-auto space-y-8">
             {/* Top Section: Canvas / Preview */}
-            <div className="max-w-3xl mx-auto w-full">
+            <div className="max-w-2xl mx-auto w-full">
 
                 <div {...getRootProps()} className="glass p-4 rounded-[2.5rem] border border-white/40 shadow-2xl bg-white/30 aspect-square flex items-center justify-center relative overflow-hidden group">
                     <input {...inputProps} />
