@@ -23,7 +23,8 @@ export async function GET() {
             'availability',
             'price',
             'brand',
-            'condition'
+            'condition',
+            'shipping'
         ];
 
         // Generate CSV Rows
@@ -45,9 +46,10 @@ export async function GET() {
                 link,
                 imageLink,
                 'in_stock', // Default availability
-                '0.00 USD', // Default price (adjust if you have pricing logic)
+                '5.00 USD', // Set a valid price (Google requires > 0 for ads usually)
                 'Copié-Collé', // Brand
-                'new' // Condition
+                'new', // Condition
+                'US::Standard:0.00 USD' // Shipping (Country:Service:Price) - Free shipping for digital
             ].join(',');
         });
 
