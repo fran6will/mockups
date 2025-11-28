@@ -8,9 +8,8 @@ export default function BlackFridayBanner() {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
     useEffect(() => {
-        // Target: Cyber Monday (Dec 2nd, 2024 at midnight) or just 3 days from now for demo
-        // Let's set it to a fixed date for the "Black Friday" feel
-        const targetDate = new Date('2024-12-03T00:00:00').getTime();
+        // Target: Cyber Monday (Dec 2nd, 2025 at midnight)
+        const targetDate = new Date('2025-12-02T00:00:00').getTime();
 
         const interval = setInterval(() => {
             const now = new Date().getTime();
