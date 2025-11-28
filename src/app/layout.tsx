@@ -3,6 +3,7 @@ import { Syne, DM_Sans } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import MetaPixel from "@/components/analytics/MetaPixel";
 import GoogleAds from "@/components/analytics/GoogleAds";
+import CookieBanner from "@/components/ui/CookieBanner";
 import "./globals.css";
 
 import Footer from "@/components/ui/Footer";
@@ -64,6 +65,7 @@ export default function RootLayout({
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || "G-9SFRSNL1KC"} />
         <GoogleAds />
         <MetaPixel />
+        <CookieBanner />
       </body>
     </html>
   );

@@ -619,7 +619,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                     className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl border border-white/20"
                                 >
                                     <Video size={18} />
-                                    Animate (10 Credits)
+                                    Animate (25 Credits)
                                 </button>
                                 <button
                                     onClick={() => setShowShareModal(true)}
@@ -971,12 +971,12 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                                 <div className="flex items-center justify-between text-sm bg-amber-50 text-amber-800 p-3 rounded-xl border border-amber-100">
                                     <span className="font-bold flex items-center gap-2"><Coins size={14} /> Cost</span>
-                                    <span className="font-bold">10 Credits</span>
+                                    <span className="font-bold">25 Credits</span>
                                 </div>
 
                                 <button
                                     onClick={handleAnimate}
-                                    disabled={!videoPrompt.trim() || (credits !== null && credits < 10)}
+                                    disabled={!videoPrompt.trim() || (credits !== null && credits < 25)}
                                     className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                 >
                                     <Play size={18} className="fill-current" /> Generate Video

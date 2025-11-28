@@ -32,6 +32,7 @@ export async function POST(request: Request) {
         }
 
         // 0. Check Auth Session (for History)
+        let publicUrl: string | null = null;
         const supabase = await createClient();
         const { data: { user: authUser } } = await supabase.auth.getUser();
 
@@ -147,7 +148,6 @@ export async function POST(request: Request) {
             }
 
             // 3.5 Upload to Storage (New!)
-            let publicUrl = null;
             try {
                 if (result.mockUrl) {
                     // Convert Data URL to Buffer
@@ -211,7 +211,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             success: true,
-            imageUrl: result.mockUrl,
+            imageUrl: publicUrl || result.mockUrl,
             remainingCredits: isPro ? 999 : (userCredits ? userCredits.balance - creditCost : 0)
         });
 
