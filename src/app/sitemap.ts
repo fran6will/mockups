@@ -1,25 +1,29 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://copiecolle.ai';
 
-    // Initialize Supabase client (using service role to bypass RLS if needed, though public read is fine)
+    // Initialize Supabase client
     const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
     // Fetch all products
     const { data: products } = await supabase
         .from('products')
-        .select('slug, updated_at');
+        .select('slug, updated_at, base_image_url, gallery_image_url')
+        .order('created_at', { ascending: false });
 
     const productUrls = (products || []).map((product) => ({
         url: `${baseUrl}/${product.slug}`,
-        lastModified: new Date(product.updated_at),
+        lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
         changeFrequency: 'weekly' as const,
         priority: 0.8,
+        images: [product.gallery_image_url || product.base_image_url].filter(Boolean),
     }));
 
     return [
@@ -36,10 +40,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.9,
         },
         {
+            url: `${baseUrl}/animate`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.9,
+        },
+        {
             url: `${baseUrl}/pricing`,
             lastModified: new Date(),
             changeFrequency: 'monthly',
             priority: 0.7,
+        },
+        {
+            url: `${baseUrl}/legal/privacy`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.5,
+        },
+        {
+            url: `${baseUrl}/legal/terms`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.5,
+        },
+        {
+            url: `${baseUrl}/legal/license`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.5,
         },
         ...productUrls,
     ];

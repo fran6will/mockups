@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { Upload, Save, Loader2, ShieldCheck, Edit, Trash2, X, Plus, UploadCloud, CheckCircle, Image as ImageIcon, Layers } from 'lucide-react';
+import { Upload, Save, Loader2, ShieldCheck, Edit, Trash2, X, Plus, UploadCloud, CheckCircle, Image as ImageIcon, Layers, Sparkles } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import Header from '@/components/ui/Header';
 
 import { useRouter } from 'next/navigation';
+import { analyzeImageAction } from '../actions';
 
 export default function AdminPage() {
     const router = useRouter();
@@ -31,6 +32,7 @@ export default function AdminPage() {
     const [editingProduct, setEditingProduct] = useState<any>(null);
 
     const [loading, setLoading] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [message, setMessage] = useState('');
 
     useEffect(() => {
@@ -156,6 +158,64 @@ export default function AdminPage() {
         setVariantName('');
         setVariantImage(null);
         setMessage('');
+        setMessage('');
+    };
+
+    const handleMagicFill = async () => {
+        if (!baseImage) {
+            setMessage('Error: Please upload a base image first');
+            return;
+        }
+
+        setIsAnalyzing(true);
+        setMessage('Analyzing image with AI...');
+
+        try {
+            // 1. Upload Image to get URL
+            const fileExt = baseImage.name.split('.').pop();
+            const fileName = `analysis-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('mockup-bases')
+                .upload(filePath, baseImage);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('mockup-bases')
+                .getPublicUrl(filePath);
+
+            const imageUrl = data.publicUrl;
+
+            // 2. Call Server Action
+            const result = await analyzeImageAction(imageUrl);
+
+            if (result.error) throw new Error(result.error);
+            if (!result.data) throw new Error("No data returned");
+
+            const { title, description, tags, slug, custom_prompt } = result.data;
+
+            // 3. Fill Form
+            if (title) setTitle(title);
+            if (description) setDescription(description);
+            if (tags) setTags(tags);
+            if (slug) setSlug(slug);
+            if (custom_prompt) setCustomPrompt(custom_prompt);
+
+            // Generate a random password if empty
+            if (!password) {
+                setPassword(Math.random().toString(36).slice(-8));
+            }
+
+            setMessage('Success: Form filled with AI magic! ✨');
+
+        } catch (error: any) {
+            console.error(error);
+            setMessage('Error analyzing image: ' + error.message);
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     const handleSubmit = async () => {
@@ -388,6 +448,16 @@ export default function AdminPage() {
                                             </div>
                                         )}
                                     </div>
+
+                                    {/* Magic Fill Button */}
+                                    <button
+                                        onClick={handleMagicFill}
+                                        disabled={!baseImage || isAnalyzing}
+                                        className={`w-full mt-3 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${!baseImage || isAnalyzing ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:shadow-lg hover:shadow-purple-500/20'}`}
+                                    >
+                                        {isAnalyzing ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
+                                        {isAnalyzing ? 'Analyzing...' : 'Auto-Fill Details with AI'}
+                                    </button>
                                 </div>
 
                                 <div>

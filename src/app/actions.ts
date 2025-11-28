@@ -208,3 +208,15 @@ export async function deleteVariant(id: string) {
 
     return { success: true };
 }
+
+import { analyzeMockupImage } from '@/lib/vertex/client';
+
+export async function analyzeImageAction(imageUrl: string) {
+    try {
+        const analysis = await analyzeMockupImage(imageUrl);
+        return { success: true, data: analysis };
+    } catch (error: any) {
+        console.error("Analysis Action Error:", error);
+        return { error: error.message };
+    }
+}

@@ -28,7 +28,7 @@ export const generateMockup = async (
                 responseModalities: ["TEXT", "IMAGE"],
                 imageConfig: {
                     aspectRatio: aspectRatio,
-                    imageSize: imageSize 
+                    imageSize: imageSize
                 }
             } as any
         });
@@ -56,7 +56,7 @@ export const generateMockup = async (
         // 1. Prepare Inputs
         // The 'prompt' variable contains either the custom product instruction or a default instruction.
         const fullPrompt = `Generate a photorealistic product shot. ${prompt} Important: Keep the provided design/logo unchanged, preserving its colors, text, and details exactly as they appear. Apply it realistically to the surface. Ensure high quality, detailed texture, and realistic lighting.`;
-        
+
         console.log("Sending request to model with images...");
         // 2. Call API
         // Pass the text prompt AND the image parts
@@ -101,5 +101,56 @@ export const generateMockup = async (
             success: false, // Let the frontend show the error
             error: error.message || "Unknown error"
         };
+    }
+};
+
+export const analyzeMockupImage = async (imageUrl: string) => {
+    if (!apiKey) {
+        throw new Error("Missing GEMINI_API_KEY in environment variables.");
+    }
+
+    try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        // Use Gemini 3 Pro Preview as requested
+        const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+
+        // Fetch image and convert to base64
+        const response = await fetch(imageUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString('base64');
+        const mimeType = response.headers.get('content-type') || 'image/png';
+
+        const prompt = `
+            Analyze this product mockup image and generate SEO-optimized details for it.
+            Return ONLY a JSON object with the following fields:
+            - title: A catchy, descriptive title (e.g., "Minimalist White Hoodie Mockup on Hanger").
+            - description: A detailed, SEO-friendly description highlighting the setting, lighting, and vibe.
+            - tags: A comma-separated string of 5-10 relevant keywords (e.g., "hoodie, streetwear, hanger, white, minimalist").
+            - slug: A URL-friendly slug based on the title (e.g., "minimalist-white-hoodie-hanger").
+            - custom_prompt: A short instruction for an AI to place a design on this product (e.g., "Place the design on the center chest area, maintaining the fabric wrinkles and lighting.").
+            
+            Do not include markdown formatting like \`\`\`json. Just the raw JSON string.
+        `;
+
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64,
+                    mimeType
+                }
+            }
+        ]);
+
+        const text = result.response.text();
+
+        // Clean up markdown if present
+        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        return JSON.parse(cleanText);
+
+    } catch (error: any) {
+        console.error("Gemini Analysis Error:", error);
+        throw new Error("Failed to analyze image: " + error.message);
     }
 };
