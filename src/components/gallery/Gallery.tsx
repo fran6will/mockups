@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { Search, Filter, ArrowRight, Lock, Sparkles, CheckCircle, Heart } from 'lucide-react';
+import { Search, Filter, ArrowRight, Lock, Sparkles, CheckCircle, Heart, Users } from 'lucide-react';
 import FavoriteButton from '@/components/ui/FavoriteButton';
 import { getFavorites } from '@/app/actions';
 
@@ -17,6 +17,7 @@ export default function Gallery() {
     const [searchQuery, setSearchQuery] = useState('');
     const [allTags, setAllTags] = useState<string[]>([]);
     const [favorites, setFavorites] = useState<string[]>([]);
+    const [userId, setUserId] = useState<string | null>(null);
 
     // Check global pro access
     const { accessLevel } = useAccess();
@@ -24,6 +25,9 @@ export default function Gallery() {
 
     useEffect(() => {
         const fetchData = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUserId(user?.id || null);
+
             const { data, error } = await supabase
                 .from('products')
                 .select('*')
@@ -59,6 +63,23 @@ export default function Gallery() {
             const matchesSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 p.tags?.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase()));
             return favorites.includes(p.id) && matchesSearch;
+        }
+
+        if (selectedTag === 'custom') {
+            const matchesSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase());
+            // Show products created by user OR tagged as custom
+            return (p.created_by === userId || p.tags?.includes('custom')) && matchesSearch;
+        }
+
+        if (selectedTag === 'community') {
+            const matchesSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase());
+            // Show PUBLIC products tagged as community
+            return p.is_public && p.tags?.includes('community') && matchesSearch;
+        }
+
+        // For general gallery (All or Specific Category), exclude private custom mockups
+        if (p.tags?.includes('custom') && !p.is_public) {
+            return false;
         }
 
         const matchesTag = selectedTag ? p.tags?.[0] === selectedTag : true;
@@ -126,6 +147,28 @@ export default function Gallery() {
                         >
                             <span className="flex items-center gap-2"><Heart size={14} className={selectedTag === 'favorites' ? 'fill-current' : ''} /> Favorites</span>
                             {selectedTag === 'favorites' && <ArrowRight size={14} className="hidden lg:block" />}
+                        </button>
+
+                        <button
+                            onClick={() => setSelectedTag('custom')}
+                            className={`whitespace-nowrap px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-all flex items-center justify-between group ${selectedTag === 'custom'
+                                ? 'bg-teal text-cream shadow-md shadow-teal/20'
+                                : 'bg-white/50 text-ink/60 hover:bg-white hover:text-ink hover:pl-5'
+                                }`}
+                        >
+                            <span className="flex items-center gap-2"><Sparkles size={14} /> My Templates</span>
+                            {selectedTag === 'custom' && <ArrowRight size={14} className="hidden lg:block" />}
+                        </button>
+
+                        <button
+                            onClick={() => setSelectedTag('community')}
+                            className={`whitespace-nowrap px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-all flex items-center justify-between group ${selectedTag === 'community'
+                                ? 'bg-teal text-cream shadow-md shadow-teal/20'
+                                : 'bg-white/50 text-ink/60 hover:bg-white hover:text-ink hover:pl-5'
+                                }`}
+                        >
+                            <span className="flex items-center gap-2"><Users size={14} /> Community</span>
+                            {selectedTag === 'community' && <ArrowRight size={14} className="hidden lg:block" />}
                         </button>
 
                         {allTags.map(tag => (

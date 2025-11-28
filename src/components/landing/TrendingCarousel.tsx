@@ -15,10 +15,15 @@ export default function TrendingCarousel() {
             const { data, error } = await supabase
                 .from('products')
                 .select('*')
-                .limit(10);
+                .limit(20); // Fetch more to allow for filtering
 
             if (!error && data) {
-                setProducts(data);
+                const filtered = data.filter(p => {
+                    // Exclude private custom mockups
+                    if (p.tags?.includes('custom') && !p.is_public) return false;
+                    return true;
+                });
+                setProducts(filtered.slice(0, 10));
             }
             setLoading(false);
         };

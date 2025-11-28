@@ -15,10 +15,15 @@ export default function NewArrivals() {
                 .from('products')
                 .select('*')
                 .order('created_at', { ascending: false })
-                .limit(4);
+                .limit(20); // Fetch more to allow for filtering
 
             if (!error && data) {
-                setProducts(data);
+                const filtered = data.filter(p => {
+                    // Exclude private custom mockups
+                    if (p.tags?.includes('custom') && !p.is_public) return false;
+                    return true;
+                });
+                setProducts(filtered.slice(0, 4));
             }
             setLoading(false);
         };

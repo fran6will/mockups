@@ -13,7 +13,10 @@ create table products (
   custom_prompt text default '', -- Custom instructions for the AI generation
   overlay_config jsonb not null default '{}'::jsonb, -- Stores coordinates, prompt hints, etc.
   tags text[] default '{}', -- Array of tags for filtering
-  user_id uuid references auth.users(id) -- Link to the admin user who created it
+  user_id uuid references auth.users(id), -- Link to the admin user who created it
+  status text default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  is_public boolean default false,
+  created_by uuid references auth.users(id)
 );
 
 -- Create 'downloads' table (optional tracking)
