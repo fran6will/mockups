@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import TryItPlayground from '@/components/landing/TryItPlayground';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { Suspense } from 'react';
 
 export default async function TryItSection() {
     const { data: freeProducts } = await supabase
@@ -32,7 +33,13 @@ export default async function TryItSection() {
                     </p>
                 </div>
 
-                <TryItPlayground products={freeProducts} />
+                <Suspense fallback={
+                    <div className="h-[600px] flex items-center justify-center">
+                        <Loader2 className="animate-spin text-teal" size={32} />
+                    </div>
+                }>
+                    <TryItPlayground products={freeProducts} />
+                </Suspense>
             </div>
         </section>
     );

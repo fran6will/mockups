@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import ProductClient from '@/components/customer/ProductClient';
+import { Suspense } from 'react';
 
 type Props = {
     params: Promise<{ slug: string }>;
@@ -85,7 +86,9 @@ export default async function Page({ params }: Props) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <ProductClient product={product} slug={slug} />
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 rounded-full border-4 border-teal/20 border-t-teal animate-spin" /></div>}>
+                <ProductClient product={product} slug={slug} />
+            </Suspense>
         </>
     );
 }
