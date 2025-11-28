@@ -11,10 +11,10 @@ import { trackPixelEvent } from '@/components/analytics/MetaPixel';
 
 export default function PricingPage() {
     const [userId, setUserId] = useState<string | null>(null);
-    const SUBSCRIPTION_URL = 'https://copiecolle.lemonsqueezy.com/buy/f172479e-0f82-4792-ae89-0cff2ade9534';
-    const STARTER_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/7e455bb9-014b-442d-b6e3-3e0b39b7b492';
-    const CREATOR_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/e79e2d50-3970-4b1d-87b8-d3eabbe835b2';
-    const AGENCY_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/74e4a089-b9ab-47b0-bd27-1b4d5937d7e8';
+    const SUBSCRIPTION_URL = 'https://copiecolle.lemonsqueezy.com/buy/373e7490-206a-4245-b484-793667ded21b';
+    const STARTER_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/85a300fc-479d-4528-9249-7b5736541316';
+    const CREATOR_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/373e7490-206a-4245-b484-793667ded21b';
+    const AGENCY_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/bce3aad8-13c1-4fbf-b123-38396fccf697';
 
     const getCheckoutUrl = (baseUrl: string, price?: number) => {
         if (!baseUrl) return '#';
