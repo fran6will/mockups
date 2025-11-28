@@ -6,6 +6,8 @@ import GoogleAds from "@/components/analytics/GoogleAds";
 import CookieBanner from "@/components/ui/CookieBanner";
 import "./globals.css";
 
+import { Toaster } from 'sonner';
+import BlackFridayBanner from '@/components/ui/BlackFridayBanner';
 import Footer from "@/components/ui/Footer";
 
 const fontHeading = Syne({
@@ -57,11 +59,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${fontHeading.variable} ${fontBody.variable} font-sans antialiased`}
-      >
+      <body className={`${fontHeading.variable} ${fontBody.variable} font-sans antialiased bg-cream text-ink`}>
+        <BlackFridayBanner />
         {children}
-        <Footer />
+        <Toaster position="bottom-right" />
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || "G-9SFRSNL1KC"} />
         <GoogleAds />
         <MetaPixel />

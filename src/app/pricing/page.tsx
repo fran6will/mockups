@@ -19,8 +19,13 @@ export default function PricingPage() {
     const getCheckoutUrl = (baseUrl: string, price?: number) => {
         if (!baseUrl) return '#';
         let url = baseUrl;
+
+        // Add discount code
+        const separator = url.includes('?') ? '&' : '?';
+        url += `${separator}checkout[discount_code]=BF2025`;
+
         if (userId) {
-            url += `?checkout[custom][user_id]=${userId}`;
+            url += `&checkout[custom][user_id]=${userId}`;
         }
 
         // Construct redirect URL with success flags for the Pixel
@@ -31,8 +36,7 @@ export default function PricingPage() {
         }
 
         const redirectUrl = encodeURIComponent(redirectPath);
-        const separator = url.includes('?') ? '&' : '?';
-        url += `${separator}checkout[redirect_url]=${redirectUrl}`;
+        url += `&checkout[redirect_url]=${redirectUrl}`;
         return url;
     };
 
@@ -88,8 +92,12 @@ export default function PricingPage() {
                                 <p className="text-white/80 text-lg mb-8">
                                     The ultimate toolkit for professional creators. Unlimited possibilities.
                                 </p>
-                                <div className="text-5xl font-bold mb-2 tracking-tighter">
-                                    $19.99<span className="text-lg text-white/60 font-bold tracking-normal">/mo CAD</span>
+                                <div className="text-5xl font-bold mb-2 tracking-tighter flex items-baseline gap-3">
+                                    <span className="text-white/40 line-through text-3xl">$19.99</span>
+                                    <span>$9.99<span className="text-lg text-white/60 font-bold tracking-normal">/mo CAD</span></span>
+                                </div>
+                                <div className="bg-yellow-400 text-ink text-xs font-black px-2 py-1 rounded inline-block mb-2 uppercase tracking-wider">
+                                    Black Friday Deal
                                 </div>
                                 <p className="text-white/60 text-sm mb-8">Cancel anytime. Local currency at checkout.</p>
 
@@ -165,7 +173,13 @@ export default function PricingPage() {
                         {/* Starter Pack */}
                         <div className="glass rounded-3xl p-8 border border-teal/10 hover:-translate-y-1 transition-transform duration-300">
                             <h3 className="text-xl font-bold text-ink mb-2">Starter Pack</h3>
-                            <div className="text-3xl font-bold text-ink mb-1">$9.99 <span className="text-sm text-ink/40 font-normal">CAD</span></div>
+                            <div className="text-3xl font-bold text-ink mb-1 flex items-baseline gap-2">
+                                <span className="text-ink/30 line-through text-xl">$9.99</span>
+                                <span>$4.99 <span className="text-sm text-ink/40 font-normal">CAD</span></span>
+                            </div>
+                            <div className="bg-yellow-400 text-ink text-[10px] font-black px-2 py-0.5 rounded inline-block mb-2 uppercase tracking-wider">
+                                50% OFF
+                            </div>
                             <div className="text-teal font-bold mb-6">100 Credits</div>
                             <ul className="space-y-3 text-sm text-ink/70 mb-8">
                                 <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 50 Images</li>
@@ -210,7 +224,13 @@ export default function PricingPage() {
                                 BEST VALUE
                             </div>
                             <h3 className="text-xl font-bold text-ink mb-2">Creator Pack</h3>
-                            <div className="text-3xl font-bold text-ink mb-1">$34.99 <span className="text-sm text-ink/40 font-normal">CAD</span></div>
+                            <div className="text-3xl font-bold text-ink mb-1 flex items-baseline gap-2">
+                                <span className="text-ink/30 line-through text-xl">$34.99</span>
+                                <span>$17.49 <span className="text-sm text-ink/40 font-normal">CAD</span></span>
+                            </div>
+                            <div className="bg-yellow-400 text-ink text-[10px] font-black px-2 py-0.5 rounded inline-block mb-2 uppercase tracking-wider">
+                                50% OFF
+                            </div>
                             <div className="text-teal font-bold mb-6">500 Credits</div>
                             <ul className="space-y-3 text-sm text-ink/70 mb-8">
                                 <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 250 Images</li>
@@ -252,7 +272,13 @@ export default function PricingPage() {
                         {/* Agency Pack */}
                         <div className="glass rounded-3xl p-8 border border-teal/10 hover:-translate-y-1 transition-transform duration-300">
                             <h3 className="text-xl font-bold text-ink mb-2">Agency Pack</h3>
-                            <div className="text-3xl font-bold text-ink mb-1">$59.99 <span className="text-sm text-ink/40 font-normal">CAD</span></div>
+                            <div className="text-3xl font-bold text-ink mb-1 flex items-baseline gap-2">
+                                <span className="text-ink/30 line-through text-xl">$59.99</span>
+                                <span>$29.99 <span className="text-sm text-ink/40 font-normal">CAD</span></span>
+                            </div>
+                            <div className="bg-yellow-400 text-ink text-[10px] font-black px-2 py-0.5 rounded inline-block mb-2 uppercase tracking-wider">
+                                50% OFF
+                            </div>
                             <div className="text-teal font-bold mb-6">1000 Credits</div>
                             <ul className="space-y-3 text-sm text-ink/70 mb-8">
                                 <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 500 Images</li>
