@@ -8,6 +8,7 @@ import Banner from '@/components/ui/Banner';
 import Header from '@/components/ui/Header';
 import { useAccess } from '@/hooks/use-access';
 import FavoriteButton from '@/components/ui/FavoriteButton';
+import WatermarkOverlay from '@/components/ui/WatermarkOverlay';
 import { getFavorites } from '@/app/actions';
 
 interface ProductClientProps {
@@ -97,13 +98,13 @@ export default function ProductClient({ product: initialProduct, slug }: Product
                     isFree={product.is_free}
                 />
 
-                <SimilarProducts currentProduct={product} />
+                <SimilarProducts currentProduct={product} isPro={isPro} />
             </main>
         </div>
     );
 }
 
-function SimilarProducts({ currentProduct }: { currentProduct: any }) {
+function SimilarProducts({ currentProduct, isPro }: { currentProduct: any, isPro: boolean }) {
     const [similar, setSimilar] = useState<any[]>([]);
 
     useEffect(() => {
@@ -134,14 +135,14 @@ function SimilarProducts({ currentProduct }: { currentProduct: any }) {
                         href={`/${product.slug}`}
                         className="group block bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-teal/10 hover:-translate-y-1 transition-all duration-500 border border-ink/5"
                     >
-                        <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
+                        <WatermarkOverlay showWatermark={!isPro} className="aspect-[4/3] relative overflow-hidden bg-gray-100">
                             <div className="absolute inset-0 bg-teal/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 mix-blend-multiply"></div>
                             <img
                                 src={product.gallery_image_url || product.base_image_url}
                                 alt={product.title}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                             />
-                        </div>
+                        </WatermarkOverlay>
                         <div className="p-4">
                             <h4 className="text-ink font-bold group-hover:text-teal transition-colors">{product.title}</h4>
                         </div>

@@ -9,6 +9,7 @@ import FabricCanvas from './FabricCanvas';
 import { useAccess } from '@/hooks/use-access';
 import { useSearchParams } from 'next/navigation';
 import ShareModal from '@/components/ui/ShareModal';
+import WatermarkOverlay from '@/components/ui/WatermarkOverlay';
 
 interface ImageCompositorProps {
     productId: string;
@@ -428,11 +429,6 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                 <Lock size={20} className="text-teal" />
                                 Unlock Template
                             </div>
-                            <div className="flex items-center gap-2 text-ink/60 mb-6 bg-ink/5 p-3 rounded-xl">
-                                <Coins size={18} className="text-teal" />
-                                <span className="font-bold">Cost: 25 Credits</span>
-                                <span className="text-xs">(Balance: {credits ?? 0})</span>
-                            </div>
                             <p className="text-sm text-ink/60">
                                 {isFree
                                     ? "Create a free account to try this mockup."
@@ -549,8 +545,12 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         <div className="max-w-6xl mx-auto space-y-8">
             {/* Top Section: Canvas / Preview */}
             <div className="max-w-2xl mx-auto w-full">
-
-                <div {...getRootProps()} className="glass p-4 rounded-[2.5rem] border border-white/40 shadow-2xl bg-white/30 aspect-square flex items-center justify-center relative overflow-hidden group">
+                <WatermarkOverlay
+                    {...getRootProps()}
+                    className="glass p-4 rounded-[2.5rem] border border-white/40 shadow-2xl bg-white/30 aspect-square flex items-center justify-center relative overflow-hidden group"
+                    showWatermark={!isUnlocked}
+                    allowInteraction={true}
+                >
                     <input {...inputProps} />
                     {!generatedImage && layers.length === 0 && (
                         <div className="text-center text-ink/30 pointer-events-none">
@@ -566,7 +566,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     <img
                         src={currentBaseImage}
                         alt="Base"
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${generatedImage ? 'opacity-0' : 'opacity-100'}`}
+                        draggable={false}
+                        onContextMenu={(e) => e.preventDefault()}
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 pointer-events-none select-none ${generatedImage ? 'opacity-0' : 'opacity-100'}`}
                     />
 
                     {/* Layers / Dropzone Area */}
@@ -669,7 +671,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                             </p>
                         </div>
                     )}
-                </div>
+                </WatermarkOverlay>
 
                 {/* Variant Carousel */}
                 {variants.length > 0 && (
@@ -900,124 +902,130 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             </div>
 
             {/* Modals */}
-            {showCreditPopup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative">
-                        <button
-                            onClick={() => setShowCreditPopup(false)}
-                            className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
-                        <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto">
-                            <Coins size={40} />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-bold text-ink mb-2">Running low on credits!</h3>
-                            <p className="text-ink/60">
-                                You've used your 5 free generations. Upgrade to Pro for unlimited mockups or purchase a credit pack.
-                            </p>
-                        </div>
-                        <div className="grid gap-3">
-                            <a href="/pricing" className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 transition-all flex items-center justify-center gap-2">
-                                <Sparkles size={18} /> Get Unlimited Access
-                            </a>
+            {
+                showCreditPopup && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative">
                             <button
                                 onClick={() => setShowCreditPopup(false)}
-                                className="w-full bg-transparent text-ink/50 font-bold py-3 hover:text-ink transition-colors"
+                                className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
                             >
-                                Maybe later
+                                <X size={24} />
                             </button>
+                            <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto">
+                                <Coins size={40} />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-ink mb-2">Running low on credits!</h3>
+                                <p className="text-ink/60">
+                                    You've used your 5 free generations. Upgrade to Pro for unlimited mockups or purchase a credit pack.
+                                </p>
+                            </div>
+                            <div className="grid gap-3">
+                                <a href="/pricing" className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 transition-all flex items-center justify-center gap-2">
+                                    <Sparkles size={18} /> Get Unlimited Access
+                                </a>
+                                <button
+                                    onClick={() => setShowCreditPopup(false)}
+                                    className="w-full bg-transparent text-ink/50 font-bold py-3 hover:text-ink transition-colors"
+                                >
+                                    Maybe later
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
-            {showAnimateDialog && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-                    <div className="bg-white rounded-[2rem] p-8 max-w-md w-full space-y-6 shadow-2xl border border-purple-500/20 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-500"></div>
-
-                        <button
-                            onClick={() => setShowAnimateDialog(false)}
-                            className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
-
-                        <div className="text-center">
-                            <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
-                                <Film size={32} />
-                            </div>
-                            <h3 className="text-2xl font-bold text-ink">Animate Mockup</h3>
-                            <p className="text-ink/60 mt-2">
-                                Turn your static design into a cinematic video using Google Veo.
-                            </p>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-2">
-                                    Camera Movement Prompt
-                                </label>
-                                <textarea
-                                    value={videoPrompt}
-                                    onChange={(e) => setVideoPrompt(e.target.value)}
-                                    placeholder="e.g. Slow camera dolly in, cinematic lighting, 4k..."
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-ink focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all h-32 resize-none"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-between text-sm bg-amber-50 text-amber-800 p-3 rounded-xl border border-amber-100">
-                                <span className="font-bold flex items-center gap-2"><Coins size={14} /> Cost</span>
-                                <span className="font-bold">10 Credits</span>
-                            </div>
+            {
+                showAnimateDialog && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+                        <div className="bg-white rounded-[2rem] p-8 max-w-md w-full space-y-6 shadow-2xl border border-purple-500/20 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-500"></div>
 
                             <button
-                                onClick={handleAnimate}
-                                disabled={!videoPrompt.trim() || (credits !== null && credits < 10)}
-                                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                onClick={() => setShowAnimateDialog(false)}
+                                className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
                             >
-                                <Play size={18} className="fill-current" /> Generate Video
+                                <X size={24} />
                             </button>
+
+                            <div className="text-center">
+                                <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
+                                    <Film size={32} />
+                                </div>
+                                <h3 className="text-2xl font-bold text-ink">Animate Mockup</h3>
+                                <p className="text-ink/60 mt-2">
+                                    Turn your static design into a cinematic video using Google Veo.
+                                </p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-ink/50 uppercase tracking-wider mb-2">
+                                        Camera Movement Prompt
+                                    </label>
+                                    <textarea
+                                        value={videoPrompt}
+                                        onChange={(e) => setVideoPrompt(e.target.value)}
+                                        placeholder="e.g. Slow camera dolly in, cinematic lighting, 4k..."
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-ink focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all h-32 resize-none"
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between text-sm bg-amber-50 text-amber-800 p-3 rounded-xl border border-amber-100">
+                                    <span className="font-bold flex items-center gap-2"><Coins size={14} /> Cost</span>
+                                    <span className="font-bold">10 Credits</span>
+                                </div>
+
+                                <button
+                                    onClick={handleAnimate}
+                                    disabled={!videoPrompt.trim() || (credits !== null && credits < 10)}
+                                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                >
+                                    <Play size={18} className="fill-current" /> Generate Video
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
-            {showLimitPopup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[2rem] p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-teal via-purple-500 to-teal"></div>
-                        <button
-                            onClick={() => setShowLimitPopup(false)}
-                            className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
-                        <div className="w-24 h-24 bg-teal/10 text-teal rounded-full flex items-center justify-center mx-auto animate-bounce">
-                            <Sparkles size={48} />
-                        </div>
-                        <div>
-                            <h3 className="text-3xl font-bold text-ink mb-3 tracking-tight">Whoa, slow down Picasso! 🎨</h3>
-                            <p className="text-lg text-ink/60 leading-relaxed">
-                                You've used up your free samples. Ready to create without limits?
-                            </p>
-                        </div>
-                        <div className="grid gap-3 pt-2">
-                            <a href="/pricing" className="w-full bg-gradient-to-r from-teal to-teal/80 text-cream font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal/20">
-                                <Sparkles size={18} /> Get Unlimited Access
-                            </a>
+            {
+                showLimitPopup && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="bg-white rounded-[2rem] p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-teal via-purple-500 to-teal"></div>
                             <button
                                 onClick={() => setShowLimitPopup(false)}
-                                className="text-sm font-bold text-ink/40 hover:text-ink transition-colors"
+                                className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
                             >
-                                No thanks, I'll wait
+                                <X size={24} />
                             </button>
+                            <div className="w-24 h-24 bg-teal/10 text-teal rounded-full flex items-center justify-center mx-auto animate-bounce">
+                                <Sparkles size={48} />
+                            </div>
+                            <div>
+                                <h3 className="text-3xl font-bold text-ink mb-3 tracking-tight">Whoa, slow down Picasso! 🎨</h3>
+                                <p className="text-lg text-ink/60 leading-relaxed">
+                                    You've used up your free samples. Ready to create without limits?
+                                </p>
+                            </div>
+                            <div className="grid gap-3 pt-2">
+                                <a href="/pricing" className="w-full bg-gradient-to-r from-teal to-teal/80 text-cream font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal/20">
+                                    <Sparkles size={18} /> Get Unlimited Access
+                                </a>
+                                <button
+                                    onClick={() => setShowLimitPopup(false)}
+                                    className="text-sm font-bold text-ink/40 hover:text-ink transition-colors"
+                                >
+                                    No thanks, I'll wait
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
