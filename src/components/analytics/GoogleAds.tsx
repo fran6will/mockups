@@ -3,9 +3,9 @@
 import Script from 'next/script';
 
 export default function GoogleAds() {
-    return (
-        <Script id="google-ads-conversion" strategy="afterInteractive">
-            {`
+  return (
+    <Script id="google-ads-conversion" strategy="afterInteractive">
+      {`
         function gtag_report_conversion(url) {
           var callback = function () {
             if (typeof(url) != 'undefined') {
@@ -14,9 +14,11 @@ export default function GoogleAds() {
           };
           // Check if gtag is defined (it should be by GoogleAnalytics)
           if (typeof gtag === 'function') {
+            // Generate a unique transaction ID for the click event
+            var transactionId = 'txn_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
             gtag('event', 'conversion', {
                 'send_to': 'AW-17764244503/1nGKCKndv8gbEJe405ZC',
-                'transaction_id': '',
+                'transaction_id': transactionId,
                 'event_callback': callback
             });
           } else {
@@ -29,6 +31,6 @@ export default function GoogleAds() {
         // Expose to window so it can be called globally if needed
         window.gtag_report_conversion = gtag_report_conversion;
       `}
-        </Script>
-    );
+    </Script>
+  );
 }
