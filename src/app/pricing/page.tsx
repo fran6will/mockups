@@ -96,7 +96,16 @@ export default function PricingPage() {
                                 {userId ? (
                                     <a
                                         href={getCheckoutUrl(SUBSCRIPTION_URL, 19.99)}
-                                        onClick={() => handleInitiateCheckout('Pro Membership', 19.99)}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleInitiateCheckout('Pro Membership', 19.99);
+                                            const url = getCheckoutUrl(SUBSCRIPTION_URL, 19.99);
+                                            if (window.gtag_report_conversion) {
+                                                window.gtag_report_conversion(url);
+                                            } else {
+                                                window.location.href = url;
+                                            }
+                                        }}
                                         className="group inline-flex w-full md:w-auto px-8 py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl items-center justify-center gap-2"
                                     >
                                         Get Pro Access <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -105,6 +114,7 @@ export default function PricingPage() {
                                     <button
                                         onClick={async () => {
                                             handleInitiateCheckout('Pro Membership', 19.99);
+                                            // For sign-in, we don't track conversion yet as they haven't purchased
                                             await supabase.auth.signInWithOAuth({
                                                 provider: 'google',
                                                 options: { redirectTo: `${window.location.origin}/pricing` },
@@ -164,7 +174,16 @@ export default function PricingPage() {
                             {userId ? (
                                 <a
                                     href={getCheckoutUrl(STARTER_PACK_URL, 9.99)}
-                                    onClick={() => handleInitiateCheckout('Starter Pack', 9.99)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleInitiateCheckout('Starter Pack', 9.99);
+                                        const url = getCheckoutUrl(STARTER_PACK_URL, 9.99);
+                                        if (window.gtag_report_conversion) {
+                                            window.gtag_report_conversion(url);
+                                        } else {
+                                            window.location.href = url;
+                                        }
+                                    }}
                                     className="block w-full py-3 rounded-xl bg-ink/5 text-ink font-bold text-center hover:bg-teal hover:text-white transition-all"
                                 >
                                     Buy Starter
@@ -200,7 +219,16 @@ export default function PricingPage() {
                             {userId ? (
                                 <a
                                     href={getCheckoutUrl(CREATOR_PACK_URL, 34.99)}
-                                    onClick={() => handleInitiateCheckout('Creator Pack', 34.99)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleInitiateCheckout('Creator Pack', 34.99);
+                                        const url = getCheckoutUrl(CREATOR_PACK_URL, 34.99);
+                                        if (window.gtag_report_conversion) {
+                                            window.gtag_report_conversion(url);
+                                        } else {
+                                            window.location.href = url;
+                                        }
+                                    }}
                                     className="block w-full py-3 rounded-xl bg-teal text-white font-bold text-center hover:bg-teal/90 transition-all shadow-lg shadow-teal/20"
                                 >
                                     Buy Creator
@@ -233,7 +261,16 @@ export default function PricingPage() {
                             {userId ? (
                                 <a
                                     href={getCheckoutUrl(AGENCY_PACK_URL, 59.99)}
-                                    onClick={() => handleInitiateCheckout('Agency Pack', 59.99)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleInitiateCheckout('Agency Pack', 59.99);
+                                        const url = getCheckoutUrl(AGENCY_PACK_URL, 59.99);
+                                        if (window.gtag_report_conversion) {
+                                            window.gtag_report_conversion(url);
+                                        } else {
+                                            window.location.href = url;
+                                        }
+                                    }}
                                     className="block w-full py-3 rounded-xl bg-ink/5 text-ink font-bold text-center hover:bg-teal hover:text-white transition-all"
                                 >
                                     Buy Agency
