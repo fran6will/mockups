@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase/client';
-import TryItGate from '@/components/landing/TryItGate';
 import TryItPlayground from '@/components/landing/TryItPlayground';
 import { Sparkles } from 'lucide-react';
 
@@ -33,9 +32,7 @@ export default async function TryItSection() {
                     </p>
                 </div>
 
-                <TryItGate>
-                    <TryItPlayground products={freeProducts} />
-                </TryItGate>
+                <TryItPlayground products={freeProducts} />
             </div>
         </section>
     );

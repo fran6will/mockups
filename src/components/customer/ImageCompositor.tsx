@@ -90,12 +90,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
     useEffect(() => {
         if (isFree) {
-            // Only unlock if user is logged in (to capture email)
-            if (user) {
-                setIsUnlocked(true);
-            } else {
-                setIsUnlocked(false);
-            }
+            // Allow guests to see the UI, but prompt on generate
+            setIsUnlocked(true);
         } else if (accessLevel === 'pro') {
             setIsUnlocked(true);
             setCredits(999); // Infinite credits for pro
@@ -258,8 +254,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const handleGenerate = async () => {
         if (layers.length === 0) return;
 
-        if (!emailInput) {
-            setError("Please sign in to generate mockups.");
+        if (!emailInput || !user) {
+            // If guest tries to generate, prompt login
+            handleGoogleSignIn();
             return;
         }
 
@@ -873,20 +870,25 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                             <span className="font-bold text-teal">{isFree ? 'Free' : `${currentCost} Credits`}</span>
                         </div>
 
+                        {/* Generate Button */}
                         <button
                             onClick={handleGenerate}
-                            disabled={layers.length === 0 || isGenerating || (!isFree && credits !== null && credits < currentCost)}
-                            className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg ${layers.length === 0 || isGenerating
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                                : 'bg-teal text-white hover:bg-teal/90 shadow-teal/20 hover:-translate-y-0.5'
+                            disabled={isGenerating || layers.length === 0}
+                            className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-2 ${isGenerating || layers.length === 0
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-teal text-white hover:bg-teal/90 hover:shadow-teal/20 hover:-translate-y-0.5'
                                 }`}
                         >
                             {isGenerating ? (
-                                <Loader2 className="animate-spin" />
+                                <>
+                                    <Loader2 className="animate-spin" /> Generating...
+                                </>
                             ) : (
-                                <Sparkles className="fill-current" />
+                                <>
+                                    <Sparkles size={20} />
+                                    {!user ? 'Sign in to Generate' : `Generate (${currentCost} Credits)`}
+                                </>
                             )}
-                            {isGenerating ? 'Generating...' : 'Generate'}
                         </button>
 
                         <p className="text-[10px] text-ink/40 text-center leading-tight">
