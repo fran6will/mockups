@@ -254,11 +254,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const handleGenerate = async () => {
         if (layers.length === 0) return;
 
-        if (!emailInput || !user) {
-            // If guest tries to generate, prompt login
-            handleGoogleSignIn();
-            return;
-        }
+        // REMOVED: Forced login check. Guests can now generate freely until limit.
+        // if (!emailInput || !user) { ... }
 
         setIsGenerating(true);
         setError(null);
@@ -285,7 +282,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     productId,
                     logoUrl: base64Image,
                     aspectRatio,
-                    email: emailInput,
+                    email: emailInput || '', // Optional for guests now
                     imageSize,
                     variantImageUrl: currentBaseImage !== baseImageUrl ? currentBaseImage : undefined
                 }),
@@ -313,7 +310,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             setGeneratedImage(data.imageUrl);
             if (data.remainingCredits !== undefined) {
                 setCredits(data.remainingCredits);
-                if (data.remainingCredits <= 0) {
+                if (data.remainingCredits <= 0 && accessLevel !== 'pro') {
                     setShowCreditPopup(true);
                 }
             }
@@ -982,6 +979,42 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                     className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                 >
                                     <Play size={18} className="fill-current" /> Generate Video
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {
+                showLimitPopup && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="bg-white rounded-[2rem] p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-teal via-purple-500 to-teal"></div>
+                            <button
+                                onClick={() => setShowLimitPopup(false)}
+                                className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
+                            >
+                                <X size={24} />
+                            </button>
+                            <div className="w-24 h-24 bg-teal/10 text-teal rounded-full flex items-center justify-center mx-auto animate-bounce">
+                                <Sparkles size={48} />
+                            </div>
+                            <div>
+                                <h3 className="text-3xl font-bold text-ink mb-3 tracking-tight">Whoa, slow down Picasso! 🎨</h3>
+                                <p className="text-lg text-ink/60 leading-relaxed">
+                                    You've used up your free samples. Ready to create without limits?
+                                </p>
+                            </div>
+                            <div className="grid gap-3 pt-2">
+                                <a href="/pricing" className="w-full bg-gradient-to-r from-teal to-teal/80 text-cream font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal/20">
+                                    <Sparkles size={18} /> Get Unlimited Access
+                                </a>
+                                <button
+                                    onClick={() => setShowLimitPopup(false)}
+                                    className="text-sm font-bold text-ink/40 hover:text-ink transition-colors"
+                                >
+                                    No thanks, I'll wait
                                 </button>
                             </div>
                         </div>

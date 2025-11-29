@@ -10,6 +10,7 @@ export async function createProduct(formData: FormData) {
     const galleryImageUrl = formData.get('galleryImageUrl') as string;
     const customPrompt = formData.get('customPrompt') as string;
     const tagsString = formData.get('tags') as string;
+    const category = formData.get('category') as string;
 
     const description = formData.get('description') as string;
     const isFree = formData.get('is_free') === 'true';
@@ -33,6 +34,7 @@ export async function createProduct(formData: FormData) {
             custom_prompt: customPrompt || '',
             overlay_config: {},
             tags: tags,
+            category: category || null,
             is_free: isFree
         })
         .select()
@@ -56,6 +58,7 @@ export async function updateProduct(formData: FormData) {
     const galleryImageUrl = formData.get('galleryImageUrl') as string;
     const description = formData.get('description') as string;
     const tagsString = formData.get('tags') as string;
+    const category = formData.get('category') as string;
     const isFree = formData.get('is_free') === 'true';
 
     const tags = tagsString ? tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
@@ -72,6 +75,7 @@ export async function updateProduct(formData: FormData) {
         custom_prompt: customPrompt || '',
         gallery_image_url: galleryImageUrl || null,
         tags: tags,
+        category: category || null,
         is_free: isFree
     };
 

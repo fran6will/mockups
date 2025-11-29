@@ -36,6 +36,10 @@ export async function POST(request: Request) {
         const supabase = await createClient();
         const { data: { user: authUser } } = await supabase.auth.getUser();
 
+        // Get IP Address
+        const forwardedFor = request.headers.get('x-forwarded-for');
+        const ip = forwardedFor ? forwardedFor.split(',')[0] : '127.0.0.1';
+
         // 0.5 Check Subscription (Pro Access) & Credits
         let isPro = false;
         let userCredits = null;
@@ -62,7 +66,7 @@ export async function POST(request: Request) {
         }
 
         // Check Credits (If NOT Pro)
-        if (!isPro) {
+        if (!isPro && email) {
             const { data: user, error: userError } = await supabaseAdmin
                 .from('user_credits')
                 .select('*')
@@ -91,16 +95,33 @@ export async function POST(request: Request) {
             // Bypass limit if Pro or has ANY credits
             const hasCredits = userCredits && userCredits.balance > 0;
 
-            if (!isPro && !hasCredits && email) {
-                const { count, error: countError } = await supabaseAdmin
-                    .from('generations')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('status', 'success')
-                    .contains('meta', { user_email: email });
+            if (!isPro && !hasCredits) {
+                // Check limit by IP if no email, or by email if provided
+                let count = 0;
+                let countError = null;
+
+                if (email) {
+                    const { count: c, error: e } = await supabaseAdmin
+                        .from('generations')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'success')
+                        .contains('meta', { user_email: email });
+                    count = c || 0;
+                    countError = e;
+                } else {
+                    // Check by IP
+                    const { count: c, error: e } = await supabaseAdmin
+                        .from('generations')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'success')
+                        .eq('ip_address', ip);
+                    count = c || 0;
+                    countError = e;
+                }
 
                 if (countError) {
                     console.error("Error checking free limit:", countError);
-                } else if (count !== null && count >= 3) {
+                } else if (count >= 3) {
                     return NextResponse.json({
                         error: 'Free limit reached',
                         code: 'FREE_LIMIT_REACHED'
@@ -183,7 +204,8 @@ export async function POST(request: Request) {
                     duration_ms: duration,
                     meta: { aspect_ratio: aspectRatio, user_email: email, image_size: imageSize },
                     user_id: authUser?.id || null, // Link to auth user if logged in
-                    image_url: publicUrl
+                    image_url: publicUrl,
+                    ip_address: ip
                 });
             } catch (logError) {
                 console.error("Failed to log generation usage:", logError);

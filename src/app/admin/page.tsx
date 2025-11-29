@@ -10,6 +10,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { analyzeImageAction } from '../actions';
 
+const CATEGORIES = [
+    "Men's Clothing",
+    "Women's Clothing",
+    "Kids' Clothing",
+    "Accessories",
+    "Home & Living"
+];
+
 export default function AdminPage() {
     const router = useRouter();
     const [products, setProducts] = useState<any[]>([]);
@@ -19,6 +27,7 @@ export default function AdminPage() {
     const [description, setDescription] = useState('');
     const [isFree, setIsFree] = useState(false);
     const [slug, setSlug] = useState('');
+    const [category, setCategory] = useState('');
     const [password, setPassword] = useState('');
     const [customPrompt, setCustomPrompt] = useState('');
     const [tags, setTags] = useState('');
@@ -66,6 +75,7 @@ export default function AdminPage() {
         setDescription(product.description || '');
         setIsFree(product.is_free || false);
         setSlug(product.slug);
+        setCategory(product.category || '');
         setPassword(product.password_hash);
         setCustomPrompt(product.custom_prompt || '');
         setTags(product.tags ? product.tags.join(', ') : '');
@@ -150,6 +160,7 @@ export default function AdminPage() {
         setDescription('');
         setIsFree(false);
         setSlug('');
+        setCategory('');
         setPassword('');
         setCustomPrompt('');
         setTags('');
@@ -275,6 +286,7 @@ export default function AdminPage() {
             formData.append('title', title);
             formData.append('description', description);
             formData.append('slug', slug);
+            formData.append('category', category);
             formData.append('password', password);
             formData.append('customPrompt', customPrompt);
             formData.append('tags', tags);
@@ -383,6 +395,19 @@ export default function AdminPage() {
                                         className="w-full bg-white/50 border border-white/60 rounded-xl p-3 text-sm text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all"
                                         placeholder="url-slug"
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Category</label>
+                                    <select
+                                        value={category}
+                                        onChange={(e) => setCategory(e.target.value)}
+                                        className="w-full bg-white/50 border border-white/60 rounded-xl p-3 text-sm text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all appearance-none"
+                                    >
+                                        <option value="">Select Category...</option>
+                                        {CATEGORIES.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Password</label>
@@ -584,6 +609,9 @@ export default function AdminPage() {
                                                     <div>{product.title}</div>
                                                     {product.is_free && (
                                                         <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">FREE</span>
+                                                    )}
+                                                    {product.category && (
+                                                        <span className="block text-[10px] text-ink/40 font-normal mt-0.5">{product.category}</span>
                                                     )}
                                                 </td>
                                                 <td className="py-3 text-ink/60 font-mono text-xs">{product.slug}</td>

@@ -106,12 +106,39 @@ export default function CustomMockupPage() {
         <div className="min-h-screen bg-cream font-sans text-ink">
             <Header />
 
-            <main className="max-w-4xl mx-auto px-6 py-12">
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">Create Custom Template</h1>
-                    <p className="text-lg text-ink/60 max-w-2xl mx-auto">
-                        Upload a blank product photo (like from Printify) and let our AI place it in a professional scene.
+            <main className="max-w-5xl mx-auto px-6 py-12">
+                <div className="text-center mb-16 relative">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal/10 rounded-full blur-[120px] -z-10"></div>
+                    <div className="inline-flex items-center gap-2 bg-white/50 backdrop-blur border border-white/60 px-4 py-1.5 rounded-full text-sm font-bold text-teal mb-6 shadow-sm">
+                        <Sparkles size={16} />
+                        <span>AI Scene Generator</span>
+                    </div>
+                    <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight text-ink">
+                        Create Your Own <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal to-purple-600">Magic Scenes</span>
+                    </h1>
+                    <p className="text-xl text-ink/60 max-w-2xl mx-auto leading-relaxed">
+                        Don't see the template you need? Upload a blank product photo and describe the scene. Our AI will place it in a professional environment instantly.
                     </p>
+                </div>
+
+                {/* How it Works */}
+                <div className="grid md:grid-cols-3 gap-6 mb-20">
+                    {[
+                        { icon: UploadCloud, title: "1. Upload Product", desc: "Upload a clean photo of your product on a plain background (like from Printify)." },
+                        { icon: Sparkles, title: "2. Describe Scene", desc: "Tell the AI where to place it. 'On a marble table', 'In a cozy coffee shop', etc." },
+                        { icon: CheckCircle, title: "3. Get Template", desc: "We'll generate a reusable template that you can use to create unlimited mockups." }
+                    ].map((step, i) => (
+                        <div key={i} className="glass p-6 rounded-2xl border border-white/40 shadow-lg shadow-teal/5 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 font-black text-6xl text-teal select-none">
+                                {i + 1}
+                            </div>
+                            <div className="w-12 h-12 bg-teal/10 text-teal rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <step.icon size={24} />
+                            </div>
+                            <h3 className="font-bold text-lg mb-2">{step.title}</h3>
+                            <p className="text-sm text-ink/60">{step.desc}</p>
+                        </div>
+                    ))}
                 </div>
 
                 {successProduct ? (

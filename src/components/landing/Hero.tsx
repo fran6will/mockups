@@ -85,6 +85,39 @@ export default function Hero() {
                     </div>
                 </div>
             )
+        },
+        {
+            id: 2,
+            badge: "Custom Templates",
+            badgeIcon: Sparkles,
+            title: <>Create Your Own <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Magic Scenes</span></>,
+            description: "Have a specific vision? Upload any blank product photo and describe the scene. Our AI will place your product in a professional environment instantly.",
+            cta: "Create Custom Mockup",
+            ctaLink: "/custom",
+            visual: (
+                <div className="relative w-full max-w-md aspect-[4/5] glass rounded-3xl border border-white/40 shadow-2xl shadow-purple-500/20 overflow-hidden transform -rotate-1 hover:rotate-0 transition-transform duration-700">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-indigo-50 flex items-center justify-center">
+                        <div className="relative w-3/4 aspect-square bg-white rounded-xl shadow-lg transform rotate-3 border border-ink/5 p-2">
+                            <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center text-ink/20">
+                                <Sparkles size={48} />
+                            </div>
+                            <div className="absolute -top-4 -right-4 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                                AI Generated
+                            </div>
+                        </div>
+                    </div>
+                    {/* Floating Badge */}
+                    <div className="absolute bottom-8 left-8 right-8 glass p-4 rounded-xl border border-white/60 shadow-lg flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white">
+                            <Sparkles size={20} />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-ink/50 uppercase">Feature</p>
+                            <p className="text-sm font-bold text-ink">Text-to-Mockup</p>
+                        </div>
+                    </div>
+                </div>
+            )
         }
     ];
 
@@ -102,11 +135,11 @@ export default function Hero() {
                             <span>{activeSlide.badge}</span>
                         </div>
 
-                        <h1 className="text-5xl lg:text-7xl font-bold text-ink mb-6 tracking-tight leading-[1.1] min-h-[160px] lg:min-h-[220px]">
+                        <h1 className="text-5xl lg:text-7xl font-bold text-ink mb-6 tracking-tight leading-[1.1] min-h-[240px] flex items-center">
                             {activeSlide.title}
                         </h1>
 
-                        <p className="text-xl text-ink/60 mb-8 leading-relaxed min-h-[84px]">
+                        <p className="text-xl text-ink/60 mb-8 leading-relaxed min-h-[100px]">
                             {activeSlide.description}
                         </p>
 

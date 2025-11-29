@@ -10,6 +10,14 @@ import { getFavorites } from '@/app/actions';
 import { useAccess } from '@/hooks/use-access';
 import WatermarkOverlay from '@/components/ui/WatermarkOverlay';
 
+const CATEGORIES = [
+    "Men's Clothing",
+    "Women's Clothing",
+    "Kids' Clothing",
+    "Accessories",
+    "Home & Living"
+];
+
 export default function Gallery() {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -82,6 +90,14 @@ export default function Gallery() {
             return false;
         }
 
+        // Category Filter
+        if (CATEGORIES.includes(selectedTag || '')) {
+            const matchesCategory = p.category === selectedTag;
+            const matchesSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.tags?.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+            return matchesCategory && matchesSearch;
+        }
+
         const matchesTag = selectedTag ? p.tags?.[0] === selectedTag : true;
         const matchesSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.tags?.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -136,6 +152,23 @@ export default function Gallery() {
                             All Mockups
                             {selectedTag === null && <ArrowRight size={14} className="hidden lg:block" />}
                         </button>
+
+                        {/* Main Categories */}
+                        {CATEGORIES.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setSelectedTag(cat)}
+                                className={`whitespace-nowrap px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-all flex items-center justify-between group ${selectedTag === cat
+                                    ? 'bg-teal text-cream shadow-md shadow-teal/20'
+                                    : 'bg-white/50 text-ink/60 hover:bg-white hover:text-ink hover:pl-5'
+                                    }`}
+                            >
+                                {cat}
+                                {selectedTag === cat && <ArrowRight size={14} className="hidden lg:block" />}
+                            </button>
+                        ))}
+
+                        <div className="hidden lg:block w-full h-px bg-ink/5 my-2"></div>
 
                         {/* Favorites Filter */}
                         <button
