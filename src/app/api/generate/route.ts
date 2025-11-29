@@ -16,8 +16,8 @@ export async function POST(request: Request) {
         if (imageSize === '2K') creditCost = 4;
         if (imageSize === '4K') creditCost = 6;
 
-        if (!productId || !logoUrl || !email) {
-            return NextResponse.json({ error: 'Missing required fields (productId, logoUrl, email)' }, { status: 400 });
+        if (!productId || !logoUrl) {
+            return NextResponse.json({ error: 'Missing required fields (productId, logoUrl)' }, { status: 400 });
         }
 
         // 1. Fetch Product Details (Base Image, Overlay Config)
