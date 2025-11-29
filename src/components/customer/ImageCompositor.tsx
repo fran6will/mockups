@@ -883,7 +883,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                             ) : (
                                 <>
                                     <Sparkles size={20} />
-                                    {!user ? 'Sign in to Generate' : (isFree ? 'Generate (Free)' : `Generate (${currentCost} Credits)`)}
+                                    {isFree ? 'Generate (Free)' : (!user ? 'Sign in to Generate' : `Generate (${currentCost} Credits)`)}
                                 </>
                             )}
                         </button>
