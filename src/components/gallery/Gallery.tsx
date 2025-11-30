@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { Search, Filter, ArrowRight, Lock, Sparkles, CheckCircle, Heart, Users } from 'lucide-react';
+import { Search, Filter, ArrowRight, Lock, Sparkles, CheckCircle, Heart, Users, Image as ImageIcon, Layers } from 'lucide-react';
 import FavoriteButton from '@/components/ui/FavoriteButton';
 import { getFavorites } from '@/app/actions';
 
@@ -15,7 +15,9 @@ const CATEGORIES = [
     "Women's Clothing",
     "Kids' Clothing",
     "Accessories",
-    "Home & Living"
+    "Home & Living",
+    "Stationery",
+    "Scenes"
 ];
 
 export default function Gallery() {
@@ -66,6 +68,14 @@ export default function Gallery() {
         fetchData();
     }, []);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 12;
+
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedTag, searchQuery, favorites]);
+
     const filteredProducts = products.filter(p => {
         if (selectedTag === 'favorites') {
             const matchesSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -103,6 +113,19 @@ export default function Gallery() {
             p.tags?.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase()));
         return matchesTag && matchesSearch;
     });
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+    const displayedProducts = filteredProducts.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        // Scroll to top of gallery
+        document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' });
+    };
 
     return (
         <section id="gallery" className="max-w-7xl mx-auto px-6 pb-20 pt-8 scroll-mt-28">
@@ -249,69 +272,151 @@ export default function Gallery() {
                             ))}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredProducts.map(product => (
-                                <Link
-                                    key={product.id}
-                                    href={`/${product.slug}`}
-                                    className="group block relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-teal/10 hover:-translate-y-1 transition-all duration-500 border border-ink/5"
-                                >
-                                    {/* Image Container */}
-                                    <WatermarkOverlay showWatermark={!isPro} className="aspect-[4/3] relative overflow-hidden bg-gray-100">
-                                        <div className="absolute inset-0 bg-teal/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 mix-blend-multiply"></div>
-                                        <img
-                                            src={product.gallery_image_url || product.base_image_url}
-                                            alt={product.title}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                        />
-
-                                        {/* Access Badge */}
-                                        <div className="absolute top-4 right-4 z-20">
-                                            {isPro ? (
-                                                <div className="bg-teal text-cream text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                                                    <CheckCircle size={12} /> Unlocked
-                                                </div>
-                                            ) : (
-                                                <div className="bg-white/90 backdrop-blur text-ink text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                                                    <Lock size={12} className="text-teal" /> Premium
-                                                </div>
-                                            )}
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {/* Pinned "Create Custom" Card - Only show on first page and when not searching/filtering favorites */}
+                                {currentPage === 1 && !searchQuery && selectedTag !== 'favorites' && (
+                                    <Link
+                                        href="/custom"
+                                        className="group relative bg-gradient-to-br from-teal to-teal-700 rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:shadow-teal/30 hover:-translate-y-1 transition-all duration-500 border border-teal/20"
+                                    >
+                                        <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center bg-white/10 backdrop-blur-sm">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50"></div>
+                                            <Sparkles className="text-white w-20 h-20 drop-shadow-lg group-hover:scale-110 transition-transform duration-500" strokeWidth={1.5} />
                                         </div>
+                                        <div className="p-5 relative">
+                                            <h3 className="font-bold text-xl text-white mb-2">
+                                                Create Yours Now
+                                            </h3>
+                                            <p className="text-sm text-teal-100 font-medium leading-relaxed">
+                                                Can't find what you need? Design your own custom mockup scene with AI.
+                                            </p>
+                                            <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                                                <Sparkles size={12} /> AI Powered
+                                            </div>
+                                        </div>
+                                    </Link>
+                                )}
 
-                                        {/* Favorite Button */}
-                                        <div className="absolute top-4 left-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <FavoriteButton
-                                                productId={product.id}
-                                                initialIsFavorited={favorites.includes(product.id)}
+                                {displayedProducts.map(product => (
+                                    <Link
+                                        key={product.id}
+                                        href={`/${product.slug}`}
+                                        className="group block relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-teal/10 hover:-translate-y-1 transition-all duration-500 border border-ink/5"
+                                    >
+                                        {/* Image Container */}
+                                        <WatermarkOverlay showWatermark={!isPro} className="aspect-[4/3] relative overflow-hidden bg-gray-100">
+                                            <div className="absolute inset-0 bg-teal/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 mix-blend-multiply"></div>
+                                            <img
+                                                src={product.gallery_image_url || product.base_image_url}
+                                                alt={product.title}
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                             />
-                                        </div>
-                                    </WatermarkOverlay>
 
-                                    {/* Card Content */}
-                                    <div className="p-5 relative">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div>
-                                                <h3 className="font-bold text-lg text-ink mb-1 group-hover:text-teal transition-colors line-clamp-1">
-                                                    {product.title}
-                                                </h3>
-                                                {product.description && (
-                                                    <p className="text-sm text-ink/60 mb-3 line-clamp-2">
-                                                        {product.description}
-                                                    </p>
+                                            {/* Access Badge */}
+                                            <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 items-end">
+                                                {isPro ? (
+                                                    <div className="bg-teal text-cream text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                                                        <CheckCircle size={12} /> Unlocked
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-white/90 backdrop-blur text-ink text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                                                        <Lock size={12} className="text-teal" /> Premium
+                                                    </div>
                                                 )}
-                                                <div className="flex flex-wrap gap-2">
-                                                    {product.tags && product.tags.length > 0 && (
-                                                        <span className="text-[10px] bg-ink/5 text-ink/60 px-2 py-1 rounded-md font-bold uppercase tracking-wider">
-                                                            {product.tags[0]}
-                                                        </span>
+
+                                                {/* Type Badge */}
+                                                {product.category === 'Scenes' ? (
+                                                    <div className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm border border-purple-200 flex items-center gap-1">
+                                                        <ImageIcon size={10} /> Scene
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm border border-blue-100 flex items-center gap-1">
+                                                        <Layers size={10} /> Mockup
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Favorite Button */}
+                                            <div className="absolute top-4 left-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <FavoriteButton
+                                                    productId={product.id}
+                                                    initialIsFavorited={favorites.includes(product.id)}
+                                                />
+                                            </div>
+                                        </WatermarkOverlay>
+
+                                        {/* Card Content */}
+                                        <div className="p-5 relative">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <h3 className="font-bold text-lg text-ink mb-1 group-hover:text-teal transition-colors line-clamp-1">
+                                                        {product.title}
+                                                    </h3>
+                                                    {product.description && (
+                                                        <p className="text-sm text-ink/60 mb-3 line-clamp-2">
+                                                            {product.description}
+                                                        </p>
                                                     )}
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {product.tags && product.tags.length > 0 && (
+                                                            <span className="text-[10px] bg-ink/5 text-ink/60 px-2 py-1 rounded-md font-bold uppercase tracking-wider">
+                                                                {product.tags[0]}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    </Link>
+                                ))}
+                            </div>
+
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="mt-12 flex justify-center items-center gap-2">
+                                    <button
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="p-2 rounded-lg hover:bg-ink/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                    >
+                                        <ArrowRight size={20} className="rotate-180" />
+                                    </button>
+
+                                    <div className="flex items-center gap-2">
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                                            // Logic to show limited page numbers with ellipsis could go here
+                                            // For now, simple list if pages < 8, otherwise we might need logic
+                                            if (totalPages > 7 && Math.abs(currentPage - page) > 2 && page !== 1 && page !== totalPages) {
+                                                if (Math.abs(currentPage - page) === 3) return <span key={page} className="text-ink/40">...</span>;
+                                                return null;
+                                            }
+
+                                            return (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => handlePageChange(page)}
+                                                    className={`w-10 h-10 rounded-full font-bold text-sm transition-all ${currentPage === page
+                                                        ? 'bg-teal text-white shadow-lg shadow-teal/20 scale-110'
+                                                        : 'text-ink/60 hover:bg-ink/5 hover:text-ink'
+                                                        }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
-                                </Link>
-                            ))}
-                        </div>
+
+                                    <button
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className="p-2 rounded-lg hover:bg-ink/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                    >
+                                        <ArrowRight size={20} />
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
 
                     {!loading && filteredProducts.length === 0 && (

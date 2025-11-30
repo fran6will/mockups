@@ -15,7 +15,9 @@ const CATEGORIES = [
     "Women's Clothing",
     "Kids' Clothing",
     "Accessories",
-    "Home & Living"
+    "Home & Living",
+    "Stationery",
+    "Scenes"
 ];
 
 export default function AdminPage() {
@@ -33,6 +35,7 @@ export default function AdminPage() {
     const [tags, setTags] = useState('');
     const [baseImage, setBaseImage] = useState<File | null>(null);
     const [galleryImage, setGalleryImage] = useState<File | null>(null);
+    const [productType, setProductType] = useState<'mockup' | 'scene'>('mockup');
 
     const [variants, setVariants] = useState<any[]>([]);
     const [variantName, setVariantName] = useState('');
@@ -201,7 +204,7 @@ export default function AdminPage() {
             const imageUrl = data.publicUrl;
 
             // 2. Call Server Action
-            const result = await analyzeImageAction(imageUrl);
+            const result = await analyzeImageAction(imageUrl, productType);
 
             if (result.error) throw new Error(result.error);
             if (!result.data) throw new Error("No data returned");
@@ -214,6 +217,11 @@ export default function AdminPage() {
             if (tags) setTags(tags);
             if (slug) setSlug(slug);
             if (custom_prompt) setCustomPrompt(custom_prompt);
+
+            // Auto-set category if scene
+            if (productType === 'scene') {
+                setCategory('Scenes');
+            }
 
             // Generate a random password if empty
             if (!password) {
@@ -247,8 +255,12 @@ export default function AdminPage() {
         try {
             let publicUrl = '';
             let galleryPublicUrl = '';
+            const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 
             if (baseImage) {
+                if (baseImage.size > MAX_SIZE) {
+                    throw new Error(`Base image is too large (${(baseImage.size / 1024 / 1024).toFixed(2)}MB). Max size is 50MB.`);
+                }
                 const fileExt = baseImage.name.split('.').pop();
                 const fileName = `${Math.random()}.${fileExt}`;
                 const filePath = `${fileName}`;
@@ -451,6 +463,28 @@ export default function AdminPage() {
                                     <label htmlFor="isFree" className="font-bold text-ink text-sm cursor-pointer select-none">
                                         Is Free Product? <span className="text-teal text-xs font-normal">(For Homepage Trial)</span>
                                     </label>
+                                </div>
+
+                                {/* Product Type Toggle */}
+                                <div>
+                                    <label className="block text-xs font-bold text-ink/70 mb-2 uppercase tracking-wider">AI Analysis Mode</label>
+                                    <div className="flex bg-white/50 p-1 rounded-xl border border-white/60">
+                                        <button
+                                            onClick={() => setProductType('mockup')}
+                                            className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${productType === 'mockup' ? 'bg-teal text-white shadow-md' : 'text-ink/60 hover:bg-white/50'}`}
+                                        >
+                                            Mockup
+                                        </button>
+                                        <button
+                                            onClick={() => setProductType('scene')}
+                                            className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${productType === 'scene' ? 'bg-teal text-white shadow-md' : 'text-ink/60 hover:bg-white/50'}`}
+                                        >
+                                            Scene
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-ink/40 mt-1 ml-1">
+                                        {productType === 'mockup' ? "For placing designs ON a product (e.g. Hoodie)" : "For placing a product INTO a scene (e.g. Table)"}
+                                    </p>
                                 </div>
 
                                 <div>

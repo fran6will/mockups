@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { ArrowRight, Droplets } from 'lucide-react';
+import { ArrowRight, Droplets, Image as ImageIcon, Layers } from 'lucide-react';
 
 export default function NewArrivals() {
     const [products, setProducts] = useState<any[]>([]);
@@ -69,6 +69,19 @@ export default function NewArrivals() {
 
                                     {/* Hover Overlay */}
                                     <div className="absolute inset-0 bg-teal/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 mix-blend-multiply"></div>
+
+                                    {/* Type Badge */}
+                                    <div className="absolute top-3 right-3 z-20">
+                                        {product.category === 'Scenes' ? (
+                                            <div className="bg-purple-100/90 backdrop-blur text-purple-700 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm border border-purple-200 flex items-center gap-1">
+                                                <ImageIcon size={10} /> Scene
+                                            </div>
+                                        ) : (
+                                            <div className="bg-white/90 backdrop-blur text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm border border-blue-100 flex items-center gap-1">
+                                                <Layers size={10} /> Mockup
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="p-4">

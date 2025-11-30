@@ -96,6 +96,7 @@ export default function ProductClient({ product: initialProduct, slug }: Product
                     baseImageUrl={product.base_image_url}
                     passwordHash={product.password_hash}
                     isFree={product.is_free}
+                    category={product.category}
                 />
 
                 <SimilarProducts currentProduct={product} isPro={isPro} />

@@ -104,7 +104,7 @@ export const generateMockup = async (
     }
 };
 
-export const analyzeMockupImage = async (imageUrl: string, productType: 'mockup' | 'scene' = 'mockup') => {
+export const analyzeMockupImage = async (imageUrl: string) => {
     if (!apiKey) {
         throw new Error("Missing GEMINI_API_KEY in environment variables.");
     }
@@ -120,33 +120,17 @@ export const analyzeMockupImage = async (imageUrl: string, productType: 'mockup'
         const base64 = Buffer.from(arrayBuffer).toString('base64');
         const mimeType = response.headers.get('content-type') || 'image/png';
 
-        let prompt = '';
-
-        if (productType === 'scene') {
-            prompt = `
-                Analyze this background scene image and generate SEO-optimized details for it.
-                Return ONLY a JSON object with the following fields:
-                - title: A catchy, descriptive title (e.g., "Cozy Wooden Desk Scene with Coffee").
-                - description: A detailed, SEO-friendly description highlighting the lighting, mood, and available space for product placement.
-                - tags: A comma-separated string of 5-10 relevant keywords (e.g., "desk, wood, coffee, cozy, morning, workspace").
-                - slug: A URL-friendly slug based on the title (e.g., "cozy-wooden-desk-scene").
-                - custom_prompt: A short instruction for an AI to place a product into this scene (e.g., "Place the product on the center of the wooden desk, matching the warm morning lighting and soft shadows.").
-                
-                Do not include markdown formatting like \`\`\`json. Just the raw JSON string.
-            `;
-        } else {
-            prompt = `
-                Analyze this product mockup image and generate SEO-optimized details for it.
-                Return ONLY a JSON object with the following fields:
-                - title: A catchy, descriptive title (e.g., "Minimalist White Hoodie Mockup on Hanger").
-                - description: A detailed, SEO-friendly description highlighting the setting, lighting, and vibe.
-                - tags: A comma-separated string of 5-10 relevant keywords (e.g., "hoodie, streetwear, hanger, white, minimalist").
-                - slug: A URL-friendly slug based on the title (e.g., "minimalist-white-hoodie-hanger").
-                - custom_prompt: A short instruction for an AI to place a design on this product (e.g., "Place the design on the center chest area, maintaining the fabric wrinkles and lighting.").
-                
-                Do not include markdown formatting like \`\`\`json. Just the raw JSON string.
-            `;
-        }
+        const prompt = `
+            Analyze this product mockup image and generate SEO-optimized details for it.
+            Return ONLY a JSON object with the following fields:
+            - title: A catchy, descriptive title (e.g., "Minimalist White Hoodie Mockup on Hanger").
+            - description: A detailed, SEO-friendly description highlighting the setting, lighting, and vibe.
+            - tags: A comma-separated string of 5-10 relevant keywords (e.g., "hoodie, streetwear, hanger, white, minimalist").
+            - slug: A URL-friendly slug based on the title (e.g., "minimalist-white-hoodie-hanger").
+            - custom_prompt: A short instruction for an AI to place a design on this product (e.g., "Place the design on the center chest area, maintaining the fabric wrinkles and lighting.").
+            
+            Do not include markdown formatting like \`\`\`json. Just the raw JSON string.
+        `;
 
         const result = await model.generateContent([
             prompt,
@@ -239,103 +223,6 @@ export const generateScene = async (
 
     } catch (error: any) {
         console.error("Gemini Scene Gen Error:", error);
-        return {
-            success: false,
-            error: error.message || "Unknown error"
-        };
-    }
-};
-
-export const generateProductPlacement = async (
-    sceneImageUrl: string,
-    productImageUrl: string,
-    prompt: string,
-    aspectRatio: string = '1:1',
-    imageSize: string = '1K'
-) => {
-    if (!apiKey) {
-        throw new Error("Missing GEMINI_API_KEY in environment variables.");
-    }
-
-    try {
-        console.log(`Calling Copié-Collé (Product Placement) with Aspect Ratio: ${aspectRatio} and Size: ${imageSize}...`);
-
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-            model: modelId,
-            generationConfig: {
-                responseModalities: ["TEXT", "IMAGE"],
-                imageConfig: {
-                    aspectRatio: aspectRatio,
-                    imageSize: imageSize
-                }
-            } as any
-        });
-
-        // Helper to fetch and convert URL to Base64
-        const urlToPart = async (url: string) => {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            const base64 = Buffer.from(arrayBuffer).toString('base64');
-            const mimeType = response.headers.get('content-type') || 'image/png';
-            return {
-                inlineData: {
-                    data: base64,
-                    mimeType
-                }
-            };
-        };
-
-        console.log("Fetching image assets...");
-        const [sceneImagePart, productImagePart] = await Promise.all([
-            urlToPart(sceneImageUrl),
-            urlToPart(productImageUrl)
-        ]);
-
-        // Construct Prompt for Product Placement
-        const fullPrompt = `
-            Generate a photorealistic product photography shot.
-            ${prompt}
-            Task: Place the provided product object into the provided scene background.
-            Important:
-            1. The product object (from the second image) must be the main focus. Keep its shape, label, and details exactly as they are.
-            2. The background scene (from the first image) should be used as the environment.
-            3. Blend the product naturally into the scene with correct perspective, lighting, shadows, and reflections.
-            4. Ensure high quality, detailed texture, and realistic lighting.
-        `;
-
-        console.log("Sending request to model with images...");
-        const result = await model.generateContent([
-            fullPrompt,
-            sceneImagePart,
-            productImagePart
-        ]);
-        const response = await result.response;
-
-        console.log("Model response candidates:", response.candidates);
-
-        const parts = response.candidates?.[0]?.content?.parts;
-        const imagePart = parts?.find((part: any) => part.inlineData);
-
-        if (!imagePart || !imagePart.inlineData) {
-            const textPart = parts?.find((part: any) => part.text);
-            if (textPart) {
-                console.warn("Model returned text instead of image:", textPart.text);
-                throw new Error("Model returned text: " + textPart.text);
-            }
-            throw new Error("No image generated by the model.");
-        }
-
-        const base64Image = imagePart.inlineData.data;
-        const mimeType = imagePart.inlineData.mimeType || 'image/png';
-
-        return {
-            success: true,
-            mockUrl: `data:${mimeType};base64,${base64Image}`
-        };
-
-    } catch (error: any) {
-        console.error("Gemini Product Placement Error:", error);
         return {
             success: false,
             error: error.message || "Unknown error"

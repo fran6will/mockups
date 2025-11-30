@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image, Lock, ArrowRight, Coins, Mail, RotateCw, Maximize, Layers, Trash2, Plus, X, Info, Video, Play, Film, Share2 } from 'lucide-react';
+import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image as ImageIcon, Lock, ArrowRight, Coins, Mail, RotateCw, Maximize, Layers, Trash2, Plus, X, Info, Video, Play, Film, Share2 } from 'lucide-react';
 import { compositeImages, Layer } from '@/lib/utils/image';
 import { supabase } from '@/lib/supabase/client';
 import FabricCanvas from './FabricCanvas';
@@ -17,9 +17,10 @@ interface ImageCompositorProps {
     baseImageUrl: string;
     passwordHash: string;
     isFree?: boolean;
+    category?: string;
 }
 
-export default function ImageCompositor({ productId, productSlug, baseImageUrl, passwordHash, isFree = false }: ImageCompositorProps) {
+export default function ImageCompositor({ productId, productSlug, baseImageUrl, passwordHash, isFree = false, category }: ImageCompositorProps) {
     const searchParams = useSearchParams();
     const [showAccessCodeInput, setShowAccessCodeInput] = useState(searchParams.get('unlock') === 'true' || searchParams.get('code') !== null);
 
@@ -196,28 +197,59 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         }
     };
 
-    const onDrop = useCallback((acceptedFiles: File[]) => {
+    const onDrop = useCallback(async (acceptedFiles: File[]) => {
         if (layers.length >= 3) {
             setError("Maximum 3 layers allowed");
             return;
         }
 
-        const newLayers = acceptedFiles.map(file => ({
-            id: Math.random().toString(36).substr(2, 9),
-            file,
-            previewUrl: URL.createObjectURL(file),
-            rotation: 0,
-            scale: 1,
-            moveX: 0,
-            moveY: 0,
-            skewX: 0,
-            skewY: 0
-        }));
+        try {
+            const newLayers = await Promise.all(acceptedFiles.map(async file => {
+                const previewUrl = URL.createObjectURL(file);
 
-        setLayers(prev => [...prev, ...newLayers]);
-        setActiveLayerId(newLayers[0].id); // Select the first new layer
-        setGeneratedImage(null);
-        setError(null);
+                // Load image to get dimensions for auto-scaling
+                const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+                    const image = new Image();
+                    image.src = previewUrl;
+                    image.onload = () => resolve(image);
+                    image.onerror = reject;
+                });
+
+                // Auto-scale to fit within 1600x1600 (leaving room in 2000x2000 canvas)
+                const TARGET_SIZE = 1600;
+                let scale = 1;
+                if (img.width > TARGET_SIZE || img.height > TARGET_SIZE) {
+                    const scaleX = TARGET_SIZE / img.width;
+                    const scaleY = TARGET_SIZE / img.height;
+                    scale = Math.min(scaleX, scaleY);
+                }
+
+                // Round to 2 decimals
+                scale = Number(scale.toFixed(2));
+
+                return {
+                    id: Math.random().toString(36).substr(2, 9),
+                    file,
+                    previewUrl,
+                    rotation: 0,
+                    scale,
+                    moveX: 0,
+                    moveY: 0,
+                    skewX: 0,
+                    skewY: 0
+                };
+            }));
+
+            setLayers(prev => [...prev, ...newLayers]);
+            if (newLayers.length > 0) {
+                setActiveLayerId(newLayers[0].id);
+            }
+            setGeneratedImage(null);
+            setError(null);
+        } catch (err) {
+            console.error("Error loading image:", err);
+            setError("Failed to load image dimensions");
+        }
     }, [layers]);
 
     const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
@@ -545,9 +577,11 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     {!generatedImage && layers.length === 0 && (
                         <div className="text-center text-ink/30 pointer-events-none">
                             <div className="w-24 h-24 bg-ink/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Image size={40} />
+                                <ImageIcon size={40} />
                             </div>
-                            <p className="font-medium">Drag & Drop your logo here</p>
+                            <p className="font-medium">
+                                {category === 'Scenes' ? "Drag & Drop your product photo" : "Drag & Drop your logo here"}
+                            </p>
                             <p className="text-sm opacity-60 mt-2">or use the controls below</p>
                         </div>
                     )}
@@ -707,6 +741,34 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 )}
             </div>
 
+            {/* Mobile Controls (Visible only on mobile) */}
+            {activeLayer && (
+                <div className="block md:hidden bg-white rounded-2xl p-4 border border-ink/5 shadow-sm mb-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Scale</label>
+                            <input
+                                type="range"
+                                min="0.1" max="3" step="0.1"
+                                value={activeLayer.scale}
+                                onChange={(e) => updateActiveLayer({ scale: Number(e.target.value) })}
+                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Rotate</label>
+                            <input
+                                type="range"
+                                min="-180" max="180"
+                                value={activeLayer.rotation}
+                                onChange={(e) => updateActiveLayer({ rotation: Number(e.target.value) })}
+                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Bottom Section: Controls */}
             <div className="grid md:grid-cols-3 gap-8 items-start">
                 {/* Col 1: Layers & Upload */}
@@ -724,7 +786,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                         <div className="w-10 h-10 bg-teal/10 text-teal rounded-full flex items-center justify-center mx-auto mb-2">
                             <Plus size={20} />
                         </div>
-                        <p className="text-sm font-bold text-ink">Add Design</p>
+                        <p className="text-sm font-bold text-ink">
+                            {category === 'Scenes' ? "Add Product" : "Add Design"}
+                        </p>
                         <p className="text-xs text-ink/40">Drop or click to upload</p>
                     </div>
 
@@ -751,9 +815,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                         ))}
                     </div>
 
-                    {/* Active Layer Controls (Compact) */}
+                    {/* Active Layer Controls (Compact) - Hidden on mobile to avoid duplication */}
                     {activeLayer && (
-                        <div className="pt-4 border-t border-ink/5 space-y-4">
+                        <div className="hidden md:block pt-4 border-t border-ink/5 space-y-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Scale</label>
@@ -833,6 +897,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                 </button>
                             ))}
                         </div>
+                        <p className="text-[10px] text-ink/40 mt-2">
+                            Preview shows full image. Output will be cropped to {aspectRatio}.
+                        </p>
                     </div>
                 </div>
 

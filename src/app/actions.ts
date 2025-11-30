@@ -35,7 +35,8 @@ export async function createProduct(formData: FormData) {
             overlay_config: {},
             tags: tags,
             category: category || null,
-            is_free: isFree
+            is_free: isFree,
+            is_public: true
         })
         .select()
         .single();
@@ -215,9 +216,9 @@ export async function deleteVariant(id: string) {
 
 import { analyzeMockupImage } from '@/lib/vertex/client';
 
-export async function analyzeImageAction(imageUrl: string) {
+export async function analyzeImageAction(imageUrl: string, productType: 'mockup' | 'scene' = 'mockup') {
     try {
-        const analysis = await analyzeMockupImage(imageUrl);
+        const analysis = await analyzeMockupImage(imageUrl, productType);
         return { success: true, data: analysis };
     } catch (error: any) {
         console.error("Analysis Action Error:", error);

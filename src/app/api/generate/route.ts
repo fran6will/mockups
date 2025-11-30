@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-import { generateMockup } from '@/lib/vertex/client';
+import { generateMockup, generateProductPlacement } from '@/lib/vertex/client';
 
 export async function POST(request: Request) {
     const startTime = Date.now();
@@ -138,13 +138,24 @@ export async function POST(request: Request) {
         // Use variant image if provided, otherwise fallback to product base image
         const baseImageToUse = variantImageUrl || product.base_image_url;
 
-        const result = await generateMockup(
-            baseImageToUse,
-            logoUrl,
-            prompt,
-            aspectRatio || '1:1',
-            imageSize
-        );
+        let result;
+        if (product.category === 'Scenes') {
+            result = await generateProductPlacement(
+                baseImageToUse,
+                logoUrl, // In this case, logoUrl is actually the product photo
+                prompt,
+                aspectRatio || '1:1',
+                imageSize
+            );
+        } else {
+            result = await generateMockup(
+                baseImageToUse,
+                logoUrl,
+                prompt,
+                aspectRatio || '1:1',
+                imageSize
+            );
+        }
 
         // 3. Log Usage & Deduct Credit
         const duration = Date.now() - startTime;

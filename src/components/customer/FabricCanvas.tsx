@@ -78,8 +78,8 @@ export default function FabricCanvas({
             const target = e.target as any;
             if (!target || !target.data?.id) return;
 
-            // World Center is always 512, 512 (half of 1024)
-            const WORLD_CENTER = 512;
+            // World Center is always 1000, 1000 (half of 2000)
+            const WORLD_CENTER = 1000;
 
             // Calculate relative move from world center
             // target.left/top are in world coordinates because we use setZoom
@@ -145,18 +145,114 @@ export default function FabricCanvas({
         };
     }, [isReady, onSelectLayer, onUpdateLayer]);
 
+    // Render Overlay (Crop Bars)
+    const renderOverlay = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        // Remove existing overlay
+        const objects = canvas.getObjects();
+        objects.forEach(obj => {
+            if ((obj as any).data?.isOverlay) {
+                canvas.remove(obj);
+            }
+        });
+
+        if (aspectRatio === '1:1') {
+            canvas.requestRenderAll();
+            return;
+        }
+
+        const WORLD_SIZE = 2000;
+        const overlayColor = 'rgba(0,0,0,0.5)';
+
+        let bars: fabric.Rect[] = [];
+
+        if (aspectRatio === '16:9') {
+            // 16:9 means width is full, height is reduced
+            // Height = Width * (9/16)
+            const targetHeight = WORLD_SIZE * (9 / 16);
+            const barHeight = (WORLD_SIZE - targetHeight) / 2;
+
+            // Top Bar
+            bars.push(new fabric.Rect({
+                left: 0,
+                top: 0,
+                width: WORLD_SIZE,
+                height: barHeight,
+                fill: overlayColor,
+                selectable: false,
+                evented: false,
+                data: { isOverlay: true } as any
+            }));
+
+            // Bottom Bar
+            bars.push(new fabric.Rect({
+                left: 0,
+                top: WORLD_SIZE - barHeight,
+                width: WORLD_SIZE,
+                height: barHeight,
+                fill: overlayColor,
+                selectable: false,
+                evented: false,
+                data: { isOverlay: true } as any
+            }));
+        } else if (aspectRatio === '9:16') {
+            // 9:16 means height is full, width is reduced
+            // Width = Height * (9/16)
+            const targetWidth = WORLD_SIZE * (9 / 16);
+            const barWidth = (WORLD_SIZE - targetWidth) / 2;
+
+            // Left Bar
+            bars.push(new fabric.Rect({
+                left: 0,
+                top: 0,
+                width: barWidth,
+                height: WORLD_SIZE,
+                fill: overlayColor,
+                selectable: false,
+                evented: false,
+                data: { isOverlay: true } as any
+            }));
+
+            // Right Bar
+            bars.push(new fabric.Rect({
+                left: WORLD_SIZE - barWidth,
+                top: 0,
+                width: barWidth,
+                height: WORLD_SIZE,
+                fill: overlayColor,
+                selectable: false,
+                evented: false,
+                data: { isOverlay: true } as any
+            }));
+        }
+
+        bars.forEach(bar => canvas.add(bar));
+
+        // Ensure overlay is on top of images but below controls
+        // Actually, for visual feedback, it should probably be on top of everything except controls
+        // Fabric renders in order. We added them last, so they are on top.
+        // But we want to make sure they don't block interaction (evented: false handles that).
+
+        canvas.requestRenderAll();
+    };
+
     // Render Layers
     const renderLayers = async () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
         // World Center
-        const WORLD_CENTER = 512;
+        const WORLD_CENTER = 1000;
 
         // 1. Remove layers that are no longer in props
         const currentObjects = canvas.getObjects();
         currentObjects.forEach(obj => {
             const objAny = obj as any;
+            // Skip overlay objects
+            if (objAny.data?.isOverlay) return;
+
             const exists = layers.find(l => l.id === objAny.data?.id);
             if (!exists) {
                 canvas.remove(obj);
@@ -246,6 +342,9 @@ export default function FabricCanvas({
             }
         }
 
+        // Re-render overlay to ensure it's on top if new layers were added
+        renderOverlay();
+
         canvas.requestRenderAll();
     };
 
@@ -265,8 +364,8 @@ export default function FabricCanvas({
             }
 
             // Calculate Zoom
-            // World size is 1024.
-            const scale = width / 1024;
+            // World size is 2000.
+            const scale = width / 2000;
             if (canvasRef.current) {
                 canvasRef.current.setZoom(scale);
             }
@@ -288,7 +387,7 @@ export default function FabricCanvas({
         if (isReady) {
             renderLayers();
         }
-    }, [layers, activeLayerId, isReady]);
+    }, [layers, activeLayerId, isReady, aspectRatio]);
 
     return (
         <div ref={containerRef} className="absolute inset-0 w-full h-full">

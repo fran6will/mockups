@@ -58,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${fontHeading.variable} ${fontBody.variable} font-sans antialiased bg-cream text-ink`}>
         <BlackFridayBanner />
         {children}
@@ -67,6 +67,7 @@ export default function RootLayout({
         <GoogleAds />
         <MetaPixel />
         <CookieBanner />
+        <Footer />
       </body>
     </html>
   );
