@@ -5,7 +5,11 @@ import { useDropzone } from 'react-dropzone';
 import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image as ImageIcon, Lock, ArrowRight, Coins, Mail, RotateCw, Maximize, Layers, Trash2, Plus, X, Info, Video, Play, Film, Share2 } from 'lucide-react';
 import { compositeImages, Layer } from '@/lib/utils/image';
 import { supabase } from '@/lib/supabase/client';
-import FabricCanvas from './FabricCanvas';
+import dynamic from 'next/dynamic';
+const FabricCanvas = dynamic(() => import('./FabricCanvas'), {
+    ssr: false,
+    loading: () => <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="animate-spin text-teal" /></div>
+});
 import { useAccess } from '@/hooks/use-access';
 import { useSearchParams } from 'next/navigation';
 import ShareModal from '@/components/ui/ShareModal';

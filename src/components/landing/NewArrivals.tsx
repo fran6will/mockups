@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, Droplets, Image as ImageIcon, Layers } from 'lucide-react';
 
 export default function NewArrivals() {
@@ -13,7 +14,7 @@ export default function NewArrivals() {
         const fetchNew = async () => {
             const { data, error } = await supabase
                 .from('products')
-                .select('*')
+                .select('id, title, slug, gallery_image_url, base_image_url, category, tags, is_public')
                 .order('created_at', { ascending: false })
                 .limit(20); // Fetch more to allow for filtering
 
@@ -61,10 +62,12 @@ export default function NewArrivals() {
                                 className="group block relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-teal/10 transition-all duration-300 border border-ink/5"
                             >
                                 <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
-                                    <img
+                                    <Image
                                         src={product.gallery_image_url || product.base_image_url}
                                         alt={product.title}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        fill
+                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
 
                                     {/* Hover Overlay */}
