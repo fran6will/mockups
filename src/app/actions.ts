@@ -216,9 +216,9 @@ export async function deleteVariant(id: string) {
 
 import { analyzeMockupImage } from '@/lib/vertex/client';
 
-export async function analyzeImageAction(imageUrl: string, productType: 'mockup' | 'scene' = 'mockup') {
+export async function analyzeImageAction(imageUrl: string, productType: 'mockup' | 'scene' = 'mockup', productNameHint?: string, keywordsHint?: string) {
     try {
-        const analysis = await analyzeMockupImage(imageUrl, productType);
+        const analysis = await analyzeMockupImage(imageUrl, productType, productNameHint, keywordsHint);
         return { success: true, data: analysis };
     } catch (error: any) {
         console.error("Analysis Action Error:", error);

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Sparkles, CheckCircle, Play, Video, Layers } from 'lucide-react';
@@ -21,13 +22,20 @@ export default function Hero() {
             visual: (
                 <div className="relative w-full max-w-md aspect-square glass rounded-3xl border border-white/40 shadow-2xl shadow-teal/20 overflow-hidden">
                     <div className="absolute inset-0 bg-black">
+                        <Image
+                            src="/hero-wallpaper.png"
+                            alt="Hero Video Poster"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className="object-cover opacity-90"
+                            priority
+                        />
                         <video
-                            className="w-full h-full object-cover opacity-90"
+                            className="absolute inset-0 w-full h-full object-cover opacity-90"
                             autoPlay
                             loop
                             muted
                             playsInline
-                            poster="/hero-wallpaper.png"
                         >
                             <source src="https://uvkdeuavzhhkcclrzdjj.supabase.co/storage/v1/object/public/assets/video-preview.mp4" type="video/mp4" />
                         </video>
@@ -57,10 +65,13 @@ export default function Hero() {
             visual: (
                 <div className="relative w-full max-w-md aspect-[4/5] glass rounded-3xl border border-white/40 shadow-2xl shadow-blue-500/20 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
-                        <img
+                        <Image
                             src="/hero-wallpaper.png"
                             alt="AI Mockup Preview"
-                            className="w-full h-full object-cover"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className="object-cover"
+                            priority
                         />
                     </div>
                     {/* Floating Badge */}
@@ -127,19 +138,18 @@ export default function Hero() {
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
                     {/* Left Column: Copy Stack */}
-                    <div className="relative min-h-[500px] flex flex-col justify-center"> 
+                    <div className="relative min-h-[500px] flex flex-col justify-center">
                         {/* The 'grid stack' trick: All slides occupy the same cell */}
                         <div className="grid grid-cols-1 grid-rows-1">
                             {slides.map((slide, index) => {
                                 const isActive = currentSlide === index;
                                 return (
-                                    <div 
+                                    <div
                                         key={slide.id}
-                                        className={`col-start-1 row-start-1 transition-all duration-700 ease-in-out ${
-                                            isActive 
-                                                ? 'opacity-100 translate-y-0 pointer-events-auto z-10' 
-                                                : 'opacity-0 translate-y-4 pointer-events-none z-0'
-                                        }`}
+                                        className={`col-start-1 row-start-1 transition-all duration-700 ease-in-out ${isActive
+                                            ? 'opacity-100 translate-y-0 pointer-events-auto z-10'
+                                            : 'opacity-0 translate-y-4 pointer-events-none z-0'
+                                            }`}
                                     >
                                         <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider mb-8 border ${slide.badgeColor}`}>
                                             <slide.badgeIcon size={16} />
@@ -204,25 +214,23 @@ export default function Hero() {
                     {/* Right Column: Visual Stack */}
                     <div className="relative lg:h-[600px] w-full flex items-center justify-center perspective-1000">
                         {/* Abstract Background Blobs */}
-                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] opacity-60 animate-pulse transition-colors duration-1000 ${
-                            currentSlide === 0 ? 'bg-teal/20' :
+                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] opacity-60 animate-pulse transition-colors duration-1000 ${currentSlide === 0 ? 'bg-teal/20' :
                             currentSlide === 1 ? 'bg-blue-500/20' :
-                            'bg-purple-500/20'
-                        }`}></div>
-                        
+                                'bg-purple-500/20'
+                            }`}></div>
+
                         <div className="grid grid-cols-1 grid-rows-1 w-full h-full">
                             {slides.map((slide, index) => {
                                 const isActive = currentSlide === index;
                                 return (
                                     <div
                                         key={slide.id}
-                                        className={`col-start-1 row-start-1 w-full h-full flex items-center justify-center transition-all duration-1000 ease-out transform ${
-                                            isActive 
-                                                ? 'opacity-100 translate-x-0 rotate-0 scale-100 z-10 blur-0' 
-                                                : index < currentSlide 
-                                                    ? 'opacity-0 -translate-x-12 -rotate-6 scale-95 z-0 blur-sm' 
-                                                    : 'opacity-0 translate-x-12 rotate-6 scale-95 z-0 blur-sm'
-                                        }`}
+                                        className={`col-start-1 row-start-1 w-full h-full flex items-center justify-center transition-all duration-1000 ease-out transform ${isActive
+                                            ? 'opacity-100 translate-x-0 rotate-0 scale-100 z-10 blur-0'
+                                            : index < currentSlide
+                                                ? 'opacity-0 -translate-x-12 -rotate-6 scale-95 z-0 blur-sm'
+                                                : 'opacity-0 translate-x-12 rotate-6 scale-95 z-0 blur-sm'
+                                            }`}
                                     >
                                         {slide.visual}
                                     </div>

@@ -44,6 +44,10 @@ export default function AdminPage() {
 
     const [editingProduct, setEditingProduct] = useState<any>(null);
 
+    // AI Hints
+    const [productNameHint, setProductNameHint] = useState('');
+    const [keywordsHint, setKeywordsHint] = useState('');
+
     const [loading, setLoading] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [message, setMessage] = useState('');
@@ -174,6 +178,8 @@ export default function AdminPage() {
         setVariantImage(null);
         setMessage('');
         setMessage('');
+        setProductNameHint('');
+        setKeywordsHint('');
     };
 
     const handleMagicFill = async () => {
@@ -204,7 +210,7 @@ export default function AdminPage() {
             const imageUrl = data.publicUrl;
 
             // 2. Call Server Action
-            const result = await analyzeImageAction(imageUrl, productType);
+            const result = await analyzeImageAction(imageUrl, productType, productNameHint, keywordsHint);
 
             if (result.error) throw new Error(result.error);
             if (!result.data) throw new Error("No data returned");
@@ -489,6 +495,29 @@ export default function AdminPage() {
 
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Base Image (Required)</label>
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-ink/70 mb-1 uppercase tracking-wider">Product Name (Hint)</label>
+                                            <input
+                                                type="text"
+                                                value={productNameHint}
+                                                onChange={(e) => setProductNameHint(e.target.value)}
+                                                className="w-full bg-white/50 border border-white/60 rounded-xl p-2 text-xs text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all"
+                                                placeholder="e.g. Gildan 18000"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-ink/70 mb-1 uppercase tracking-wider">Keywords (Hint)</label>
+                                            <input
+                                                type="text"
+                                                value={keywordsHint}
+                                                onChange={(e) => setKeywordsHint(e.target.value)}
+                                                className="w-full bg-white/50 border border-white/60 rounded-xl p-2 text-xs text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all"
+                                                placeholder="e.g. Sublimation, Vintage"
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div
                                         className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${baseImage ? 'border-teal bg-teal/5' : 'border-ink/10 hover:border-teal/50 hover:bg-white/40'}`}
                                         onClick={() => document.getElementById('baseImageInput')?.click()}

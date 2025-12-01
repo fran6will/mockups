@@ -104,7 +104,7 @@ export const generateMockup = async (
     }
 };
 
-export const analyzeMockupImage = async (imageUrl: string, productType: 'mockup' | 'scene' = 'mockup') => {
+export const analyzeMockupImage = async (imageUrl: string, productType: 'mockup' | 'scene' = 'mockup', productNameHint?: string, keywordsHint?: string) => {
     if (!apiKey) {
         throw new Error("Missing GEMINI_API_KEY in environment variables.");
     }
@@ -122,9 +122,14 @@ export const analyzeMockupImage = async (imageUrl: string, productType: 'mockup'
 
         let prompt = '';
 
+        const hintContext = productNameHint ? `Context/Product Name: "${productNameHint}".` : '';
+        const keywordContext = keywordsHint ? `Keywords to include: "${keywordsHint}".` : '';
+
         if (productType === 'scene') {
             prompt = `
                 Analyze this background scene image and generate SEO-optimized details for it.
+                ${hintContext}
+                ${keywordContext}
                 Return ONLY a JSON object with the following fields:
                 - title: A catchy, descriptive title (e.g., "Cozy Wooden Desk Scene with Coffee").
                 - description: A detailed, SEO-friendly description highlighting the lighting, mood, and available space for product placement.
@@ -137,6 +142,8 @@ export const analyzeMockupImage = async (imageUrl: string, productType: 'mockup'
         } else {
             prompt = `
                 Analyze this product mockup image and generate SEO-optimized details for it.
+                ${hintContext}
+                ${keywordContext}
                 Return ONLY a JSON object with the following fields:
                 - title: A catchy, descriptive title (e.g., "Minimalist White Hoodie Mockup on Hanger").
                 - description: A detailed, SEO-friendly description highlighting the setting, lighting, and vibe.
