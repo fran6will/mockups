@@ -35,7 +35,7 @@ export default function CookieBanner() {
                 <div className="flex-1 mb-4 md:mb-0">
                     <h3 className="font-bold text-ink mb-2">We value your privacy</h3>
                     <p className="text-sm text-ink/70 leading-relaxed">
-                        By clicking "Accept", you agree to the storing of cookies on your device to enhance site navigation, analyze site usage, and assist in our marketing efforts. For more information, please review our <Link href="/privacy" className="text-teal hover:underline font-medium">Privacy Policy</Link>.
+                        By clicking "Accept", you agree to the storing of cookies on your device to enhance site navigation, analyze site usage, and assist in our marketing efforts. For more information, please review our <Link href="/legal/privacy" className="text-teal hover:underline font-medium">Privacy Policy</Link>.
                     </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">

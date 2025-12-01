@@ -204,9 +204,11 @@ export default function Hero() {
                                         setCurrentSlide(index);
                                         setIsAutoPlaying(false); // Pause on interaction
                                     }}
-                                    className={`h-2 rounded-full transition-all duration-500 ${currentSlide === index ? 'w-12 bg-ink' : 'w-2 bg-ink/10 hover:bg-ink/30'}`}
+                                    className={`p-2 group transition-all duration-500`}
                                     aria-label={`Go to slide ${index + 1}`}
-                                />
+                                >
+                                    <div className={`h-2 rounded-full transition-all duration-500 ${currentSlide === index ? 'w-12 bg-ink' : 'w-2 bg-ink/10 group-hover:bg-ink/30'}`} />
+                                </button>
                             ))}
                         </div>
                     </div>

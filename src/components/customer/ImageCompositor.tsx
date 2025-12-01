@@ -584,7 +584,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     showWatermark={!isUnlocked}
                     allowInteraction={true}
                 >
-                    <input {...inputProps} />
+                    <input {...inputProps} aria-label="Upload image" />
                     {!generatedImage && layers.length === 0 && (
                         <div className="text-center text-ink/30 pointer-events-none">
                             <div className="w-24 h-24 bg-ink/5 rounded-full flex items-center justify-center mx-auto mb-4">
