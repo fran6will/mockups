@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getOptimizedSupabaseUrl } from '@/lib/utils/supabase-image';
 import { Search, Filter, ArrowRight, Lock, Sparkles, CheckCircle, Heart, Users, Image as ImageIcon, Layers } from 'lucide-react';
 import FavoriteButton from '@/components/ui/FavoriteButton';
 import { getFavorites } from '@/app/actions';
@@ -309,7 +310,7 @@ export default function Gallery() {
                                         <WatermarkOverlay showWatermark={!isPro} className="aspect-[4/3] relative overflow-hidden bg-gray-100">
                                             <div className="absolute inset-0 bg-teal/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 mix-blend-multiply"></div>
                                             <Image
-                                                src={product.gallery_image_url || product.base_image_url}
+                                                src={getOptimizedSupabaseUrl(product.gallery_image_url || product.base_image_url, 600)}
                                                 alt={product.title}
                                                 fill
                                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

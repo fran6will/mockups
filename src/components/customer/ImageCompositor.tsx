@@ -3,7 +3,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image as ImageIcon, Lock, ArrowRight, Coins, Mail, RotateCw, Maximize, Layers, Trash2, Plus, X, Info, Video, Play, Film, Share2 } from 'lucide-react';
+import Image from 'next/image';
 import { compositeImages, Layer } from '@/lib/utils/image';
+import { getOptimizedSupabaseUrl } from '@/lib/utils/supabase-image';
 import { supabase } from '@/lib/supabase/client';
 import dynamic from 'next/dynamic';
 const FabricCanvas = dynamic(() => import('./FabricCanvas'), {
@@ -213,7 +215,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                 // Load image to get dimensions for auto-scaling
                 const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-                    const image = new Image();
+                    const image = new window.Image();
                     image.src = previewUrl;
                     image.onload = () => resolve(image);
                     image.onerror = reject;
@@ -557,7 +559,12 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                 {/* Right Column: Locked Preview */}
                 <div className="glass p-4 rounded-[2rem] border border-white/40 shadow-2xl bg-white/30 min-h-[500px] flex items-center justify-center relative overflow-hidden">
-                    <img src={currentBaseImage} className="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm" />
+                    <Image
+                        src={getOptimizedSupabaseUrl(currentBaseImage, 1200)}
+                        alt="Locked Preview"
+                        fill
+                        className="object-cover opacity-50 blur-sm"
+                    />
                     <div className="relative z-10 bg-white/80 backdrop-blur px-6 py-3 rounded-full font-bold text-ink shadow-lg flex items-center gap-2">
                         <Lock size={18} /> Preview Locked
                     </div>
@@ -591,12 +598,13 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     )}
 
                     {/* Base Image */}
-                    <img
-                        src={currentBaseImage}
+                    <Image
+                        src={getOptimizedSupabaseUrl(currentBaseImage, 1200)}
                         alt="Base"
+                        fill
                         draggable={false}
                         onContextMenu={(e) => e.preventDefault()}
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 pointer-events-none select-none ${generatedImage ? 'opacity-0' : 'opacity-100'}`}
+                        className={`object-cover transition-opacity duration-700 pointer-events-none select-none ${generatedImage ? 'opacity-0' : 'opacity-100'}`}
                     />
 
                     {/* Layers / Dropzone Area */}
@@ -637,7 +645,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                 alt="Generated Mockup"
                                 className="w-full h-full object-contain rounded-2xl"
                             />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 rounded-2xl backdrop-blur-sm">
+                            <div className="absolute inset-0 bg-black/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 rounded-2xl backdrop-blur-sm md:backdrop-blur-sm">
                                 <a
                                     href={generatedImage}
                                     download="mockup.png"
@@ -713,7 +721,13 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                     ? 'border-teal ring-4 ring-teal/10 scale-110 shadow-lg'
                                     : 'border-transparent opacity-70 hover:opacity-100 hover:scale-105'}`}
                             >
-                                <img src={baseImageUrl} className="w-full h-full object-cover" />
+                                <Image
+                                    src={getOptimizedSupabaseUrl(baseImageUrl, 200)}
+                                    alt="Default Variant"
+                                    fill
+                                    sizes="80px"
+                                    className="object-cover"
+                                />
                                 <div className={`absolute inset-0 bg-black/20 transition-opacity ${!selectedVariant ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'}`}></div>
                                 {!selectedVariant && (
                                     <div className="absolute bottom-0 inset-x-0 bg-teal/90 text-white text-[8px] font-bold py-0.5 text-center uppercase tracking-wider">
@@ -731,7 +745,13 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                         ? 'border-teal ring-4 ring-teal/10 scale-110 shadow-lg'
                                         : 'border-transparent opacity-70 hover:opacity-100 hover:scale-105'}`}
                                 >
-                                    <img src={v.base_image_url} className="w-full h-full object-cover" />
+                                    <Image
+                                        src={getOptimizedSupabaseUrl(v.base_image_url, 200)}
+                                        alt={v.name}
+                                        fill
+                                        sizes="80px"
+                                        className="object-cover"
+                                    />
                                     <div className={`absolute inset-0 bg-black/20 transition-opacity ${selectedVariant?.id === v.id ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'}`}></div>
                                     {selectedVariant?.id === v.id && (
                                         <div className="absolute bottom-0 inset-x-0 bg-teal/90 text-white text-[8px] font-bold py-0.5 text-center uppercase tracking-wider truncate px-1">

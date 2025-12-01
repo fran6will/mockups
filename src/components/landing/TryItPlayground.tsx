@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
+import { getOptimizedSupabaseUrl } from '@/lib/utils/supabase-image';
 import ImageCompositor from '@/components/customer/ImageCompositor';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -32,10 +34,12 @@ export default function TryItPlayground({ products }: TryItPlaygroundProps) {
                             : 'border-transparent hover:border-teal/30 hover:scale-105 opacity-70 hover:opacity-100'
                             }`}
                     >
-                        <img
-                            src={product.base_image_url}
+                        <Image
+                            src={getOptimizedSupabaseUrl(product.base_image_url, 200)}
                             alt={product.title}
-                            className="w-full h-full object-cover"
+                            fill
+                            sizes="96px"
+                            className="object-cover"
                         />
                         {selectedProduct.id === product.id && (
                             <div className="absolute inset-0 bg-teal/10 flex items-center justify-center">

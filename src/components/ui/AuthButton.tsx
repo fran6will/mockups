@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { LogIn, LogOut, User, LayoutDashboard, Coins, Mail, X, Check, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { trackPixelEvent } from '@/components/analytics/MetaPixel';
 
@@ -127,7 +128,13 @@ export default function AuthButton() {
                 </button>
                 <div className="w-8 h-8 rounded-full bg-teal text-cream flex items-center justify-center text-xs font-bold overflow-hidden border-2 border-white shadow-sm">
                     {user.user_metadata?.avatar_url ? (
-                        <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                        <Image
+                            src={user.user_metadata.avatar_url}
+                            alt="Avatar"
+                            fill
+                            className="object-cover"
+                            sizes="32px"
+                        />
                     ) : (
                         user.email?.charAt(0).toUpperCase()
                     )}

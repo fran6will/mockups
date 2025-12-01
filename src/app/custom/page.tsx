@@ -3,7 +3,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, Sparkles, Loader2, Image as ImageIcon, CheckCircle, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 import Header from '@/components/ui/Header';
+import { getOptimizedSupabaseUrl } from '@/lib/utils/supabase-image';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 
@@ -151,8 +153,14 @@ export default function CustomMockupPage() {
                             Your custom template "{successProduct.title}" is ready. You can now use it to generate mockups.
                         </p>
 
-                        <div className="aspect-square w-64 mx-auto rounded-2xl overflow-hidden shadow-lg mb-8 border border-ink/5">
-                            <img src={successProduct.base_image_url} alt="Generated Scene" className="w-full h-full object-cover" />
+                        <div className="aspect-square w-64 mx-auto rounded-2xl overflow-hidden shadow-lg mb-8 border border-ink/5 relative">
+                            <Image
+                                src={getOptimizedSupabaseUrl(successProduct.base_image_url, 600)}
+                                alt="Generated Scene"
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                            />
                         </div>
 
                         <div className="flex justify-center gap-4">
@@ -296,10 +304,12 @@ export default function CustomMockupPage() {
                                     className="snap-center min-w-[240px] group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-teal/10 transition-all duration-300 border border-ink/5 cursor-pointer"
                                 >
                                     <div className="aspect-square relative overflow-hidden bg-gray-100">
-                                        <img
-                                            src={template.base_image_url}
+                                        <Image
+                                            src={getOptimizedSupabaseUrl(template.base_image_url, 400)}
                                             alt={template.title}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                            fill
+                                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                            sizes="240px"
                                         />
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                             <span className="text-white font-bold bg-white/20 backdrop-blur px-4 py-2 rounded-full">Use Template</span>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { Loader2, Upload, Film, Play, Download, X, AlertCircle, Sparkles, AlertTriangle, Info } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export default function VideoAnimator() {
@@ -148,7 +149,12 @@ export default function VideoAnimator() {
                     onClick={() => fileInputRef.current?.click()}
                 >
                     {uploadedImage ? (
-                        <img src={uploadedImage} alt="Upload" className="w-full h-full object-contain p-8" />
+                        <Image
+                            src={uploadedImage}
+                            alt="Upload"
+                            fill
+                            className="object-contain p-8"
+                        />
                     ) : (
                         <div className="text-center p-6">
                             <div className="w-20 h-20 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-6 text-teal">

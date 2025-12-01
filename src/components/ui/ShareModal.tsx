@@ -2,6 +2,7 @@
 
 import { X, Copy, Check, Facebook, Twitter } from 'lucide-react';
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -63,7 +64,13 @@ export default function ShareModal({ isOpen, onClose, imageUrl, productTitle = '
 
                 {/* Preview */}
                 <div className="aspect-video rounded-xl overflow-hidden bg-gray-100 mb-6 border border-ink/5 relative">
-                    <img src={imageUrl} alt="Preview" className="w-full h-full object-contain" />
+                    <Image
+                        src={imageUrl}
+                        alt="Preview"
+                        fill
+                        className="object-contain"
+                        sizes="(max-width: 768px) 100vw, 500px"
+                    />
                 </div>
 
                 {/* Social Grid */}

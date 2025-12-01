@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/ui/Header';
 import { Download, Calendar, Image as ImageIcon, Heart, Film } from 'lucide-react';
+import Image from 'next/image';
+import { getOptimizedSupabaseUrl } from '@/lib/utils/supabase-image';
 import FavoriteButton from '@/components/ui/FavoriteButton';
 import PurchaseTracker from '@/components/analytics/PurchaseTracker';
 
@@ -136,10 +138,12 @@ export default async function DashboardPage() {
                                         {/* Image Container */}
                                         <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
                                             <div className="absolute inset-0 bg-teal/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 mix-blend-multiply"></div>
-                                            <img
-                                                src={product.gallery_image_url || product.base_image_url}
+                                            <Image
+                                                src={getOptimizedSupabaseUrl(product.gallery_image_url || product.base_image_url, 400)}
                                                 alt={product.title}
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                fill
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                className="object-cover transition-transform duration-700 group-hover:scale-105"
                                             />
 
                                             {/* Favorite Button */}
@@ -185,10 +189,12 @@ export default async function DashboardPage() {
                                     {gen.meta?.type === 'video' ? (
                                         (gen.meta?.source_image || gen.products?.base_image_url) ? (
                                             <>
-                                                <img
-                                                    src={gen.meta?.source_image || gen.products?.base_image_url}
+                                                <Image
+                                                    src={getOptimizedSupabaseUrl(gen.meta?.source_image || gen.products?.base_image_url, 400)}
                                                     alt="Video Thumbnail"
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                    fill
+                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                                                 />
                                                 <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 backdrop-blur-sm">
                                                     <Film size={12} /> Video
@@ -200,10 +206,12 @@ export default async function DashboardPage() {
                                             </div>
                                         )
                                     ) : gen.image_url ? (
-                                        <img
-                                            src={gen.image_url}
+                                        <Image
+                                            src={getOptimizedSupabaseUrl(gen.image_url, 400)}
                                             alt="Generated Mockup"
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                            fill
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                            className="object-cover transition-transform duration-700 group-hover:scale-105"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-ink/20">
@@ -211,8 +219,8 @@ export default async function DashboardPage() {
                                         </div>
                                     )}
 
-                                    {/* Overlay Actions */}
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm">
+                                    {/* Overlay Actions (Desktop Hover) */}
+                                    <div className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-4 backdrop-blur-sm">
                                         {gen.meta?.type === 'video' && gen.meta?.videoUrl ? (
                                             <a
                                                 href={gen.meta.videoUrl}
@@ -248,13 +256,42 @@ export default async function DashboardPage() {
                                             {gen.meta?.aspect_ratio || '1:1'}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs text-ink/40">
-                                        <Calendar size={14} />
-                                        {new Date(gen.created_at).toLocaleDateString(undefined, {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric'
-                                        })}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-xs text-ink/40">
+                                            <Calendar size={14} />
+                                            {new Date(gen.created_at).toLocaleDateString(undefined, {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}
+                                        </div>
+
+                                        {/* Mobile Download Button */}
+                                        <div className="md:hidden">
+                                            {gen.meta?.type === 'video' && gen.meta?.videoUrl ? (
+                                                <a
+                                                    href={gen.meta.videoUrl}
+                                                    download={`video-${gen.id}.mp4`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-teal hover:text-teal/80 p-2"
+                                                    title="Download Video"
+                                                >
+                                                    <Download size={20} />
+                                                </a>
+                                            ) : gen.image_url ? (
+                                                <a
+                                                    href={gen.image_url}
+                                                    download={`mockup-${gen.id}.png`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-teal hover:text-teal/80 p-2"
+                                                    title="Download Image"
+                                                >
+                                                    <Download size={20} />
+                                                </a>
+                                            ) : null}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

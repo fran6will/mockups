@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
+import { getOptimizedSupabaseUrl } from '@/lib/utils/supabase-image';
 import ImageCompositor from '@/components/customer/ImageCompositor';
 import { Zap, Ban, Star } from 'lucide-react';
 import Banner from '@/components/ui/Banner';
@@ -138,10 +140,12 @@ function SimilarProducts({ currentProduct, isPro }: { currentProduct: any, isPro
                     >
                         <WatermarkOverlay showWatermark={!isPro} className="aspect-[4/3] relative overflow-hidden bg-gray-100">
                             <div className="absolute inset-0 bg-teal/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 mix-blend-multiply"></div>
-                            <img
-                                src={product.gallery_image_url || product.base_image_url}
+                            <Image
+                                src={getOptimizedSupabaseUrl(product.gallery_image_url || product.base_image_url, 400)}
                                 alt={product.title}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
                             />
                         </WatermarkOverlay>
                         <div className="p-4">

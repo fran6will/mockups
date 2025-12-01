@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getOptimizedSupabaseUrl } from '@/lib/utils/supabase-image';
 import { ArrowRight, Droplets, Image as ImageIcon, Layers } from 'lucide-react';
 
 export default function NewArrivals() {
@@ -63,7 +64,7 @@ export default function NewArrivals() {
                             >
                                 <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
                                     <Image
-                                        src={product.gallery_image_url || product.base_image_url}
+                                        src={getOptimizedSupabaseUrl(product.gallery_image_url || product.base_image_url, 600)}
                                         alt={product.title}
                                         fill
                                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
