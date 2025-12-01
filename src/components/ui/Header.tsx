@@ -31,16 +31,18 @@ export default function Header({ className = "" }: { className?: string }) {
                         <Link href="/pricing" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Pricing</Link>
                     </nav>
                 </div>
-                <AuthButton />
+                <div className="flex items-center gap-4">
+                    <AuthButton />
 
-                {/* Mobile Menu Button */}
-                <button
-                    className="md:hidden p-2 text-ink/60 hover:text-ink transition-colors"
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    aria-label="Toggle mobile menu"
-                >
-                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
+                    {/* Mobile Menu Button */}
+                    <button
+                        className="md:hidden p-2 text-ink/60 hover:text-ink transition-colors"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label="Toggle mobile menu"
+                    >
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                </div>
             </div>
 
             {/* Mobile Menu */}

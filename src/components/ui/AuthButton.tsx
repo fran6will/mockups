@@ -126,7 +126,7 @@ export default function AuthButton() {
                 >
                     <LogOut size={18} />
                 </button>
-                <div className="w-8 h-8 rounded-full bg-teal text-cream flex items-center justify-center text-xs font-bold overflow-hidden border-2 border-white shadow-sm">
+                <div className="relative w-8 h-8 rounded-full bg-teal text-cream flex items-center justify-center text-xs font-bold overflow-hidden border-2 border-white shadow-sm">
                     {user.user_metadata?.avatar_url ? (
                         <Image
                             src={user.user_metadata.avatar_url}
