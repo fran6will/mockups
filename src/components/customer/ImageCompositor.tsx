@@ -60,7 +60,38 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const [isGenerating, setIsGenerating] = useState(false);
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '9:16' | '16:9'>('1:1');
     const [imageSize, setImageSize] = useState<'1K' | '2K' | '4K'>('1K');
+
     const [error, setError] = useState<string | null>(null);
+
+    // Reference Images State (for Scenes)
+    const [referenceImages, setReferenceImages] = useState<{ id: string, file: File, previewUrl: string }[]>([]);
+
+    const onDropReferences = useCallback((acceptedFiles: File[]) => {
+        if (referenceImages.length + acceptedFiles.length > 3) {
+            setError("Maximum 3 reference images allowed");
+            return;
+        }
+
+        const newRefs = acceptedFiles.map(file => ({
+            id: Math.random().toString(36).substr(2, 9),
+            file,
+            previewUrl: URL.createObjectURL(file)
+        }));
+
+        setReferenceImages(prev => [...prev, ...newRefs]);
+        setError(null);
+    }, [referenceImages]);
+
+    const { getRootProps: getRefRootProps, getInputProps: getRefInputProps, isDragActive: isRefDragActive } = useDropzone({
+        onDrop: onDropReferences,
+        accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp'] },
+        maxFiles: 3 - referenceImages.length,
+        disabled: referenceImages.length >= 3
+    });
+
+    const removeReference = (id: string) => {
+        setReferenceImages(prev => prev.filter(ref => ref.id !== id));
+    };
 
     // Credit System State
     const [isUnlocked, setIsUnlocked] = useState(false);
@@ -322,7 +353,16 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     aspectRatio,
                     email: emailInput || '', // Optional for guests now
                     imageSize,
-                    variantImageUrl: currentBaseImage !== baseImageUrl ? currentBaseImage : undefined
+
+                    variantImageUrl: currentBaseImage !== baseImageUrl ? currentBaseImage : undefined,
+                    referenceImageUrls: category === 'Scenes' ? await Promise.all(referenceImages.map(async (ref) => {
+                        return new Promise<string>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.readAsDataURL(ref.file);
+                            reader.onload = () => resolve(reader.result as string);
+                            reader.onerror = reject;
+                        });
+                    })) : undefined
                 }),
             });
 
@@ -797,6 +837,43 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             <div className="grid md:grid-cols-3 gap-8 items-start">
                 {/* Col 1: Layers & Upload */}
                 <div className="space-y-6 bg-white rounded-[2rem] p-6 border border-ink/5 shadow-sm h-full">
+                    {/* Reference Images Section (Scenes Only) */}
+                    {category === 'Scenes' && (
+                        <div className="mb-6 pb-6 border-b border-ink/5">
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="text-xs font-bold text-ink/40 uppercase tracking-wider flex items-center gap-2">
+                                    Product References <span className="bg-teal/10 text-teal px-1.5 py-0.5 rounded text-[10px]">AI Helper</span>
+                                </label>
+                                <span className="text-[10px] text-ink/40">{referenceImages.length}/3</span>
+                            </div>
+                            <p className="text-[10px] text-ink/50 mb-3 leading-relaxed">
+                                Upload extra photos of your product (different angles, close-ups) to help the AI understand its shape and details.
+                            </p>
+
+                            <div className="grid grid-cols-4 gap-2">
+                                {referenceImages.map(ref => (
+                                    <div key={ref.id} className="relative aspect-square rounded-lg overflow-hidden group border border-ink/10">
+                                        <Image src={ref.previewUrl} alt="Ref" fill className="object-cover" />
+                                        <button
+                                            onClick={() => removeReference(ref.id)}
+                                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+
+                                {referenceImages.length < 3 && (
+                                    <div {...getRefRootProps()} className={`aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${isRefDragActive ? 'border-teal bg-teal/5' : 'border-ink/10 hover:border-teal/50 hover:bg-teal/5'}`}>
+                                        <input {...getRefInputProps()} />
+                                        <Plus size={16} className="text-ink/40" />
+                                        <span className="text-[8px] text-ink/40 font-bold mt-1">ADD</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="font-bold text-ink flex items-center gap-2">
                             <Layers size={18} className="text-teal" /> Layers

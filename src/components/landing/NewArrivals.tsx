@@ -86,6 +86,18 @@ export default function NewArrivals() {
                                             </div>
                                         )}
                                     </div>
+
+                                    {/* Scenes Overlay - Place Your Product */}
+                                    {product.category === 'Scenes' && (
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
+                                            <div className="bg-black/40 backdrop-blur-md border border-white/20 text-white px-4 py-3 rounded-xl font-bold shadow-2xl flex flex-col items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mb-1">
+                                                    <ImageIcon size={16} />
+                                                </div>
+                                                <span className="text-xs tracking-wide">Place Your Product</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="p-4">

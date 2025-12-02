@@ -140,9 +140,13 @@ export async function POST(request: Request) {
 
         let result;
         if (product.category === 'Scenes') {
+            // Extract reference images if provided
+            const { referenceImageUrls = [] } = await request.json().catch(() => ({}));
+
             result = await generateProductPlacement(
                 baseImageToUse,
-                logoUrl, // In this case, logoUrl is actually the product photo
+                logoUrl, // In this case, logoUrl is the main product photo (from canvas)
+                referenceImageUrls, // Array of additional reference URLs
                 prompt,
                 aspectRatio || '1:1',
                 imageSize

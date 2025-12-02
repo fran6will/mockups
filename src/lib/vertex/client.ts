@@ -255,7 +255,8 @@ export const generateScene = async (
 
 export const generateProductPlacement = async (
     sceneImageUrl: string,
-    productImageUrl: string,
+    mainProductImageUrl: string,
+    referenceProductImageUrls: string[],
     prompt: string,
     aspectRatio: string = '1:1',
     imageSize: string = '1K'
@@ -294,28 +295,40 @@ export const generateProductPlacement = async (
         };
 
         console.log("Fetching image assets...");
-        const [sceneImagePart, productImagePart] = await Promise.all([
+
+        // Fetch Scene and Main Product
+        const [sceneImagePart, mainProductPart] = await Promise.all([
             urlToPart(sceneImageUrl),
-            urlToPart(productImageUrl)
+            urlToPart(mainProductImageUrl)
         ]);
+
+        // Fetch Reference Images
+        const referenceParts = await Promise.all(
+            referenceProductImageUrls.map(url => urlToPart(url))
+        );
 
         // Construct Prompt for Product Placement
         const fullPrompt = `
             Generate a photorealistic product photography shot.
             ${prompt}
-            Task: Place the provided product object into the provided scene background.
-            Important:
-            1. The product object (from the second image) must be the main focus. Keep its shape, label, and details exactly as they are.
-            2. The background scene (from the first image) should be used as the environment.
-            3. Blend the product naturally into the scene with correct perspective, lighting, shadows, and reflections.
-            4. Ensure high quality, detailed texture, and realistic lighting.
+            Task: Place the provided product object (from the second image and additional references) into the provided scene background (from the first image).
+            CRITICAL INSTRUCTIONS:
+            1. DO NOT CHANGE THE PRODUCT. The product object must be preserved EXACTLY as it appears in the reference images (shape, label, colors, details).
+            2. Use the "Main Product" image as the primary source for the object's pose and perspective to be placed.
+            3. Use the "Reference Images" (if provided) to better understand the product's details, materials, and 3D shape.
+            4. Only adjust the lighting and shadows on the product to match the scene.
+            5. The background scene (from the first image) should be used as the environment.
+            6. Blend the product naturally with correct perspective and realistic shadows.
+            7. Ensure high quality, detailed texture, and realistic lighting.
         `;
 
-        console.log("Sending request to model with images...");
+        console.log(`Sending request to model with ${referenceParts.length} reference images...`);
+
         const result = await model.generateContent([
             fullPrompt,
             sceneImagePart,
-            productImagePart
+            mainProductPart,
+            ...referenceParts
         ]);
         const response = await result.response;
 
@@ -347,5 +360,43 @@ export const generateProductPlacement = async (
             success: false,
             error: error.message || "Unknown error"
         };
+    }
+};
+
+export const refinePrompt = async (prompt: string) => {
+    if (!apiKey) {
+        throw new Error("Missing GEMINI_API_KEY in environment variables.");
+    }
+
+    try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        // Use a text-optimized model for this
+        const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+
+        const systemPrompt = `
+            You are an expert photographer and prompt engineer for AI image generation.
+            Your task is to take a simple user description and enhance it into a detailed, photorealistic scene description for product photography.
+            
+            Focus on:
+            - Lighting (e.g., cinematic, soft, golden hour, studio)
+            - Texture and Materials (e.g., marble, wood, fabric)
+            - Mood and Atmosphere
+            - Composition (e.g., depth of field, bokeh)
+            
+            Constraints:
+            - Keep the product itself generic (refer to it as "the product") as it will be inserted later.
+            - Keep the description under 50 words.
+            - Return ONLY the enhanced prompt text. Do not add quotes or explanations.
+            
+            User Input: "${prompt}"
+        `;
+
+        const result = await model.generateContent(systemPrompt);
+        const response = await result.response;
+        return response.text().trim();
+
+    } catch (error: any) {
+        console.error("Gemini Prompt Refinement Error:", error);
+        throw new Error("Failed to refine prompt: " + error.message);
     }
 };
