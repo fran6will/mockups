@@ -14,7 +14,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { image, prompt, title } = await request.json();
+        const { image, prompt, title, styleReferences, aspectRatio } = await request.json();
 
         if (!image || !prompt || !title) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
         // 2. Generate Scene using AI
         // The image comes as a Data URL (Base64)
-        const sceneResult = await generateScene(image, prompt);
+        const sceneResult = await generateScene(image, prompt, styleReferences || [], aspectRatio || '1:1');
 
         if (!sceneResult.success || !sceneResult.mockUrl) {
             throw new Error(sceneResult.error || 'Failed to generate scene');

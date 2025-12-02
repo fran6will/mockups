@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, Sparkles, Loader2, Image as ImageIcon, CheckCircle, AlertCircle, Download, Wand2, LayoutTemplate, Palette } from 'lucide-react';
+import { UploadCloud, Sparkles, Loader2, Image as ImageIcon, CheckCircle, AlertCircle, Download, Wand2, LayoutTemplate, Palette, Plus, X } from 'lucide-react';
 import Image from 'next/image';
 import Header from '@/components/ui/Header';
 import { getOptimizedSupabaseUrl } from '@/lib/utils/supabase-image';
@@ -23,6 +23,8 @@ export default function CustomMockupPage() {
     const [consent, setConsent] = useState(false);
     const [userTemplates, setUserTemplates] = useState<any[]>([]);
     const [loadingTemplates, setLoadingTemplates] = useState(true);
+    const [styleReferences, setStyleReferences] = useState<File[]>([]);
+    const [aspectRatio, setAspectRatio] = useState<'1:1' | '9:16' | '16:9'>('1:1');
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         const file = acceptedFiles[0];
@@ -66,7 +68,7 @@ export default function CustomMockupPage() {
     }, [successProduct]); // Refresh when a new product is created
 
     const handleGenerate = async () => {
-        if (!file || !prompt || !title || !consent) return;
+        if (!file || !prompt || !title || (mode === 'template' && !consent)) return;
 
         setIsGenerating(true);
         setError(null);
@@ -80,13 +82,25 @@ export default function CustomMockupPage() {
                 reader.onerror = reject;
             });
 
+            // Convert style references to base64
+            const styleRefsBase64 = await Promise.all(styleReferences.map(async (ref) => {
+                return new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(ref);
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                });
+            }));
+
             const response = await fetch('/api/custom/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     image: base64,
                     prompt,
-                    title
+                    title,
+                    aspectRatio,
+                    styleReferences: styleRefsBase64
                 })
             });
 
@@ -264,9 +278,11 @@ export default function CustomMockupPage() {
                                 {mode === 'template' ? "Create Another" : "Remix Another"}
                             </button>
                         </div>
-                        <p className="text-xs text-ink/40 mt-6">
-                            Note: This template is currently private. An admin may review it for public release.
-                        </p>
+                        {mode === 'template' && (
+                            <p className="text-xs text-ink/40 mt-6">
+                                Note: This template is currently private. An admin may review it for public release.
+                            </p>
+                        )}
                     </div>
                 ) : (
                     <div className="grid md:grid-cols-2 gap-12 items-start mb-20">
@@ -319,6 +335,24 @@ export default function CustomMockupPage() {
                             </div>
 
                             <div>
+                                <label className="block text-sm font-bold text-ink/70 mb-2">Aspect Ratio</label>
+                                <div className="flex bg-gray-50 p-1 rounded-xl border border-ink/10">
+                                    {['1:1', '9:16', '16:9'].map((ratio) => (
+                                        <button
+                                            key={ratio}
+                                            onClick={() => setAspectRatio(ratio as any)}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${aspectRatio === ratio
+                                                ? (mode === 'template' ? 'bg-teal text-white shadow-sm' : 'bg-purple-600 text-white shadow-sm')
+                                                : 'text-ink/60 hover:bg-white/50'
+                                                }`}
+                                        >
+                                            {ratio === '1:1' ? 'Square' : ratio === '9:16' ? 'Story' : 'Wide'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="block text-sm font-bold text-ink/70">Scene Prompt</label>
                                     <button
@@ -344,23 +378,63 @@ export default function CustomMockupPage() {
                                 </p>
                             </div>
 
-                            <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100">
-                                <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
-                                <div className="text-sm text-amber-900">
-                                    <label className="flex items-center gap-2 cursor-pointer font-bold mb-1">
-                                        <input
-                                            type="checkbox"
-                                            checked={consent}
-                                            onChange={(e) => setConsent(e.target.checked)}
-                                            className="accent-teal w-4 h-4"
-                                        />
-                                        I agree to the terms
-                                    </label>
-                                    <p className="opacity-80 text-xs">
-                                        By generating this template, you consent that it may be reviewed by admins and potentially offered as a public template in the gallery.
+                            {mode === 'remix' && (
+                                <div>
+                                    <label className="block text-sm font-bold text-ink/70 mb-2">Style References (Optional)</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {styleReferences.map((ref, i) => (
+                                            <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-ink/10 group">
+                                                <img src={URL.createObjectURL(ref)} alt="Reference" className="w-full h-full object-cover" />
+                                                <button
+                                                    onClick={() => setStyleReferences(prev => prev.filter((_, idx) => idx !== i))}
+                                                    className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {styleReferences.length < 3 && (
+                                            <label className="aspect-square rounded-lg border-2 border-dashed border-ink/10 hover:border-purple-300 hover:bg-purple-50 flex flex-col items-center justify-center cursor-pointer transition-all text-ink/40 hover:text-purple-600">
+                                                <Plus size={20} />
+                                                <span className="text-[10px] font-bold mt-1">Add Ref</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        if (e.target.files?.[0]) {
+                                                            setStyleReferences(prev => [...prev, e.target.files![0]]);
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-ink/40 mt-2">
+                                        Upload up to 3 images to guide the style, lighting, or mood.
                                     </p>
                                 </div>
-                            </div>
+                            )}
+
+                            {mode === 'template' && (
+                                <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100">
+                                    <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+                                    <div className="text-sm text-amber-900">
+                                        <label className="flex items-center gap-2 cursor-pointer font-bold mb-1">
+                                            <input
+                                                type="checkbox"
+                                                checked={consent}
+                                                onChange={(e) => setConsent(e.target.checked)}
+                                                className="accent-teal w-4 h-4"
+                                            />
+                                            I agree to the terms
+                                        </label>
+                                        <p className="opacity-80 text-xs">
+                                            By generating this template, you consent that it may be reviewed by admins and potentially offered as a public template in the gallery.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {error && (
                                 <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-bold flex items-center gap-2">
@@ -370,7 +444,7 @@ export default function CustomMockupPage() {
 
                             <button
                                 onClick={handleGenerate}
-                                disabled={!file || !prompt || !title || !consent || isGenerating}
+                                disabled={!file || !prompt || !title || (mode === 'template' && !consent) || isGenerating}
                                 className={`w-full text-white font-bold py-4 rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${mode === 'template' ? 'bg-teal hover:bg-teal/90 shadow-teal/20' : 'bg-purple-600 hover:bg-purple-700 shadow-purple-200'}`}
                             >
                                 {isGenerating ? (
@@ -385,57 +459,60 @@ export default function CustomMockupPage() {
                             </button>
                         </div>
                     </div>
-                )}
+                )
+                }
 
                 {/* User Templates Carousel */}
-                {userTemplates.length > 0 && (
-                    <div className="mt-16 border-t border-ink/5 pt-16">
-                        <h2 className="text-2xl font-bold text-ink mb-8 flex items-center gap-2">
-                            <Sparkles className="text-teal" /> Your Custom Templates
-                        </h2>
+                {
+                    userTemplates.length > 0 && (
+                        <div className="mt-16 border-t border-ink/5 pt-16">
+                            <h2 className="text-2xl font-bold text-ink mb-8 flex items-center gap-2">
+                                <Sparkles className="text-teal" /> Your Custom Templates
+                            </h2>
 
-                        <div className="flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory no-scrollbar">
-                            {userTemplates.map(template => (
-                                <div
-                                    key={template.id}
-                                    onClick={() => router.push(`/${template.slug}`)}
-                                    className="snap-center min-w-[240px] group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-teal/10 transition-all duration-300 border border-ink/5 cursor-pointer"
-                                >
-                                    <div className="aspect-square relative overflow-hidden bg-gray-100">
-                                        <Image
-                                            src={getOptimizedSupabaseUrl(template.base_image_url, 400)}
-                                            alt={template.title}
-                                            fill
-                                            className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                            sizes="240px"
-                                        />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <span className="text-white font-bold bg-white/20 backdrop-blur px-4 py-2 rounded-full">Use Template</span>
+                            <div className="flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory no-scrollbar">
+                                {userTemplates.map(template => (
+                                    <div
+                                        key={template.id}
+                                        onClick={() => router.push(`/${template.slug}`)}
+                                        className="snap-center min-w-[240px] group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-teal/10 transition-all duration-300 border border-ink/5 cursor-pointer"
+                                    >
+                                        <div className="aspect-square relative overflow-hidden bg-gray-100">
+                                            <Image
+                                                src={getOptimizedSupabaseUrl(template.base_image_url, 400)}
+                                                alt={template.title}
+                                                fill
+                                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                                sizes="240px"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span className="text-white font-bold bg-white/20 backdrop-blur px-4 py-2 rounded-full">Use Template</span>
+                                            </div>
+
+                                            {/* Status Badge */}
+                                            <div className="absolute top-3 right-3">
+                                                {template.status === 'approved' ? (
+                                                    <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">Public</span>
+                                                ) : template.status === 'rejected' ? (
+                                                    <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">Rejected</span>
+                                                ) : (
+                                                    <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">Pending</span>
+                                                )}
+                                            </div>
                                         </div>
-
-                                        {/* Status Badge */}
-                                        <div className="absolute top-3 right-3">
-                                            {template.status === 'approved' ? (
-                                                <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">Public</span>
-                                            ) : template.status === 'rejected' ? (
-                                                <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">Rejected</span>
-                                            ) : (
-                                                <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">Pending</span>
-                                            )}
+                                        <div className="p-4">
+                                            <h3 className="font-bold text-ink text-sm truncate">{template.title}</h3>
+                                            <p className="text-xs text-ink/40 mt-1">
+                                                {new Date(template.created_at).toLocaleDateString()}
+                                            </p>
                                         </div>
                                     </div>
-                                    <div className="p-4">
-                                        <h3 className="font-bold text-ink text-sm truncate">{template.title}</h3>
-                                        <p className="text-xs text-ink/40 mt-1">
-                                            {new Date(template.created_at).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                )}
-            </main>
-        </div>
+                    )
+                }
+            </main >
+        </div >
     );
 }

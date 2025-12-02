@@ -6,7 +6,7 @@ import { Suspense } from 'react';
 export default async function TryItSection() {
     const { data: freeProducts } = await supabase
         .from('products')
-        .select('id, slug, title, base_image_url, password_hash')
+        .select('id, slug, title, base_image_url, gallery_image_url, password_hash')
         .eq('is_free', true)
         .limit(5);
 

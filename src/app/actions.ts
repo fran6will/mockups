@@ -101,6 +101,11 @@ export async function updateProduct(formData: FormData) {
 export async function deleteProduct(id: string) {
     if (!id) return { error: 'Missing ID' };
 
+    // Delete related records first (Manual Cascade)
+    await supabaseAdmin.from('generations').delete().eq('product_id', id);
+    await supabaseAdmin.from('favorites').delete().eq('product_id', id);
+    await supabaseAdmin.from('product_variants').delete().eq('product_id', id);
+
     const { error } = await supabaseAdmin
         .from('products')
         .delete()

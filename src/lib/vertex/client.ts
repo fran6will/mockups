@@ -180,44 +180,64 @@ export const analyzeMockupImage = async (imageUrl: string, productType: 'mockup'
 
 export const generateScene = async (
     baseImageUrl: string,
-    prompt: string
+    prompt: string,
+    styleReferenceUrls: string[] = [],
+    aspectRatio: string = '1:1'
 ) => {
     if (!apiKey) {
         throw new Error("Missing GEMINI_API_KEY in environment variables.");
     }
 
     try {
-        console.log(`Calling Copié-Collé (Gemini Scene Generation)...`);
+        console.log(`Calling Copié-Collé (Gemini Scene Generation) with ${styleReferenceUrls.length} style refs and ratio ${aspectRatio}...`);
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: modelId, // Use same model: gemini-3-pro-image-preview
+            model: modelId,
             generationConfig: {
-                responseModalities: ["IMAGE"], // We only want the image
+                responseModalities: ["IMAGE"],
                 imageConfig: {
-                    aspectRatio: "1:1", // Default to square for now
+                    aspectRatio: aspectRatio,
                     imageSize: "1K"
                 }
             } as any
         });
 
-        // Fetch and convert Base Image
-        const response = await fetch(baseImageUrl);
-        const arrayBuffer = await response.arrayBuffer();
-        const base64 = Buffer.from(arrayBuffer).toString('base64');
-        const mimeType = response.headers.get('content-type') || 'image/png';
-
-        const baseImagePart = {
-            inlineData: {
-                data: base64,
-                mimeType
+        // Helper to fetch and convert URL to Base64 (reused from generateProductPlacement logic if needed, or defined here)
+        const urlToPart = async (url: string) => {
+            // Check if it's already a data URL
+            if (url.startsWith('data:')) {
+                const [mimeType, base64] = url.split(';base64,');
+                return {
+                    inlineData: {
+                        data: base64,
+                        mimeType: mimeType.replace('data:', '')
+                    }
+                };
             }
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            const base64 = Buffer.from(arrayBuffer).toString('base64');
+            const mimeType = response.headers.get('content-type') || 'image/png';
+            return {
+                inlineData: {
+                    data: base64,
+                    mimeType
+                }
+            };
         };
+
+        const baseImagePart = await urlToPart(baseImageUrl);
+
+        const styleParts = await Promise.all(
+            styleReferenceUrls.map(url => urlToPart(url))
+        );
 
         // Construct Prompt
         const fullPrompt = `
-            Take this blank product image and place it into a professional, photorealistic scene.
+            Take this blank product image (first image) and place it into a professional, photorealistic scene.
             ${prompt}
+            ${styleParts.length > 0 ? 'Use the provided additional images as STYLE REFERENCES for the lighting, mood, and composition.' : ''}
             Important: Keep the product itself (shape, material) exactly as is, just change the background and lighting to match the scene.
             Ensure high quality, detailed texture, and realistic lighting.
         `;
@@ -225,7 +245,8 @@ export const generateScene = async (
         console.log("Sending scene generation request...");
         const result = await model.generateContent([
             fullPrompt,
-            baseImagePart
+            baseImagePart,
+            ...styleParts
         ]);
         const apiResponse = await result.response;
 
@@ -311,15 +332,14 @@ export const generateProductPlacement = async (
         const fullPrompt = `
             Generate a photorealistic product photography shot.
             ${prompt}
-            Task: Place the provided product object (from the second image and additional references) into the provided scene background (from the first image).
+            Task: REPLACE the sample product in the provided scene (first image) with the new product provided (second image and references).
             CRITICAL INSTRUCTIONS:
-            1. DO NOT CHANGE THE PRODUCT. The product object must be preserved EXACTLY as it appears in the reference images (shape, label, colors, details).
-            2. Use the "Main Product" image as the primary source for the object's pose and perspective to be placed.
-            3. Use the "Reference Images" (if provided) to better understand the product's details, materials, and 3D shape.
-            4. Only adjust the lighting and shadows on the product to match the scene.
-            5. The background scene (from the first image) should be used as the environment.
-            6. Blend the product naturally with correct perspective and realistic shadows.
-            7. Ensure high quality, detailed texture, and realistic lighting.
+            1. IDENTIFY the sample product/object currently in the scene (first image).
+            2. REPLACE that object completely with the new product from the second image.
+            3. MATCH the exact position, scale, perspective, and lighting of the original sample product.
+            4. PRESERVE the new product's identity (shape, label, colors, details) exactly as shown in the reference images.
+            5. The background scene must remain unchanged, only the product is swapped.
+            6. Ensure realistic shadows and reflections that match the scene's lighting environment.
         `;
 
         console.log(`Sending request to model with ${referenceParts.length} reference images...`);

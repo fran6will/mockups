@@ -11,6 +11,7 @@ interface Product {
     slug: string;
     title: string;
     base_image_url: string;
+    gallery_image_url?: string;
     password_hash: string | null;
 }
 
@@ -35,7 +36,7 @@ export default function TryItPlayground({ products }: TryItPlaygroundProps) {
                             }`}
                     >
                         <Image
-                            src={getOptimizedSupabaseUrl(product.base_image_url, 200)}
+                            src={getOptimizedSupabaseUrl(product.gallery_image_url || product.base_image_url, 200)}
                             alt={product.title}
                             fill
                             sizes="96px"
