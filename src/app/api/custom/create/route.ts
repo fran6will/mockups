@@ -148,7 +148,7 @@ export async function POST(request: Request) {
                 created_by: user.id,
                 status: 'pending',
                 is_public: false,
-                tags: ['custom', 'community']
+                tags: ['custom']
             })
             .select()
             .single();
