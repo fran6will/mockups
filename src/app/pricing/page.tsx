@@ -307,7 +307,7 @@ export default function PricingPage() {
 
                 <div className="mt-24 text-center">
                     <p className="text-ink/40 text-sm font-medium">
-                        Secure payments powered by Lemon Squeezy. Cancel anytime.
+                        Secure payments powered by Lemon Squeezy. Cancel anytime. Questions? <a href="mailto:copiecolle.ai@gmail.com" className="text-teal hover:underline">copiecolle.ai@gmail.com</a>
                     </p>
                 </div>
             </main>

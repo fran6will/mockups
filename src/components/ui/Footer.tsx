@@ -38,7 +38,7 @@ export default function Footer() {
                             <a href="#" aria-label="Follow us on Instagram" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
                                 <Instagram size={18} />
                             </a>
-                            <a href="#" aria-label="Contact us via Email" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                            <a href="mailto:copiecolle.ai@gmail.com" aria-label="Contact us via Email" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
                                 <Mail size={18} />
                             </a>
                         </div>
@@ -60,7 +60,7 @@ export default function Footer() {
                                 <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
                                 <li><a href="#" className="hover:text-white transition-colors">Tutorials</a></li>
                                 <li><Link href="/faq" className="hover:text-white transition-colors">FAQ & How-to</Link></li>
-                                <li><a href="#" className="hover:text-white transition-colors">Support Center</a></li>
+                                <li><a href="mailto:copiecolle.ai@gmail.com" className="hover:text-white transition-colors">Contact Support</a></li>
                             </ul>
                         </div>
                         <div>
