@@ -20,12 +20,17 @@ export default function PricingPage() {
         if (!baseUrl) return '#';
         let url = baseUrl;
 
-        // Add discount code
-        const separator = url.includes('?') ? '&' : '?';
-        // url += `${separator}checkout[discount_code]=BF2025`; // Removed BF2025
+        // Helper to append params
+        const addParam = (key: string, value: string) => {
+            const separator = url.includes('?') ? '&' : '?';
+            url += `${separator}${key}=${value}`;
+        };
+
+        // Add discount code (Example)
+        // addParam('checkout[discount_code]', 'BF2025');
 
         if (userId) {
-            url += `&checkout[custom][user_id]=${userId}`;
+            addParam('checkout[custom][user_id]', userId);
         }
 
         // Construct redirect URL with success flags for the Pixel
@@ -36,7 +41,8 @@ export default function PricingPage() {
         }
 
         const redirectUrl = encodeURIComponent(redirectPath);
-        url += `&checkout[redirect_url]=${redirectUrl}`;
+        addParam('checkout[redirect_url]', redirectUrl);
+
         return url;
     };
 
@@ -93,12 +99,12 @@ export default function PricingPage() {
                                     The ultimate toolkit for professional creators. Unlimited possibilities.
                                 </p>
                                 <div className="text-5xl font-bold mb-2 tracking-tighter flex items-baseline gap-3">
-                                    <span>$9.99<span className="text-lg text-white/60 font-bold tracking-normal">/mo CAD</span></span>
+                                    <span>$19.99<span className="text-lg text-white/60 font-bold tracking-normal">/mo CAD</span></span>
                                 </div>
                                 <div className="bg-yellow-400 text-ink text-xs font-black px-2 py-1 rounded inline-block mb-2 uppercase tracking-wider animate-pulse">
                                     7 Days Free
                                 </div>
-                                <p className="text-white/60 text-sm mb-8">Then $9.99/mo. Cancel anytime.</p>
+                                <p className="text-white/60 text-sm mb-8">Then $19.99/mo. Cancel anytime.</p>
 
                                 {userId ? (
                                     <a

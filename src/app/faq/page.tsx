@@ -70,6 +70,19 @@ export default function FAQPage() {
                                 A <strong>Custom Template</strong> allows you to upload your own base image (either a product photo or a scene) and use our AI to composite your designs or products onto it. This gives you complete control over your visual assets.
                             </p>
                         </div>
+
+                        <div className="mt-8 pt-8 border-t border-ink/5">
+                            <h3 className="font-bold text-ink mb-2">Remixing & Privacy</h3>
+                            <p className="text-ink/70 leading-relaxed">
+                                <strong>Remixing</strong> allows you to take an existing scene or upload your own, and customize it with your product.
+                            </p>
+                            <div className="mt-4 bg-teal/5 p-4 rounded-xl border border-teal/10">
+                                <p className="text-sm text-ink/80 font-medium flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-teal"></span>
+                                    <strong>Privacy Guarantee:</strong> All custom remixes and scenes you create are <strong>PRIVATE</strong> by default. They will appear in your personal dashboard but will never be shown in the public community gallery.
+                                </p>
+                            </div>
+                        </div>
                     </section>
 
                     {/* Section 2: Credits & Billing */}

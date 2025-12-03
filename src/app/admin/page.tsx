@@ -367,6 +367,10 @@ export default function AdminPage() {
                             <Clock size={20} className="text-teal" />
                             Generations Log
                         </Link>
+                        <Link href="/admin/users" className="bg-white text-ink font-bold px-6 py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2 border border-ink/5">
+                            <Users size={20} className="text-teal" />
+                            Users & Credits
+                        </Link>
                         <Link href="/admin/reviews" className="bg-white text-ink font-bold px-6 py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2 border border-ink/5">
                             <Users size={20} className="text-teal" />
                             Review Community

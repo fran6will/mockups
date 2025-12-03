@@ -22,13 +22,14 @@ export default function Header({ className = "" }: { className?: string }) {
                         <Logo showText={true} />
                     </Link>
                     <nav className="hidden md:flex items-center gap-1">
+                        <Link href="/#gallery" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Gallery</Link>
+                        <Link href="/custom" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Create Scene</Link>
                         <Link href="/animate" className="relative px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all group flex items-center gap-2">
                             Animate
                             <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm group-hover:shadow-md transition-shadow">NEW</span>
                         </Link>
-                        <Link href="/custom" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Custom</Link>
-                        <Link href="/#gallery" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Gallery</Link>
                         <Link href="/pricing" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Pricing</Link>
+                        <Link href="/faq" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Help</Link>
                     </nav>
                 </div>
                 <div className="flex items-center gap-4">
@@ -50,6 +51,20 @@ export default function Header({ className = "" }: { className?: string }) {
                 <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-ink/5 shadow-xl animate-in slide-in-from-top-2 duration-200">
                     <nav className="flex flex-col p-6 space-y-4">
                         <Link
+                            href="/#gallery"
+                            className="px-4 py-3 rounded-xl text-ink/60 font-medium hover:bg-ink/5 hover:text-ink transition-all"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Gallery
+                        </Link>
+                        <Link
+                            href="/custom"
+                            className="px-4 py-3 rounded-xl text-ink/60 font-medium hover:bg-ink/5 hover:text-ink transition-all"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Create Scene
+                        </Link>
+                        <Link
                             href="/animate"
                             className="flex items-center justify-between px-4 py-3 rounded-xl bg-ink/5 text-ink font-bold hover:bg-teal/10 hover:text-teal transition-all"
                             onClick={() => setIsMobileMenuOpen(false)}
@@ -58,25 +73,18 @@ export default function Header({ className = "" }: { className?: string }) {
                             <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">NEW</span>
                         </Link>
                         <Link
-                            href="/custom"
-                            className="px-4 py-3 rounded-xl text-ink/60 font-medium hover:bg-ink/5 hover:text-ink transition-all"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                            Custom
-                        </Link>
-                        <Link
-                            href="/#gallery"
-                            className="px-4 py-3 rounded-xl text-ink/60 font-medium hover:bg-ink/5 hover:text-ink transition-all"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                            Gallery
-                        </Link>
-                        <Link
                             href="/pricing"
                             className="px-4 py-3 rounded-xl text-ink/60 font-medium hover:bg-ink/5 hover:text-ink transition-all"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Pricing
+                        </Link>
+                        <Link
+                            href="/faq"
+                            className="px-4 py-3 rounded-xl text-ink/60 font-medium hover:bg-ink/5 hover:text-ink transition-all"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Help
                         </Link>
                     </nav>
                 </div>

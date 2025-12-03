@@ -230,3 +230,66 @@ export async function analyzeImageAction(imageUrl: string, productType: 'mockup'
         return { error: error.message };
     }
 }
+
+export async function addUserCredits(email: string, amount: number) {
+    if (!email || !amount) return { error: 'Missing fields' };
+
+    // 1. Find User ID by Email
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+
+    if (userError) return { error: 'Error listing users: ' + userError.message };
+
+    const user = userData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+    if (!user) {
+        return { error: `User not found with email: ${email}` };
+    }
+
+    // 2. Add Credits
+    const { data: currentCredits } = await supabaseAdmin
+        .from('user_credits')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+    let newBalance = amount;
+
+    if (currentCredits) {
+        newBalance = (currentCredits.balance || 0) + amount;
+        const { error: updateError } = await supabaseAdmin
+            .from('user_credits')
+            .update({
+                balance: newBalance,
+                updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
+
+        if (updateError) return { error: updateError.message };
+    } else {
+        const { error: insertError } = await supabaseAdmin
+            .from('user_credits')
+            .insert({
+                user_id: user.id,
+                email: email,
+                balance: amount,
+                total_used: 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            });
+
+        if (insertError) return { error: insertError.message };
+    }
+
+    // 3. Log Transaction
+    await supabaseAdmin
+        .from('transactions')
+        .insert([{
+            user_id: user.id,
+            amount: amount,
+            type: 'credit',
+            description: 'Manual Admin Adjustment',
+            metadata: { timestamp: new Date().toISOString(), admin_action: true }
+        }]);
+
+    return { success: true, newBalance };
+}

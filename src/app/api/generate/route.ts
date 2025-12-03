@@ -66,15 +66,29 @@ export async function POST(request: Request) {
         }
 
         // Check Credits (If NOT Pro)
-        if (!isPro && email) {
-            const { data: user, error: userError } = await supabaseAdmin
-                .from('user_credits')
-                .select('*')
-                .eq('email', email)
-                .single();
+        if (!isPro) {
+            if (authUser) {
+                // Prioritize lookup by User ID (handles email mismatches from PayPal)
+                const { data: user, error: userError } = await supabaseAdmin
+                    .from('user_credits')
+                    .select('*')
+                    .eq('user_id', authUser.id)
+                    .single();
 
-            if (user && !userError) {
-                userCredits = user;
+                if (user && !userError) {
+                    userCredits = user;
+                }
+            } else if (email) {
+                // Fallback to email for guests or if user_id lookup fails (though user_id should be primary)
+                const { data: user, error: userError } = await supabaseAdmin
+                    .from('user_credits')
+                    .select('*')
+                    .eq('email', email)
+                    .single();
+
+                if (user && !userError) {
+                    userCredits = user;
+                }
             }
         }
 
