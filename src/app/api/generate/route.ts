@@ -12,9 +12,9 @@ export async function POST(request: Request) {
         productIdString = productId;
 
         // Calculate Cost
-        let creditCost = 2;
-        if (imageSize === '2K') creditCost = 4;
-        if (imageSize === '4K') creditCost = 6;
+        let creditCost = 5;
+        if (imageSize === '2K') creditCost = 10;
+        if (imageSize === '4K') creditCost = 15;
 
         if (!productId || !logoUrl) {
             return NextResponse.json({ error: 'Missing required fields (productId, logoUrl)' }, { status: 400 });
@@ -76,6 +76,11 @@ export async function POST(request: Request) {
             if (user && !userError) {
                 userCredits = user;
             }
+        }
+
+        // RESTRICT 4K TO PRO USERS
+        if (imageSize === '4K' && !isPro) {
+            return NextResponse.json({ error: '4K export is reserved for Pro members.' }, { status: 403 });
         }
 
         // SKIP CHECKS IF PRODUCT IS FREE

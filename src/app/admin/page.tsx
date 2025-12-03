@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { Upload, Save, Loader2, ShieldCheck, Edit, Trash2, X, Plus, UploadCloud, CheckCircle, Image as ImageIcon, Layers, Sparkles, Users } from 'lucide-react';
+import { Upload, Save, Loader2, ShieldCheck, Edit, Trash2, X, Plus, UploadCloud, CheckCircle, Image as ImageIcon, Layers, Sparkles, Users, Clock } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import Header from '@/components/ui/Header';
 import Link from 'next/link';
@@ -362,10 +362,16 @@ export default function AdminPage() {
                             Admin Dashboard
                         </h1>
                     </div>
-                    <Link href="/admin/reviews" className="bg-white text-ink font-bold px-6 py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2 border border-ink/5">
-                        <Users size={20} className="text-teal" />
-                        Review Community
-                    </Link>
+                    <div className="flex gap-3">
+                        <Link href="/admin/generations" className="bg-white text-ink font-bold px-6 py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2 border border-ink/5">
+                            <Clock size={20} className="text-teal" />
+                            Generations Log
+                        </Link>
+                        <Link href="/admin/reviews" className="bg-white text-ink font-bold px-6 py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2 border border-ink/5">
+                            <Users size={20} className="text-teal" />
+                            Review Community
+                        </Link>
+                    </div>
                 </header>
 
                 <div className="grid lg:grid-cols-3 gap-8">

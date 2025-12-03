@@ -182,14 +182,15 @@ export const generateScene = async (
     baseImageUrl: string,
     prompt: string,
     styleReferenceUrls: string[] = [],
-    aspectRatio: string = '1:1'
+    aspectRatio: string = '1:1',
+    imageSize: string = '1K'
 ) => {
     if (!apiKey) {
         throw new Error("Missing GEMINI_API_KEY in environment variables.");
     }
 
     try {
-        console.log(`Calling Copié-Collé (Gemini Scene Generation) with ${styleReferenceUrls.length} style refs and ratio ${aspectRatio}...`);
+        console.log(`Calling Copié-Collé (Gemini Scene Generation) with ${styleReferenceUrls.length} style refs, ratio ${aspectRatio}, size ${imageSize}...`);
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
@@ -198,7 +199,7 @@ export const generateScene = async (
                 responseModalities: ["IMAGE"],
                 imageConfig: {
                     aspectRatio: aspectRatio,
-                    imageSize: "1K"
+                    imageSize: imageSize
                 }
             } as any
         });

@@ -303,7 +303,7 @@ export default function Gallery() {
                                 {displayedProducts.map(product => (
                                     <Link
                                         key={product.id}
-                                        href={`/${product.slug}`}
+                                        href={product.category === 'Scenes' ? `/custom?sceneId=${product.id}` : `/${product.slug}`}
                                         className="group block relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-teal/10 hover:-translate-y-1 transition-all duration-500 border border-ink/5"
                                     >
                                         {/* Image Container */}
@@ -346,9 +346,9 @@ export default function Gallery() {
                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
                                                     <div className="bg-black/40 backdrop-blur-md border border-white/20 text-white px-5 py-4 rounded-2xl font-bold shadow-2xl flex flex-col items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                                                         <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mb-1">
-                                                            <ImageIcon size={20} />
+                                                            <Sparkles size={20} />
                                                         </div>
-                                                        <span className="text-sm tracking-wide">Place Your Product</span>
+                                                        <span className="text-sm tracking-wide">Remix This Scene</span>
                                                     </div>
                                                 </div>
                                             )}

@@ -30,6 +30,25 @@ export default function HomePage() {
 
             <main className="relative z-10">
                 <Hero />
+
+                {/* Free Trial CTA */}
+                <div className="max-w-7xl mx-auto px-6 mb-12 -mt-8 relative z-20">
+                    <div className="bg-ink text-white rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-ink/10 border border-white/10">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-ink font-black text-xl shrink-0 animate-pulse">
+                                7
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-xl md:text-2xl">Try Pro Free for 7 Days</h3>
+                                <p className="text-white/60 text-sm">Unlimited generations. Cancel anytime.</p>
+                            </div>
+                        </div>
+                        <a href="/pricing" className="bg-white text-ink font-bold px-8 py-3 rounded-xl hover:bg-yellow-400 transition-colors whitespace-nowrap">
+                            Start Free Trial
+                        </a>
+                    </div>
+                </div>
+
                 <TrendingCarousel />
                 <TryItSection />
                 <NewArrivals />

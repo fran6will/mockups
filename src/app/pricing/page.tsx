@@ -11,7 +11,7 @@ import { trackPixelEvent } from '@/components/analytics/MetaPixel';
 
 export default function PricingPage() {
     const [userId, setUserId] = useState<string | null>(null);
-    const SUBSCRIPTION_URL = 'https://copiecolle.lemonsqueezy.com/buy/373e7490-206a-4245-b484-793667ded21b';
+    const SUBSCRIPTION_URL = 'https://copiecolle.lemonsqueezy.com/buy/1c68621e-5709-4124-adf8-a269def1b5b3';
     const STARTER_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/85a300fc-479d-4528-9249-7b5736541316';
     const CREATOR_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/373e7490-206a-4245-b484-793667ded21b';
     const AGENCY_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/bce3aad8-13c1-4fbf-b123-38396fccf697';
@@ -22,7 +22,7 @@ export default function PricingPage() {
 
         // Add discount code
         const separator = url.includes('?') ? '&' : '?';
-        url += `${separator}checkout[discount_code]=BF2025`;
+        // url += `${separator}checkout[discount_code]=BF2025`; // Removed BF2025
 
         if (userId) {
             url += `&checkout[custom][user_id]=${userId}`;
@@ -93,13 +93,12 @@ export default function PricingPage() {
                                     The ultimate toolkit for professional creators. Unlimited possibilities.
                                 </p>
                                 <div className="text-5xl font-bold mb-2 tracking-tighter flex items-baseline gap-3">
-                                    <span className="text-white/40 line-through text-3xl">$19.99</span>
                                     <span>$9.99<span className="text-lg text-white/60 font-bold tracking-normal">/mo CAD</span></span>
                                 </div>
-                                <div className="bg-yellow-400 text-ink text-xs font-black px-2 py-1 rounded inline-block mb-2 uppercase tracking-wider">
-                                    Black Friday Deal
+                                <div className="bg-yellow-400 text-ink text-xs font-black px-2 py-1 rounded inline-block mb-2 uppercase tracking-wider animate-pulse">
+                                    7 Days Free
                                 </div>
-                                <p className="text-white/60 text-sm mb-8">Cancel anytime. Local currency at checkout.</p>
+                                <p className="text-white/60 text-sm mb-8">Then $9.99/mo. Cancel anytime.</p>
 
                                 {userId ? (
                                     <a
@@ -116,7 +115,7 @@ export default function PricingPage() {
                                         }}
                                         className="group inline-flex w-full md:w-auto px-8 py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl items-center justify-center gap-2"
                                     >
-                                        Get Pro Access <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                        Start 7-Day Free Trial <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                     </a>
                                 ) : (
                                     <button
@@ -130,7 +129,7 @@ export default function PricingPage() {
                                         }}
                                         className="group inline-flex w-full md:w-auto px-8 py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl items-center justify-center gap-2"
                                     >
-                                        Sign in to Subscribe <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                        Sign in to Start Trial <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 )}
                             </div>
@@ -145,7 +144,6 @@ export default function PricingPage() {
                                         "100 Bonus Credits / mo (≈ 4 Videos)",
                                         "Videos: 25 credits each",
                                         "Access to ALL templates",
-                                        "Priority generation speed",
                                         "Commercial license included",
                                         "Premium 4K export"
                                     ].map((feature, i) => (
@@ -174,15 +172,11 @@ export default function PricingPage() {
                         <div className="glass rounded-3xl p-8 border border-teal/10 hover:-translate-y-1 transition-transform duration-300">
                             <h3 className="text-xl font-bold text-ink mb-2">Starter Pack</h3>
                             <div className="text-3xl font-bold text-ink mb-1 flex items-baseline gap-2">
-                                <span className="text-ink/30 line-through text-xl">$9.99</span>
-                                <span>$4.99 <span className="text-sm text-ink/40 font-normal">CAD</span></span>
-                            </div>
-                            <div className="bg-yellow-400 text-ink text-[10px] font-black px-2 py-0.5 rounded inline-block mb-2 uppercase tracking-wider">
-                                50% OFF
+                                <span>$9.99 <span className="text-sm text-ink/40 font-normal">CAD</span></span>
                             </div>
                             <div className="text-teal font-bold mb-6">100 Credits</div>
                             <ul className="space-y-3 text-sm text-ink/70 mb-8">
-                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 50 Images</li>
+                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 20 Images</li>
                                 <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 4 Videos</li>
                             </ul>
                             {userId ? (
@@ -225,15 +219,11 @@ export default function PricingPage() {
                             </div>
                             <h3 className="text-xl font-bold text-ink mb-2">Creator Pack</h3>
                             <div className="text-3xl font-bold text-ink mb-1 flex items-baseline gap-2">
-                                <span className="text-ink/30 line-through text-xl">$34.99</span>
-                                <span>$17.49 <span className="text-sm text-ink/40 font-normal">CAD</span></span>
-                            </div>
-                            <div className="bg-yellow-400 text-ink text-[10px] font-black px-2 py-0.5 rounded inline-block mb-2 uppercase tracking-wider">
-                                50% OFF
+                                <span>$34.99 <span className="text-sm text-ink/40 font-normal">CAD</span></span>
                             </div>
                             <div className="text-teal font-bold mb-6">500 Credits</div>
                             <ul className="space-y-3 text-sm text-ink/70 mb-8">
-                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 250 Images</li>
+                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 100 Images</li>
                                 <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 20 Videos</li>
                             </ul>
                             {userId ? (
@@ -273,15 +263,11 @@ export default function PricingPage() {
                         <div className="glass rounded-3xl p-8 border border-teal/10 hover:-translate-y-1 transition-transform duration-300">
                             <h3 className="text-xl font-bold text-ink mb-2">Agency Pack</h3>
                             <div className="text-3xl font-bold text-ink mb-1 flex items-baseline gap-2">
-                                <span className="text-ink/30 line-through text-xl">$59.99</span>
-                                <span>$29.99 <span className="text-sm text-ink/40 font-normal">CAD</span></span>
-                            </div>
-                            <div className="bg-yellow-400 text-ink text-[10px] font-black px-2 py-0.5 rounded inline-block mb-2 uppercase tracking-wider">
-                                50% OFF
+                                <span>$59.99 <span className="text-sm text-ink/40 font-normal">CAD</span></span>
                             </div>
                             <div className="text-teal font-bold mb-6">1000 Credits</div>
                             <ul className="space-y-3 text-sm text-ink/70 mb-8">
-                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 500 Images</li>
+                                <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 200 Images</li>
                                 <li className="flex gap-2"><Check size={16} className="text-teal" /> ≈ 40 Videos</li>
                             </ul>
                             {userId ? (
