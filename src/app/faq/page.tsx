@@ -98,8 +98,14 @@ export default function FAQPage() {
                             <div>
                                 <h3 className="font-bold text-lg text-ink mb-2">How are credits used?</h3>
                                 <p className="text-ink/70 leading-relaxed">
-                                    Each successful generation costs <strong>1 Credit</strong>. This includes generating a mockup with your design or placing a product into a scene.
+                                    Credit costs depend on the resolution and type of generation:
                                 </p>
+                                <ul className="list-disc list-inside mt-2 space-y-1 text-ink/70">
+                                    <li><strong>Standard (1K):</strong> 5 Credits</li>
+                                    <li><strong>High Res (2K):</strong> 10 Credits</li>
+                                    <li><strong>Ultra Res (4K):</strong> 15 Credits</li>
+                                    <li><strong>Video:</strong> 25 Credits</li>
+                                </ul>
                             </div>
 
                             <div>
@@ -111,7 +117,7 @@ export default function FAQPage() {
                                             <strong>System Errors:</strong> If the generation fails due to a technical error on our end (e.g., server timeout, AI service unavailable), your credit will not be deducted, or it will be automatically refunded.
                                         </p>
                                         <p className="text-ink/80 text-sm leading-relaxed">
-                                            <strong>User Satisfaction:</strong> We do <strong>not</strong> offer reimbursement for generations that complete successfully but do not meet your aesthetic preference. We recommend using the preview tools and following our best practices guides to ensure the best results.
+                                            <strong>User Satisfaction:</strong> If you are not satisfied with a generation, please contact us at <a href="mailto:copiecolle.ai@gmail.com" className="text-teal hover:underline">copiecolle.ai@gmail.com</a> and we will make it right.
                                         </p>
                                     </div>
                                 </div>
