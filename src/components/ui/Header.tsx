@@ -28,6 +28,10 @@ export default function Header({ className = "" }: { className?: string }) {
                             Animate
                             <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm group-hover:shadow-md transition-shadow">NEW</span>
                         </Link>
+                        <Link href="/experimental" className="relative px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all group flex items-center gap-2">
+                            Experimental
+                            <span className="bg-teal/10 text-teal text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-teal/20">LAB</span>
+                        </Link>
                         <Link href="/pricing" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Pricing</Link>
                         <Link href="/faq" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Help</Link>
                     </nav>
@@ -71,6 +75,14 @@ export default function Header({ className = "" }: { className?: string }) {
                         >
                             <span>Animate</span>
                             <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">NEW</span>
+                        </Link>
+                        <Link
+                            href="/experimental"
+                            className="flex items-center justify-between px-4 py-3 rounded-xl bg-ink/5 text-ink font-bold hover:bg-teal/10 hover:text-teal transition-all"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            <span>Experimental</span>
+                            <span className="bg-teal/10 text-teal text-[10px] font-bold px-2 py-0.5 rounded-full border border-teal/20">LAB</span>
                         </Link>
                         <Link
                             href="/pricing"

@@ -73,15 +73,15 @@ export default function BlogPost() {
 
                         {/* Witty CTA */}
                         <div className="mt-12 p-8 rounded-2xl border border-[var(--color-teal)]/20 bg-[var(--color-teal)]/5 backdrop-blur-sm">
-                            <h3 className="text-2xl font-bold text-[var(--color-teal)] mb-3">Want to test AI consistency right now?</h3>
+                            <h3 className="text-2xl font-bold text-[var(--color-teal)] mb-3">Want to test Seedream 4.5 right now?</h3>
                             <p className="mb-6 text-lg">
-                                Full disclosure: We are currently running on the incredibly reliable <strong>nano-banana-pro</strong> model (yes, that's a thing... sort of). But don't worry, the second Seedream 4.5 is available via API, we'll be the first to integrate it. Until then, see how our current engine handles complex logo placement on real products today.
+                                <strong>Good news!</strong> We've just integrated the experimental Seedream 4.5 model into our lab. Pro members can now upload product shots and remix them with this cutting-edge AI.
                             </p>
                             <Link
-                                href="/"
+                                href="/experimental"
                                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-[var(--color-teal)] rounded-xl hover:opacity-90 transition-all w-full md:w-auto shadow-lg shadow-[var(--color-teal)]/20 hover:shadow-xl hover:scale-[1.02]"
                             >
-                                Try CopieColle Generator
+                                Try Seedream 4.5 Lab
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>
                         </div>
