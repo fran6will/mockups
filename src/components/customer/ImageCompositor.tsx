@@ -960,7 +960,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                 if (size === '2K') cost = 4;
                                 if (size === '4K') cost = 6;
 
-                                const isDisabled = isFree && size !== '1K';
+                                const isDisabled = (isFree && accessLevel !== 'pro') && size !== '1K';
                                 return (
                                     <button
                                         key={size}
