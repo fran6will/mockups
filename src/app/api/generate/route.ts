@@ -5,10 +5,10 @@ import { generateMockup, generateProductPlacement } from '@/lib/vertex/client';
 
 export async function POST(request: Request) {
     const startTime = Date.now();
-    let productIdString = null;
-    let userEmail = null;
-    let userIp = '127.0.0.1';
-    let userId = null;
+    let productIdString: string | null = null;
+    let userEmail: string | null = null;
+    let userIp: string = '127.0.0.1';
+    let userId: string | null = null;
 
     // Helper to log attempts (success or fail)
     const logAttempt = async (status: string, errorMsg: string | null = null, meta: any = {}) => {
