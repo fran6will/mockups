@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         }
 
         // 4. Award Credits (Transaction)
-        const CREDITS_TO_AWARD = 100;
+        const CREDITS_TO_AWARD = 10;
 
         // A. Add Claim record
         const { error: claimInsertError } = await supabaseAdmin

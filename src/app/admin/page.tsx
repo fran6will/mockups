@@ -9,6 +9,7 @@ import Link from 'next/link';
 
 import { useRouter } from 'next/navigation';
 import { analyzeImageAction } from '../actions';
+import EtsyLinksManager from '@/components/admin/EtsyLinksManager';
 
 const CATEGORIES = [
     "Men's Clothing",
@@ -728,6 +729,11 @@ export default function AdminPage() {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Etsy Links Manager */}
+                <div className="mt-8">
+                    <EtsyLinksManager products={products} />
                 </div>
             </div>
         </div>
