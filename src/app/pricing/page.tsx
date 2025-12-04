@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Check, Sparkles, ArrowRight } from 'lucide-react';
+import { Check, Sparkles, ArrowRight, Settings } from 'lucide-react';
 import Header from '@/components/ui/Header';
 import Banner from '@/components/ui/Banner';
 import { useEffect, useState } from 'react';
@@ -11,6 +11,9 @@ import { trackPixelEvent } from '@/components/analytics/MetaPixel';
 
 export default function PricingPage() {
     const [userId, setUserId] = useState<string | null>(null);
+    const [subscription, setSubscription] = useState<any>(null);
+    const [loadingSub, setLoadingSub] = useState(false);
+
     const SUBSCRIPTION_URL = 'https://copiecolle.lemonsqueezy.com/buy/1c68621e-5709-4124-adf8-a269def1b5b3';
     const STARTER_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/85a300fc-479d-4528-9249-7b5736541316';
     const CREATOR_PACK_URL = 'https://copiecolle.lemonsqueezy.com/buy/373e7490-206a-4245-b484-793667ded21b';
@@ -59,10 +62,36 @@ export default function PricingPage() {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
                 setUserId(session.user.id);
+                fetchSubscription(session.user.id);
             }
         };
         getSession();
     }, []);
+
+    const fetchSubscription = async (uid: string) => {
+        setLoadingSub(true);
+        const { data } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', uid)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (data) {
+            const isActive = data.status === 'active' || data.status === 'on_trial';
+            const isCancelledButValid = data.status === 'cancelled' &&
+                data.ends_at &&
+                new Date(data.ends_at) > new Date();
+
+            if (isActive || isCancelledButValid) {
+                setSubscription(data);
+            }
+        }
+        setLoadingSub(false);
+    };
+
+    const isPro = !!subscription;
 
     return (
         <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-fixed" style={{
@@ -107,22 +136,33 @@ export default function PricingPage() {
                                 <p className="text-white/60 text-sm mb-8">Then $19.99/mo. Cancel anytime.</p>
 
                                 {userId ? (
-                                    <a
-                                        href={getCheckoutUrl(SUBSCRIPTION_URL, 19.99)}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleInitiateCheckout('Pro Membership', 19.99);
-                                            const url = getCheckoutUrl(SUBSCRIPTION_URL, 19.99);
-                                            if (window.gtag_report_conversion) {
-                                                window.gtag_report_conversion(url);
-                                            } else {
-                                                window.location.href = url;
-                                            }
-                                        }}
-                                        className="group inline-flex w-full md:w-auto px-8 py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl items-center justify-center gap-2"
-                                    >
-                                        Start 7-Day Free Trial <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                    </a>
+                                    isPro ? (
+                                        <a
+                                            href={subscription.customer_portal_url || '#'}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="group inline-flex w-full md:w-auto px-8 py-4 rounded-xl bg-white/20 text-white font-bold text-center hover:bg-white/30 transition-all shadow-xl items-center justify-center gap-2 backdrop-blur-sm border border-white/20"
+                                        >
+                                            <Settings size={18} /> Manage Subscription
+                                        </a>
+                                    ) : (
+                                        <a
+                                            href={getCheckoutUrl(SUBSCRIPTION_URL, 19.99)}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleInitiateCheckout('Pro Membership', 19.99);
+                                                const url = getCheckoutUrl(SUBSCRIPTION_URL, 19.99);
+                                                if (window.gtag_report_conversion) {
+                                                    window.gtag_report_conversion(url);
+                                                } else {
+                                                    window.location.href = url;
+                                                }
+                                            }}
+                                            className="group inline-flex w-full md:w-auto px-8 py-4 rounded-xl bg-white text-teal font-bold text-center hover:bg-cream transition-all shadow-xl items-center justify-center gap-2"
+                                        >
+                                            Start 7-Day Free Trial <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                        </a>
+                                    )
                                 ) : (
                                     <button
                                         onClick={async () => {
@@ -320,3 +360,4 @@ export default function PricingPage() {
         </div>
     );
 }
+

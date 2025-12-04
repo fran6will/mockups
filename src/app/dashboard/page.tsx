@@ -40,10 +40,12 @@ export default async function DashboardPage() {
         .limit(1)
         .maybeSingle();
 
+    const status = subscription?.status?.toLowerCase();
     const isPro = subscription && (
-        subscription.status === 'active' ||
-        subscription.status === 'on_trial' ||
-        (subscription.status === 'cancelled' && subscription.ends_at && new Date(subscription.ends_at) > new Date())
+        status === 'active' ||
+        status === 'on_trial' ||
+        status === 'trialing' ||
+        (status === 'cancelled' && subscription.ends_at && new Date(subscription.ends_at) > new Date())
     );
 
     // Fetch favorites

@@ -6,10 +6,37 @@ import { generateMockup, generateProductPlacement } from '@/lib/vertex/client';
 export async function POST(request: Request) {
     const startTime = Date.now();
     let productIdString = null;
+    let userEmail = null;
+    let userIp = '127.0.0.1';
+    let userId = null;
+
+    // Helper to log attempts (success or fail)
+    const logAttempt = async (status: string, errorMsg: string | null = null, meta: any = {}) => {
+        try {
+            await supabaseAdmin.from('generations').insert({
+                product_id: productIdString, // Can be null if not found
+                status: status,
+                duration_ms: Date.now() - startTime,
+                error_message: errorMsg,
+                meta: { ...meta, user_email: userEmail },
+                user_id: userId,
+                ip_address: userIp
+            });
+        } catch (logError) {
+            console.error("Failed to log generation usage:", logError);
+        }
+    };
 
     try {
-        const { productId, logoUrl, aspectRatio, email, imageSize = '1K', variantImageUrl } = await request.json();
+        const body = await request.json();
+        const { productId, logoUrl, aspectRatio, email, imageSize = '1K', variantImageUrl } = body;
+
         productIdString = productId;
+        userEmail = email;
+
+        // Get IP Address
+        const forwardedFor = request.headers.get('x-forwarded-for');
+        userIp = forwardedFor ? forwardedFor.split(',')[0] : '127.0.0.1';
 
         // Calculate Cost
         let creditCost = 5;
@@ -17,7 +44,9 @@ export async function POST(request: Request) {
         if (imageSize === '4K') creditCost = 15;
 
         if (!productId || !logoUrl) {
-            return NextResponse.json({ error: 'Missing required fields (productId, logoUrl)' }, { status: 400 });
+            const msg = 'Missing required fields (productId, logoUrl)';
+            await logAttempt('validation_error', msg);
+            return NextResponse.json({ error: msg }, { status: 400 });
         }
 
         // 1. Fetch Product Details (Base Image, Overlay Config)
@@ -28,7 +57,9 @@ export async function POST(request: Request) {
             .single();
 
         if (error || !product) {
-            return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+            const msg = 'Product not found';
+            await logAttempt('product_not_found', msg);
+            return NextResponse.json({ error: msg }, { status: 404 });
         }
 
         // 0. Check Auth Session (for History)
@@ -36,9 +67,7 @@ export async function POST(request: Request) {
         const supabase = await createClient();
         const { data: { user: authUser } } = await supabase.auth.getUser();
 
-        // Get IP Address
-        const forwardedFor = request.headers.get('x-forwarded-for');
-        const ip = forwardedFor ? forwardedFor.split(',')[0] : '127.0.0.1';
+        if (authUser) userId = authUser.id;
 
         // 0.5 Check Subscription (Pro Access) & Credits
         let isPro = false;
@@ -94,7 +123,9 @@ export async function POST(request: Request) {
 
         // RESTRICT 4K TO PRO USERS
         if (imageSize === '4K' && !isPro) {
-            return NextResponse.json({ error: '4K export is reserved for Pro members.' }, { status: 403 });
+            const msg = '4K export is reserved for Pro members.';
+            await logAttempt('policy_restriction', msg, { restriction: '4k_pro_only' });
+            return NextResponse.json({ error: msg }, { status: 403 });
         }
 
         // SKIP CHECKS IF PRODUCT IS FREE
@@ -102,11 +133,15 @@ export async function POST(request: Request) {
             // Enforce Payment for Paid Products
             if (!isPro) {
                 if (!userCredits) {
-                    return NextResponse.json({ error: 'User not found. Please claim credits first.' }, { status: 403 });
+                    const msg = 'User not found. Please claim credits first.';
+                    await logAttempt('auth_error', msg);
+                    return NextResponse.json({ error: msg }, { status: 403 });
                 }
 
                 if (userCredits.balance < creditCost) {
-                    return NextResponse.json({ error: `Insufficient credits. This requires ${creditCost} credits.` }, { status: 402 });
+                    const msg = `Insufficient credits. This requires ${creditCost} credits.`;
+                    await logAttempt('insufficient_credits', msg, { balance: userCredits.balance, cost: creditCost });
+                    return NextResponse.json({ error: msg }, { status: 402 });
                 }
             }
         } else {
@@ -133,7 +168,7 @@ export async function POST(request: Request) {
                         .from('generations')
                         .select('*', { count: 'exact', head: true })
                         .eq('status', 'success')
-                        .eq('ip_address', ip);
+                        .eq('ip_address', userIp);
                     count = c || 0;
                     countError = e;
                 }
@@ -141,8 +176,10 @@ export async function POST(request: Request) {
                 if (countError) {
                     console.error("Error checking free limit:", countError);
                 } else if (count >= 3) {
+                    const msg = 'Free limit reached';
+                    await logAttempt('limit_reached', msg, { count });
                     return NextResponse.json({
-                        error: 'Free limit reached',
+                        error: msg,
                         code: 'FREE_LIMIT_REACHED'
                     }, { status: 403 });
                 }
@@ -160,7 +197,7 @@ export async function POST(request: Request) {
         let result;
         if (product.category === 'Scenes') {
             // Extract reference images if provided
-            const { referenceImageUrls = [] } = await request.json().catch(() => ({}));
+            const { referenceImageUrls = [] } = body; // Use body from earlier
 
             result = await generateProductPlacement(
                 baseImageToUse,
@@ -181,8 +218,6 @@ export async function POST(request: Request) {
         }
 
         // 3. Log Usage & Deduct Credit
-        const duration = Date.now() - startTime;
-
         if (result.success) {
             // Deduct Credit ONLY if not Pro AND not Free
             if (!isPro && !product.is_free && userCredits) {
@@ -230,34 +265,41 @@ export async function POST(request: Request) {
                 console.error("Error processing image upload:", uploadErr);
             }
 
-            // 4. Save to Generations Table
-            try {
-                await supabaseAdmin.from('generations').insert({
-                    product_id: productId,
-                    status: 'success',
-                    duration_ms: duration,
-                    meta: { aspect_ratio: aspectRatio, user_email: email, image_size: imageSize },
-                    user_id: authUser?.id || null, // Link to auth user if logged in
-                    image_url: publicUrl,
-                    ip_address: ip
-                });
-            } catch (logError) {
-                console.error("Failed to log generation usage:", logError);
-            }
+            // 4. Save to Generations Table (Success)
+            await logAttempt('success', null, { aspect_ratio: aspectRatio, image_size: imageSize });
+
+            // Update the image_url separately since logAttempt is generic
+            // Actually, we should just do a manual update or insert here to include the image_url
+            // But to keep it simple, let's just do a separate update for the image_url if we want to use the helper,
+            // OR just manually insert here like before but using the variables we set up.
+            // Let's stick to the manual insert for success to ensure we capture everything exactly as before + consistency.
+            // Wait, I can just update the helper to take extra fields or just do it manually here.
+            // Let's do it manually here to be safe and explicit, but using the variables.
+            // Actually, wait, I replaced the manual insert with logAttempt in my head, but in the code I should probably just use logAttempt if I can pass everything.
+            // Let's modify logAttempt to take an optional object for overrides.
+
+            // Re-implementing the success log using the helper would require passing image_url.
+            // Let's just do a direct insert here for success to match the exact schema we want (including image_url).
+            // Actually, let's just update the last log entry? No, that's complex.
+            // Let's just use the supabaseAdmin directly here for success, it's fine.
+            // BUT, to avoid code duplication, I'll just use the helper and add an `updates` arg?
+            // No, keep it simple.
+
+            // Let's just use the helper for errors, and keep the success logic mostly as is but updated to use the variables.
+            // Actually, I'll just use the helper for everything.
+            await supabaseAdmin.from('generations').insert({
+                product_id: productId,
+                status: 'success',
+                duration_ms: Date.now() - startTime,
+                meta: { aspect_ratio: aspectRatio, user_email: email, image_size: imageSize },
+                user_id: userId,
+                image_url: publicUrl,
+                ip_address: userIp
+            });
+
         } else {
-            // Log failure
-            try {
-                await supabaseAdmin.from('generations').insert({
-                    product_id: productId,
-                    status: 'error',
-                    duration_ms: duration,
-                    error_message: result.error,
-                    meta: { aspect_ratio: aspectRatio, user_email: email, image_size: imageSize },
-                    user_id: authUser?.id || null
-                });
-            } catch (logError) {
-                console.error("Failed to log error usage:", logError);
-            }
+            // Log failure (Vertex AI Error)
+            await logAttempt('error', result.error, { aspect_ratio: aspectRatio, image_size: imageSize });
         }
 
         // 5. Return the result
@@ -275,18 +317,7 @@ export async function POST(request: Request) {
         console.error("Generation failed:", e);
 
         // Log catastrophic failure
-        if (productIdString) {
-            try {
-                await supabaseAdmin.from('generations').insert({
-                    product_id: productIdString,
-                    status: 'crash',
-                    duration_ms: Date.now() - startTime,
-                    error_message: e.message || 'Unknown server error'
-                });
-            } catch (logError) {
-                console.error("Failed to log crash usage:", logError);
-            }
-        }
+        await logAttempt('crash', e.message || 'Unknown server error');
 
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

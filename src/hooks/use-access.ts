@@ -24,9 +24,11 @@ export function useAccess(productSlug?: string) {
 
                     if (subscription) {
                         console.log("DEBUG: Found subscription:", subscription);
-                        const isActive = subscription.status === 'active' || subscription.status === 'on_trial';
+                        const status = subscription.status?.toLowerCase();
+                        const isActive = status === 'active' || status === 'on_trial' || status === 'trialing';
+
                         // Check if cancelled but still within the billing period
-                        const isCancelledButValid = subscription.status === 'cancelled' &&
+                        const isCancelledButValid = status === 'cancelled' &&
                             subscription.ends_at &&
                             new Date(subscription.ends_at) > new Date();
 

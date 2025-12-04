@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { Link as LinkIcon, Trash2, ExternalLink, Copy, Plus, Save, Loader2 } from 'lucide-react';
+import { Link as LinkIcon, Trash2, ExternalLink, Copy, Plus, Save, Loader2, FileText } from 'lucide-react';
 
 interface Product {
     id: string;
     title: string;
     base_image_url: string;
+    password_hash: string;
 }
 
 interface EtsyLink {
@@ -22,7 +23,7 @@ interface EtsyLink {
 export default function EtsyLinksManager({ products }: { products: Product[] }) {
     const [links, setLinks] = useState<EtsyLink[]>([]);
     const [loading, setLoading] = useState(false);
-    
+
     // Form State
     const [selectedProductId, setSelectedProductId] = useState('');
     const [driveUrl, setDriveUrl] = useState('');
@@ -42,7 +43,8 @@ export default function EtsyLinksManager({ products }: { products: Product[] }) 
                 products (
                     id,
                     title,
-                    base_image_url
+                    base_image_url,
+                    password_hash
                 )
             `)
             .order('created_at', { ascending: false });
@@ -61,7 +63,7 @@ export default function EtsyLinksManager({ products }: { products: Product[] }) 
 
         try {
             const slug = customSlug || Math.random().toString(36).substring(2, 10);
-            
+
             const { error } = await supabase
                 .from('etsy_links')
                 .insert({
@@ -87,7 +89,7 @@ export default function EtsyLinksManager({ products }: { products: Product[] }) 
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this secret link?')) return;
-        
+
         const { error } = await supabase
             .from('etsy_links')
             .delete()
@@ -124,7 +126,7 @@ export default function EtsyLinksManager({ products }: { products: Product[] }) 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-xs font-bold text-ink/50 mb-1">Product</label>
-                        <select 
+                        <select
                             value={selectedProductId}
                             onChange={(e) => setSelectedProductId(e.target.value)}
                             className="w-full bg-white border border-ink/10 rounded-xl p-3 text-sm outline-none focus:border-purple-500 transition-all"
@@ -137,7 +139,7 @@ export default function EtsyLinksManager({ products }: { products: Product[] }) 
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-ink/50 mb-1">Google Drive URL</label>
-                        <input 
+                        <input
                             type="text"
                             value={driveUrl}
                             onChange={(e) => setDriveUrl(e.target.value)}
@@ -148,14 +150,14 @@ export default function EtsyLinksManager({ products }: { products: Product[] }) 
                     <div>
                         <label className="block text-xs font-bold text-ink/50 mb-1">Custom Slug (Optional)</label>
                         <div className="flex gap-2">
-                            <input 
+                            <input
                                 type="text"
                                 value={customSlug}
                                 onChange={(e) => setCustomSlug(e.target.value)}
                                 placeholder="random-string"
                                 className="w-full bg-white border border-ink/10 rounded-xl p-3 text-sm outline-none focus:border-purple-500 transition-all"
                             />
-                            <button 
+                            <button
                                 onClick={handleCreate}
                                 disabled={isCreating || !selectedProductId || !driveUrl}
                                 className="bg-purple-600 text-white px-6 rounded-xl font-bold hover:bg-purple-700 transition-all disabled:opacity-50 flex items-center justify-center min-w-[100px]"
@@ -197,14 +199,24 @@ export default function EtsyLinksManager({ products }: { products: Product[] }) 
                                 </td>
                                 <td className="py-3 text-right pr-2">
                                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button 
+                                        <button
+                                            onClick={() => {
+                                                const url = `/admin/tools/pdf-generator?slug=${link.slug}&password=${link.products?.password_hash || ''}&title=${encodeURIComponent(link.products?.title || '')}`;
+                                                window.open(url, '_blank');
+                                            }}
+                                            className="p-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors"
+                                            title="Generate PDF"
+                                        >
+                                            <FileText size={16} />
+                                        </button>
+                                        <button
                                             onClick={() => copyToClipboard(link.slug)}
-                                            className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                            className="p-2 bg-teal/10 text-teal rounded-lg hover:bg-teal/20 transition-colors"
                                             title="Copy Link"
                                         >
                                             <Copy size={16} />
                                         </button>
-                                        <a 
+                                        <a
                                             href={`/download/${link.slug}`}
                                             target="_blank"
                                             className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
@@ -212,7 +224,7 @@ export default function EtsyLinksManager({ products }: { products: Product[] }) 
                                         >
                                             <ExternalLink size={16} />
                                         </a>
-                                        <button 
+                                        <button
                                             onClick={() => handleDelete(link.id)}
                                             className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                                             title="Delete"
