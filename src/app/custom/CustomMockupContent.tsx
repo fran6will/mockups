@@ -117,15 +117,21 @@ export default function CustomMockupContent() {
         setError(null);
 
         try {
-            // Convert file to base64
-            const base64 = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result as string);
-                reader.onerror = reject;
-            });
+            // 1. Upload Image to Supabase Storage
+            const fileName = `custom-input-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('mockup-bases')
+                .upload(fileName, file);
 
-            // Convert style references to base64
+            if (uploadError) throw new Error('Failed to upload image: ' + uploadError.message);
+
+            const { data: urlData } = supabase.storage
+                .from('mockup-bases')
+                .getPublicUrl(fileName);
+
+            const imageUrl = urlData.publicUrl;
+
+            // Convert style references to base64 (keep this for now as they are usually smaller, or TODO: upload them too)
             const styleRefsBase64 = await Promise.all(styleReferences.map(async (ref) => {
                 return new Promise<string>((resolve, reject) => {
                     const reader = new FileReader();
@@ -139,7 +145,7 @@ export default function CustomMockupContent() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    image: base64,
+                    imageUrl, // Send URL instead of base64
                     prompt,
                     title,
                     aspectRatio,

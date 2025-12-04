@@ -14,9 +14,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { image, prompt, title, styleReferences, aspectRatio, imageSize = '1K' } = await request.json();
+        const { image, imageUrl, prompt, title, styleReferences, aspectRatio, imageSize = '1K' } = await request.json();
 
-        if (!image || !prompt || !title) {
+        if ((!image && !imageUrl) || !prompt || !title) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
         // Let's assume I need to update generateScene too if it doesn't support it.
         // But for now, let's pass it.
 
-        const sceneResult = await generateScene(image, prompt, styleReferences || [], aspectRatio || '1:1', imageSize);
+        const sceneResult = await generateScene(imageUrl || image, prompt, styleReferences || [], aspectRatio || '1:1', imageSize);
 
         if (!sceneResult.success || !sceneResult.mockUrl) {
             throw new Error(sceneResult.error || 'Failed to generate scene');
