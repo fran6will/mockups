@@ -16,6 +16,7 @@ import { useAccess } from '@/hooks/use-access';
 import { useSearchParams } from 'next/navigation';
 import ShareModal from '@/components/ui/ShareModal';
 import WatermarkOverlay from '@/components/ui/WatermarkOverlay';
+import UnlockModal from './UnlockModal';
 
 interface ImageCompositorProps {
     productId: string;
@@ -30,6 +31,7 @@ interface ImageCompositorProps {
 export default function ImageCompositor({ productId, productSlug, baseImageUrl, passwordHash, isFree = false, category, galleryImageUrl }: ImageCompositorProps) {
     const searchParams = useSearchParams();
     const [showAccessCodeInput, setShowAccessCodeInput] = useState(searchParams.get('unlock') === 'true' || searchParams.get('code') !== null);
+    const [showUnlockModal, setShowUnlockModal] = useState(false);
 
     // Variant State
     const [variants, setVariants] = useState<any[]>([]);
@@ -99,8 +101,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const [passwordInput, setPasswordInput] = useState(searchParams.get('code') || '');
     const [emailInput, setEmailInput] = useState('');
     const [credits, setCredits] = useState<number | null>(null);
-    const [unlockError, setUnlockError] = useState('');
-    const [isClaiming, setIsClaiming] = useState(false);
+
+
     const [user, setUser] = useState<any>(null);
     const [showCreditPopup, setShowCreditPopup] = useState(false);
     const [isAuthChecking, setIsAuthChecking] = useState(true);
@@ -121,9 +123,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
     // Determine cost based on resolution
     const getCost = (size: '1K' | '2K' | '4K') => {
-        if (size === '2K') return 4;
-        if (size === '4K') return 6;
-        return 2;
+        if (size === '2K') return 10;
+        if (size === '4K') return 15;
+        return 5;
     };
     const currentCost = getCost(imageSize);
 
@@ -182,6 +184,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             setIsUnlocked(true);
             // We don't set credits here because we don't know them yet.
             // They will be updated after the first generation or if we add a fetchCredits call.
+        } else if (user) {
+            setIsUnlocked(true);
         }
 
         // Demo Mode: Auto-load sample image
@@ -241,48 +245,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         return () => subscription.unsubscribe();
     }, []);
 
-    const handleUnlockAndClaim = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsClaiming(true);
-        setUnlockError('');
 
-        try {
-            const response = await fetch('/api/claim-credits', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    productId,
-                    password: passwordInput,
-                    email: emailInput
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to unlock');
-            }
-
-            // Success
-            setIsUnlocked(true);
-            setCredits(data.balance);
-            if (!user) {
-                localStorage.setItem('user_email', emailInput);
-            }
-
-            // Persist unlocked state for this product
-            const unlockedProducts = JSON.parse(localStorage.getItem('unlocked_products') || '[]');
-            if (!unlockedProducts.includes(productSlug)) {
-                unlockedProducts.push(productSlug);
-                localStorage.setItem('unlocked_products', JSON.stringify(unlockedProducts));
-            }
-
-        } catch (err: any) {
-            setUnlockError(err.message);
-        } finally {
-            setIsClaiming(false);
-        }
-    };
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
         if (layers.length >= 3) {
@@ -374,6 +337,12 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const handleGenerate = async () => {
         if (layers.length === 0) return;
 
+        // NEW: Check unlock via modal
+        if (!isUnlocked) {
+            setShowUnlockModal(true);
+            return;
+        }
+
         // REMOVED: Forced login check. Guests can now generate freely until limit.
         // if (!emailInput || !user) { ... }
 
@@ -429,7 +398,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             }
 
             if (!response.ok) {
-                if (data.code === 'FREE_LIMIT_REACHED') {
+                if (data.code === 'FREE_LIMIT_REACHED' || response.status === 402) {
                     setShowLimitPopup(true);
                     return;
                 }
@@ -541,132 +510,30 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         );
     }
 
-    if (!isUnlocked) {
-        return (
-            <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-start">
-                {/* Left Column: Locked Controls */}
-                <div className="space-y-6">
-                    <div className="glass p-6 rounded-3xl border border-white/40 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div>
-                            <div className="flex items-center gap-2 text-ink/80 font-bold mb-2">
-                                <Lock size={20} className="text-teal" />
-                                Unlock Template
-                            </div>
-                            <p className="text-sm text-ink/60">
-                                {isFree
-                                    ? "Create a free account to try this mockup."
-                                    : "Enter your Etsy access code to unlock this premium template."
-                                }
-                            </p>
-                        </div>
+    // UNLOCKED STATE (Now Default)
+    // We render the canvas for everyone. The 'Unlock' happens on Generate.
 
-                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                            {user && (
-                                <div className="p-3 bg-teal/5 rounded-xl flex items-center gap-3 border border-teal/10">
-                                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-teal font-bold text-xs border border-teal/10">
-                                        <CheckCircle size={16} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold text-ink/50 uppercase">Logged in as</p>
-                                        <p className="text-sm font-bold text-ink truncate">{user.email}</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {showAccessCodeInput ? (
-                                <form onSubmit={handleUnlockAndClaim} className="space-y-4">
-                                    {!user && (
-                                        <div className="relative">
-                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" size={16} />
-                                            <input
-                                                type="email"
-                                                value={emailInput}
-                                                onChange={(e) => setEmailInput(e.target.value)}
-                                                className="w-full bg-white/50 border border-white/60 rounded-xl pl-10 pr-4 py-3 text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all font-sans placeholder:font-sans"
-                                                placeholder="Enter your email"
-                                                required
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" size={16} />
-                                        <input
-                                            type="text"
-                                            value={passwordInput}
-                                            onChange={(e) => {
-                                                setPasswordInput(e.target.value);
-                                                setUnlockError('');
-                                            }}
-                                            className="w-full bg-white/50 border border-white/60 rounded-xl pl-10 pr-4 py-3 text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all font-mono placeholder:font-sans"
-                                            placeholder="Enter Access Code"
-                                            required
-                                        />
-                                    </div>
-
-                                    {unlockError && (
-                                        <p className="text-red-500 text-xs font-bold ml-1">{unlockError}</p>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        disabled={isClaiming}
-                                        className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 hover:shadow-lg hover:shadow-teal/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                                    >
-                                        {isClaiming ? <Loader2 className="animate-spin" /> : <>Unlock Template <ArrowRight size={18} /></>}
-                                    </button>
-
-                                    {!user && (
-                                        <p className="text-xs text-ink/40 text-center">
-                                            We'll link your credits to this email.
-                                        </p>
-                                    )}
-                                </form>
-                            ) : (
-                                <div className="space-y-3">
-                                    <p className="text-sm text-ink/70 text-center">
-                                        This is a premium template.
-                                    </p>
-                                    <a
-                                        href="/pricing"
-                                        className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 hover:shadow-lg hover:shadow-teal/20 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <Sparkles size={18} /> Get Unlimited Access
-                                    </a>
-                                    <p className="text-xs text-ink/40 text-center">
-                                        Have an Etsy access code? Use your secret link to unlock.
-                                    </p>
-                                    <button
-                                        onClick={() => setShowAccessCodeInput(true)}
-                                        className="w-full text-teal font-bold text-sm hover:underline"
-                                    >
-                                        Enter Access Code
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column: Locked Preview */}
-                <div className="glass p-4 rounded-[2rem] border border-white/40 shadow-2xl bg-white/30 min-h-[500px] flex items-center justify-center relative overflow-hidden">
-                    <Image
-                        src={getOptimizedSupabaseUrl(currentBaseImage, 1200)}
-                        alt="Locked Preview"
-                        fill
-                        className="object-cover opacity-50 blur-sm"
-                    />
-                    <div className="relative z-10 bg-white/80 backdrop-blur px-6 py-3 rounded-full font-bold text-ink shadow-lg flex items-center gap-2">
-                        <Lock size={18} /> Preview Locked
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // UNLOCKED STATE
     return (
         <div className="max-w-6xl mx-auto space-y-8">
+            <UnlockModal
+                isOpen={showUnlockModal}
+                onClose={() => setShowUnlockModal(false)}
+                onUnlock={(balance) => {
+                    setIsUnlocked(true);
+                    setCredits(balance);
+                    // Automatically retry generation after unlock? 
+                    // For now let them click generate again to be safe/clear
+                }}
+                productId={productId}
+                productSlug={productSlug}
+                isFree={isFree}
+                user={user}
+                passwordInput={passwordInput}
+                setPasswordInput={setPasswordInput}
+                emailInput={emailInput}
+                setEmailInput={setEmailInput}
+            />
+
             {/* Top Section: Canvas / Preview */}
             <div className="max-w-2xl mx-auto w-full">
                 <WatermarkOverlay
@@ -1042,9 +909,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                         <label className="text-xs font-bold text-ink/50 uppercase tracking-wider mb-3 block">Resolution</label>
                         <div className="grid grid-cols-1 gap-2">
                             {(['1K', '2K', '4K'] as const).map((size) => {
-                                let cost = 2;
-                                if (size === '2K') cost = 4;
-                                if (size === '4K') cost = 6;
+                                let cost = 5;
+                                if (size === '2K') cost = 10;
+                                if (size === '4K') cost = 15;
 
                                 const isDisabled = (isFree && accessLevel !== 'pro') && size !== '1K';
                                 return (
@@ -1123,7 +990,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                         {/* Generate Button */}
                         <button
-                            onClick={handleGenerate}
+                            onClick={!user && !isFree ? handleGoogleSignIn : handleGenerate}
                             disabled={isGenerating || layers.length === 0}
                             className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-2 ${isGenerating || layers.length === 0
                                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -1276,41 +1143,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 )
             }
 
-            {
-                showLimitPopup && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                        <div className="bg-white rounded-[2rem] p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-teal/20 relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-teal via-purple-500 to-teal"></div>
-                            <button
-                                onClick={() => setShowLimitPopup(false)}
-                                className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
-                            >
-                                <X size={24} />
-                            </button>
-                            <div className="w-24 h-24 bg-teal/10 text-teal rounded-full flex items-center justify-center mx-auto animate-bounce">
-                                <Sparkles size={48} />
-                            </div>
-                            <div>
-                                <h3 className="text-3xl font-bold text-ink mb-3 tracking-tight">Whoa, slow down Picasso! 🎨</h3>
-                                <p className="text-lg text-ink/60 leading-relaxed">
-                                    You've used up your free samples. Ready to create without limits?
-                                </p>
-                            </div>
-                            <div className="grid gap-3 pt-2">
-                                <a href="/pricing" className="w-full bg-gradient-to-r from-teal to-teal/80 text-cream font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal/20">
-                                    <Sparkles size={18} /> Get Unlimited Access
-                                </a>
-                                <button
-                                    onClick={() => setShowLimitPopup(false)}
-                                    className="text-sm font-bold text-ink/40 hover:text-ink transition-colors"
-                                >
-                                    No thanks, I'll wait
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+
         </div >
     );
 }
