@@ -12,6 +12,40 @@ export default function Hero() {
     const slides = [
         {
             id: 0,
+            badge: "#1 AI Mockup Generator",
+            badgeIcon: Layers,
+            badgeColor: "text-blue-600 bg-blue-50 border-blue-100",
+            title: <>Sell More with <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Instant Mockups</span></>,
+            description: "Stop wasting hours on photoshoots or settling for poor quality Canva mockups. Upload your design and get professional, 4K product images in seconds.",
+            cta: "Start Creating Free",
+            ctaLink: "/#tryout",
+            visual: (
+                <div className="relative w-full max-w-md aspect-[4/5] glass rounded-3xl border border-white/40 shadow-2xl shadow-blue-500/20 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
+                        <Image
+                            src="/hero-wallpaper.png"
+                            alt="AI Mockup Preview"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className="object-cover"
+                            priority
+                        />
+                    </div>
+                    {/* Floating Badge */}
+                    <div className="absolute bottom-8 left-8 right-8 glass p-4 rounded-xl border border-white/60 shadow-lg flex items-center gap-4 backdrop-blur-xl bg-white/40">
+                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg">
+                            <Sparkles size={20} />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-ink/50 uppercase tracking-wider">Status</p>
+                            <p className="text-sm font-bold text-ink">Generated in 2.4s</p>
+                        </div>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 1,
             badge: "New: Video Generation",
             badgeIcon: Video,
             badgeColor: "text-teal bg-teal/5 border-teal/10",
@@ -48,40 +82,6 @@ export default function Hero() {
                         <div>
                             <p className="text-xs font-bold text-ink/50 uppercase tracking-wider">Effect</p>
                             <p className="text-sm font-bold text-ink">Cinematic Motion</p>
-                        </div>
-                    </div>
-                </div>
-            )
-        },
-        {
-            id: 1,
-            badge: "#1 AI Mockup Generator",
-            badgeIcon: Layers,
-            badgeColor: "text-blue-600 bg-blue-50 border-blue-100",
-            title: <>Sell More with <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Instant Mockups</span></>,
-            description: "Stop wasting hours on photoshoots or settling for poor quality Canva mockups. Upload your design and get professional, 4K product images in seconds.",
-            cta: "Start Creating Free",
-            ctaLink: "/#try-it",
-            visual: (
-                <div className="relative w-full max-w-md aspect-[4/5] glass rounded-3xl border border-white/40 shadow-2xl shadow-blue-500/20 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
-                        <Image
-                            src="/hero-wallpaper.png"
-                            alt="AI Mockup Preview"
-                            fill
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                            className="object-cover"
-                            priority
-                        />
-                    </div>
-                    {/* Floating Badge */}
-                    <div className="absolute bottom-8 left-8 right-8 glass p-4 rounded-xl border border-white/60 shadow-lg flex items-center gap-4 backdrop-blur-xl bg-white/40">
-                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg">
-                            <Sparkles size={20} />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold text-ink/50 uppercase tracking-wider">Status</p>
-                            <p className="text-sm font-bold text-ink">Generated in 2.4s</p>
                         </div>
                     </div>
                 </div>

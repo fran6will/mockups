@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/ui/Header';
-import { Download, Calendar, Image as ImageIcon, Heart, Film } from 'lucide-react';
+import { Download, Calendar, Image as ImageIcon, Heart, Film, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { getOptimizedSupabaseUrl } from '@/lib/utils/supabase-image';
 import FavoriteButton from '@/components/ui/FavoriteButton';
@@ -121,6 +121,25 @@ export default async function DashboardPage() {
                     </div>
                 </div>
 
+                {/* Empty State */}
+                {(!generations || generations.length === 0) && (
+                    <div className="text-center py-20 bg-white rounded-3xl border border-ink/5 shadow-sm">
+                        <div className="w-20 h-20 bg-ink/5 rounded-full flex items-center justify-center mx-auto mb-6 text-ink/20">
+                            <ImageIcon size={40} />
+                        </div>
+                        <h3 className="text-xl font-bold text-ink mb-2">No mockups yet</h3>
+                        <p className="text-ink/60 max-w-md mx-auto mb-8">
+                            Create your first professional product mockup in seconds.
+                        </p>
+                        <a
+                            href="/"
+                            className="inline-flex items-center gap-2 bg-teal text-cream font-bold px-8 py-3 rounded-xl hover:bg-teal/90 transition-colors shadow-lg shadow-teal/20"
+                        >
+                            <Sparkles size={18} /> Create New Mockup
+                        </a>
+                    </div>
+                )}
+
                 {/* Favorites Section */}
                 {favorites && favorites.length > 0 && (
                     <div className="mb-16">
@@ -179,107 +198,61 @@ export default async function DashboardPage() {
                     </div>
                 )}
 
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-ink mb-4">Your Creations</h2>
-                </div>
+                {generations && generations.length > 0 && (
+                    <>
+                        <div className="mb-8">
+                            <h2 className="text-2xl font-bold text-ink mb-4">Your Creations</h2>
+                        </div>
 
-                {generations && generations.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {generations.map((gen: any) => (
-                            <div key={gen.id} className="group relative bg-white rounded-3xl overflow-hidden shadow-sm border border-ink/5 hover:shadow-xl hover:shadow-teal/10 transition-all duration-300">
-                                <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                                    {gen.meta?.type === 'video' ? (
-                                        (gen.meta?.source_image || gen.products?.base_image_url) ? (
-                                            <>
-                                                <Image
-                                                    src={getOptimizedSupabaseUrl(gen.meta?.source_image || gen.products?.base_image_url, 400)}
-                                                    alt="Video Thumbnail"
-                                                    fill
-                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                                />
-                                                <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 backdrop-blur-sm">
-                                                    <Film size={12} /> Video
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {generations.map((gen: any) => (
+                                <div key={gen.id} className="group relative bg-white rounded-3xl overflow-hidden shadow-sm border border-ink/5 hover:shadow-xl hover:shadow-teal/10 transition-all duration-300">
+                                    <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                                        {gen.meta?.type === 'video' ? (
+                                            (gen.meta?.source_image || gen.products?.base_image_url) ? (
+                                                <>
+                                                    <Image
+                                                        src={getOptimizedSupabaseUrl(gen.meta?.source_image || gen.products?.base_image_url, 400)}
+                                                        alt="Video Thumbnail"
+                                                        fill
+                                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                                    />
+                                                    <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1 backdrop-blur-sm">
+                                                        <Film size={12} /> Video
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-ink/20 bg-gray-50">
+                                                    <Film size={48} />
                                                 </div>
-                                            </>
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-ink/20 bg-gray-50">
-                                                <Film size={48} />
-                                            </div>
-                                        )
-                                    ) : gen.image_url ? (
-                                        <Image
-                                            src={getOptimizedSupabaseUrl(gen.image_url, 400)}
-                                            alt="Generated Mockup"
-                                            fill
-                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                            className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-ink/20">
-                                            <ImageIcon size={48} />
-                                        </div>
-                                    )}
-
-                                    {/* Overlay Actions (Desktop Hover) */}
-                                    <div className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-4 backdrop-blur-sm">
-                                        {gen.meta?.type === 'video' && gen.meta?.videoUrl ? (
-                                            <a
-                                                href={gen.meta.videoUrl}
-                                                download={`video-${gen.id}.mp4`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="bg-white text-ink font-bold py-3 px-6 rounded-full flex items-center gap-2 hover:bg-teal hover:text-cream transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300"
-                                            >
-                                                <Download size={18} />
-                                                Download Video
-                                            </a>
+                                            )
                                         ) : gen.image_url ? (
-                                            <a
-                                                href={gen.image_url}
-                                                download={`mockup-${gen.id}.png`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="bg-white text-ink font-bold py-3 px-6 rounded-full flex items-center gap-2 hover:bg-teal hover:text-cream transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300"
-                                            >
-                                                <Download size={18} />
-                                                Download
-                                            </a>
-                                        ) : null}
-                                    </div>
-                                </div>
+                                            <Image
+                                                src={getOptimizedSupabaseUrl(gen.image_url, 400)}
+                                                alt="Generated Mockup"
+                                                fill
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-ink/20">
+                                                <ImageIcon size={48} />
+                                            </div>
+                                        )}
 
-                                <div className="p-6">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <h3 className="font-bold text-lg text-ink truncate pr-4">
-                                            {gen.products?.title || 'Custom Animation'}
-                                        </h3>
-                                        <span className="text-xs font-mono bg-ink/5 px-2 py-1 rounded text-ink/50">
-                                            {gen.meta?.aspect_ratio || '1:1'}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-xs text-ink/40">
-                                            <Calendar size={14} />
-                                            {new Date(gen.created_at).toLocaleDateString(undefined, {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}
-                                        </div>
-
-                                        {/* Mobile Download Button */}
-                                        <div className="md:hidden">
+                                        {/* Overlay Actions (Desktop Hover) */}
+                                        <div className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-4 backdrop-blur-sm">
                                             {gen.meta?.type === 'video' && gen.meta?.videoUrl ? (
                                                 <a
                                                     href={gen.meta.videoUrl}
                                                     download={`video-${gen.id}.mp4`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="text-teal hover:text-teal/80 p-2"
-                                                    title="Download Video"
+                                                    className="bg-white text-ink font-bold py-3 px-6 rounded-full flex items-center gap-2 hover:bg-teal hover:text-cream transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300"
                                                 >
-                                                    <Download size={20} />
+                                                    <Download size={18} />
+                                                    Download Video
                                                 </a>
                                             ) : gen.image_url ? (
                                                 <a
@@ -287,31 +260,66 @@ export default async function DashboardPage() {
                                                     download={`mockup-${gen.id}.png`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="text-teal hover:text-teal/80 p-2"
-                                                    title="Download Image"
+                                                    className="bg-white text-ink font-bold py-3 px-6 rounded-full flex items-center gap-2 hover:bg-teal hover:text-cream transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300"
                                                 >
-                                                    <Download size={20} />
+                                                    <Download size={18} />
+                                                    Download
                                                 </a>
                                             ) : null}
                                         </div>
                                     </div>
+
+                                    <div className="p-6">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <h3 className="font-bold text-lg text-ink truncate pr-4">
+                                                {gen.products?.title || 'Custom Animation'}
+                                            </h3>
+                                            <span className="text-xs font-mono bg-ink/5 px-2 py-1 rounded text-ink/50">
+                                                {gen.meta?.aspect_ratio || '1:1'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-xs text-ink/40">
+                                                <Calendar size={14} />
+                                                {new Date(gen.created_at).toLocaleDateString(undefined, {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                })}
+                                            </div>
+
+                                            {/* Mobile Download Button */}
+                                            <div className="md:hidden">
+                                                {gen.meta?.type === 'video' && gen.meta?.videoUrl ? (
+                                                    <a
+                                                        href={gen.meta.videoUrl}
+                                                        download={`video-${gen.id}.mp4`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-teal hover:text-teal/80 p-2"
+                                                        title="Download Video"
+                                                    >
+                                                        <Download size={20} />
+                                                    </a>
+                                                ) : gen.image_url ? (
+                                                    <a
+                                                        href={gen.image_url}
+                                                        download={`mockup-${gen.id}.png`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-teal hover:text-teal/80 p-2"
+                                                        title="Download Image"
+                                                    >
+                                                        <Download size={20} />
+                                                    </a>
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-20 bg-white/40 rounded-3xl border border-dashed border-ink/10">
-                        <div className="w-20 h-20 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-6 text-teal">
-                            <ImageIcon size={32} />
+                            ))}
                         </div>
-                        <h3 className="text-xl font-bold text-ink mb-2">No mockups yet</h3>
-                        <p className="text-ink/60 mb-8 max-w-md mx-auto">
-                            You haven't generated any mockups yet. Visit the gallery to pick a product and start creating!
-                        </p>
-                        <a href="/gallery" className="inline-flex items-center gap-2 bg-teal text-cream font-bold py-3 px-8 rounded-xl hover:bg-teal/90 transition-all shadow-lg shadow-teal/20">
-                            Browse Gallery
-                        </a>
-                    </div>
+                    </>
                 )}
             </main>
         </div>

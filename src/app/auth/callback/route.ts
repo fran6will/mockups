@@ -13,7 +13,7 @@ export async function GET(request: Request) {
         if (!error) {
             // Check and grant free credits for new users
             const { data: { user } } = await supabase.auth.getUser();
-            
+
             if (user && user.email) {
                 const { data: existingCredits } = await supabaseAdmin
                     .from('user_credits')
@@ -37,10 +37,19 @@ export async function GET(request: Request) {
                         type: 'credit',
                         description: 'Welcome Bonus'
                     });
+
+                    // New user - redirect to home page #tryout section
+                    return NextResponse.redirect(`${origin}/#tryout`);
                 }
             }
 
-            return NextResponse.redirect(`${origin}${next}`);
+            // Redirect logic
+            let redirectUrl = next;
+            if (redirectUrl === '/' || redirectUrl === '/dashboard') {
+                redirectUrl = '/#tryout';
+            }
+
+            return NextResponse.redirect(`${origin}${redirectUrl}`);
         }
     }
 

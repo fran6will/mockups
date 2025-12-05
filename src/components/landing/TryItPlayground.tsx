@@ -89,6 +89,7 @@ export default function TryItPlayground({ products }: TryItPlaygroundProps) {
                                 baseImageUrl={selectedProduct.base_image_url}
                                 passwordHash={selectedProduct.password_hash || ""}
                                 isFree={true}
+                                galleryImageUrl={selectedProduct.gallery_image_url}
                             />
                         </div>
                     </div>

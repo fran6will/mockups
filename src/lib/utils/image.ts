@@ -7,6 +7,7 @@ export interface Layer {
     moveY: number;
     skewX: number;
     skewY: number;
+    opacity?: number;
     previewUrl: string; // For UI display
 }
 

@@ -24,9 +24,10 @@ interface ImageCompositorProps {
     passwordHash: string;
     isFree?: boolean;
     category?: string;
+    galleryImageUrl?: string;
 }
 
-export default function ImageCompositor({ productId, productSlug, baseImageUrl, passwordHash, isFree = false, category }: ImageCompositorProps) {
+export default function ImageCompositor({ productId, productSlug, baseImageUrl, passwordHash, isFree = false, category, galleryImageUrl }: ImageCompositorProps) {
     const searchParams = useSearchParams();
     const [showAccessCodeInput, setShowAccessCodeInput] = useState(searchParams.get('unlock') === 'true' || searchParams.get('code') !== null);
 
@@ -126,6 +127,50 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     };
     const currentCost = getCost(imageSize);
 
+    const loadDemoImage = async () => {
+        try {
+            const response = await fetch('/test_logo.png');
+            const blob = await response.blob();
+            const file = new File([blob], "sample-pattern.png", { type: "image/png" });
+
+            // Reuse onDrop logic manually
+            const previewUrl = URL.createObjectURL(file);
+            const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+                const image = new window.Image();
+                image.src = previewUrl;
+                image.onload = () => resolve(image);
+                image.onerror = reject;
+            });
+
+            const TARGET_SIZE = 1600;
+            let scale = 1;
+            if (img.width > TARGET_SIZE || img.height > TARGET_SIZE) {
+                const scaleX = TARGET_SIZE / img.width;
+                const scaleY = TARGET_SIZE / img.height;
+                scale = Math.min(scaleX, scaleY);
+            }
+            scale = Number(scale.toFixed(2));
+
+            const newLayer = {
+                id: 'demo-layer',
+                file,
+                previewUrl,
+                rotation: 0,
+                scale,
+                moveX: 0,
+                moveY: 0,
+                skewX: 0,
+                skewY: 0,
+                opacity: 1
+            };
+
+            setLayers([newLayer]);
+            setActiveLayerId('demo-layer');
+        } catch (e) {
+            console.error("Failed to load demo image", e);
+        }
+    };
+
     useEffect(() => {
         if (isFree) {
             // Allow guests to see the UI, but prompt on generate
@@ -138,7 +183,12 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             // We don't set credits here because we don't know them yet.
             // They will be updated after the first generation or if we add a fetchCredits call.
         }
-    }, [accessLevel, isFree, user]);
+
+        // Demo Mode: Auto-load sample image
+        if (searchParams.get('demo') === 'true' && layers.length === 0) {
+            loadDemoImage();
+        }
+    }, [accessLevel, isFree, user, searchParams, layers.length]);
 
     // Load state from local storage on mount & Check Auth
     useEffect(() => {
@@ -273,7 +323,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                     moveX: 0,
                     moveY: 0,
                     skewX: 0,
-                    skewY: 0
+                    skewY: 0,
+                    opacity: 1
                 };
             }));
 
@@ -626,20 +677,35 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 >
                     <input {...inputProps} aria-label="Upload image" />
                     {!generatedImage && layers.length === 0 && (
-                        <div className="text-center text-ink/30 pointer-events-none">
-                            <div className="w-24 h-24 bg-ink/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="text-center text-ink/30">
+                            <div className="w-24 h-24 bg-ink/5 rounded-full flex items-center justify-center mx-auto mb-4 pointer-events-none">
                                 <ImageIcon size={40} />
                             </div>
-                            <p className="font-medium">
+                            <p className="font-medium pointer-events-none">
                                 {category === 'Scenes' ? "Drag & Drop your product photo" : "Drag & Drop your logo here"}
                             </p>
-                            <p className="text-sm opacity-60 mt-2">or use the controls below</p>
+                            <p className="text-sm opacity-60 mt-2 pointer-events-none">or use the controls below</p>
+
+                            <div className="mt-6 relative z-50 flex justify-center">
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        loadDemoImage();
+                                    }}
+                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/90 backdrop-blur-md text-teal text-sm font-bold hover:bg-white hover:scale-105 transition-all border border-white/50 shadow-lg shadow-teal/10 cursor-pointer"
+                                >
+                                    <Sparkles size={16} />
+                                    Need inspiration? Try with a sample
+                                </button>
+                            </div>
                         </div>
                     )}
 
-                    {/* Base Image */}
+                    {/* Base Image (Show Gallery Image if available, otherwise Base Image) */}
                     <Image
-                        src={getOptimizedSupabaseUrl(currentBaseImage, 1200)}
+                        src={getOptimizedSupabaseUrl(galleryImageUrl || currentBaseImage, 1200)}
                         alt="Base"
                         fill
                         draggable={false}
@@ -829,6 +895,16 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                 className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                             />
                         </div>
+                        <div className="col-span-2">
+                            <label className="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Opacity</label>
+                            <input
+                                type="range"
+                                min="0" max="1" step="0.01"
+                                value={activeLayer.opacity ?? 1}
+                                onChange={(e) => updateActiveLayer({ opacity: Number(e.target.value) })}
+                                className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                        </div>
                     </div>
                 </div>
             )}
@@ -937,6 +1013,16 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                         min="-180" max="180"
                                         value={activeLayer.rotation}
                                         onChange={(e) => updateActiveLayer({ rotation: Number(e.target.value) })}
+                                        className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="text-[10px] font-bold text-ink/40 uppercase mb-1 block">Opacity</label>
+                                    <input
+                                        type="range"
+                                        min="0" max="1" step="0.01"
+                                        value={activeLayer.opacity ?? 1}
+                                        onChange={(e) => updateActiveLayer({ opacity: Number(e.target.value) })}
                                         className="w-full accent-teal h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                     />
                                 </div>

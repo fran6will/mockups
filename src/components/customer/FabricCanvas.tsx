@@ -97,7 +97,8 @@ export default function FabricCanvas({
                 rotation: Math.round(rotation),
                 scale: Number((target.scaleX || 1).toFixed(2)),
                 skewX: Math.round(target.skewX || 0),
-                skewY: Math.round(target.skewY || 0)
+                skewY: Math.round(target.skewY || 0),
+                opacity: Number((target.opacity || 1).toFixed(2))
             });
         };
 
@@ -298,6 +299,7 @@ export default function FabricCanvas({
                             scaleY: layer.scale,
                             skewX: layer.skewX,
                             skewY: layer.skewY,
+                            opacity: layer.opacity ?? 1,
                         });
 
                         canvas.add(obj);
@@ -331,6 +333,7 @@ export default function FabricCanvas({
                 }
                 if (Math.abs((obj.skewX || 0) - layer.skewX) > 1) obj.set('skewX', layer.skewX);
                 if (Math.abs((obj.skewY || 0) - layer.skewY) > 1) obj.set('skewY', layer.skewY);
+                if (Math.abs((obj.opacity || 1) - (layer.opacity ?? 1)) > 0.01) obj.set('opacity', layer.opacity ?? 1);
 
                 // Force update coordinates if we changed something
                 obj.setCoords();
