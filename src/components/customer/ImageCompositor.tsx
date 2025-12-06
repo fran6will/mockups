@@ -582,6 +582,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                         alt="Base"
                         fill
                         draggable={false}
+                        unoptimized
                         onContextMenu={(e) => e.preventDefault()}
                         className={`object-cover transition-opacity duration-700 pointer-events-none select-none ${generatedImage ? 'opacity-0' : 'opacity-100'}`}
                     />
@@ -705,6 +706,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                     alt="Default Variant"
                                     fill
                                     sizes="80px"
+                                    unoptimized
                                     className="object-cover"
                                 />
                                 <div className={`absolute inset-0 bg-black/20 transition-opacity ${!selectedVariant ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'}`}></div>
@@ -729,6 +731,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                         alt={v.name}
                                         fill
                                         sizes="80px"
+                                        unoptimized
                                         className="object-cover"
                                     />
                                     <div className={`absolute inset-0 bg-black/20 transition-opacity ${selectedVariant?.id === v.id ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'}`}></div>

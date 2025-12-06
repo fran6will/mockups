@@ -63,6 +63,7 @@ export default function TryItPlayground({ products }: TryItPlaygroundProps) {
                                     src={getOptimizedSupabaseUrl(product.gallery_image_url || product.base_image_url, 200)}
                                     alt={product.title}
                                     fill
+                                    unoptimized
                                     sizes="96px"
                                     className="object-cover"
                                 />
