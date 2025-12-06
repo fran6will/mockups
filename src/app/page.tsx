@@ -20,6 +20,7 @@ import NewArrivals from '@/components/landing/NewArrivals';
 import Features from '@/components/landing/Features';
 import BackgroundDoodles from '@/components/ui/BackgroundDoodles';
 import TryItSection from '@/components/landing/TryItSection';
+import StatsSection from '@/components/landing/StatsSection';
 
 export default function HomePage() {
     return (
@@ -48,6 +49,8 @@ export default function HomePage() {
                         </a>
                     </div>
                 </div>
+
+                <StatsSection />
 
                 <TrendingCarousel />
                 <TryItSection />

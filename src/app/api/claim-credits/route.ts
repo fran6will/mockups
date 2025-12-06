@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         }
 
         // 4. Award Credits (Transaction)
-        const CREDITS_TO_AWARD = 10;
+        const CREDITS_TO_AWARD = 200;
 
         // A. Add Claim record
         const { error: claimInsertError } = await supabaseAdmin
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             success: true,
-            message: '50 Credits Added!',
+            message: '200 Credits Added!',
             balance: updatedUser.balance,
             userId: updatedUser.user_id
         });

@@ -192,7 +192,12 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         if (searchParams.get('demo') === 'true' && layers.length === 0) {
             loadDemoImage();
         }
-    }, [accessLevel, isFree, user, searchParams, layers.length]);
+
+        // Auto-open unlock modal if code or unlock param is present and not yet unlocked
+        if ((searchParams.get('code') || searchParams.get('unlock') === 'true') && !isUnlocked && !showUnlockModal) {
+            setShowUnlockModal(true);
+        }
+    }, [accessLevel, isFree, user, searchParams, layers.length, isUnlocked]);
 
     // Load state from local storage on mount & Check Auth
     useEffect(() => {
@@ -521,8 +526,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 onUnlock={(balance) => {
                     setIsUnlocked(true);
                     setCredits(balance);
-                    // Automatically retry generation after unlock? 
-                    // For now let them click generate again to be safe/clear
+                    window.location.href = window.location.pathname;
                 }}
                 productId={productId}
                 productSlug={productSlug}
@@ -532,6 +536,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 setPasswordInput={setPasswordInput}
                 emailInput={emailInput}
                 setEmailInput={setEmailInput}
+                initialShowAccessCodeInput={showAccessCodeInput}
+                onSignIn={handleGoogleSignIn}
             />
 
             {/* Top Section: Canvas / Preview */}
@@ -990,7 +996,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                         {/* Generate Button */}
                         <button
-                            onClick={!user && !isFree ? handleGoogleSignIn : handleGenerate}
+                            onClick={!user ? handleGoogleSignIn : handleGenerate}
                             disabled={isGenerating || layers.length === 0}
                             className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-2 ${isGenerating || layers.length === 0
                                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -1004,7 +1010,10 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                             ) : (
                                 <>
                                     <Sparkles size={20} />
-                                    {isFree ? 'Generate (Free)' : (!user ? 'Sign in to Generate' : `Generate (${currentCost} Credits)`)}
+                                    {!user
+                                        ? (isFree ? 'Sign in to Generate (Free)' : 'Sign in to Generate')
+                                        : (isFree ? 'Generate (Free)' : `Generate (${currentCost} Credits)`)
+                                    }
                                 </>
                             )}
                         </button>

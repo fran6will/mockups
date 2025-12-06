@@ -16,6 +16,8 @@ interface UnlockModalProps {
     setPasswordInput: (val: string) => void;
     emailInput: string;
     setEmailInput: (val: string) => void;
+    initialShowAccessCodeInput?: boolean;
+    onSignIn?: () => void;
 }
 
 export default function UnlockModal({
@@ -29,11 +31,13 @@ export default function UnlockModal({
     passwordInput,
     setPasswordInput,
     emailInput,
-    setEmailInput
+    setEmailInput,
+    initialShowAccessCodeInput = false,
+    onSignIn
 }: UnlockModalProps) {
     const [isClaiming, setIsClaiming] = useState(false);
     const [unlockError, setUnlockError] = useState('');
-    const [showAccessCodeInput, setShowAccessCodeInput] = useState(false);
+    const [showAccessCodeInput, setShowAccessCodeInput] = useState(initialShowAccessCodeInput);
 
     if (!isOpen) return null;
 
@@ -121,56 +125,77 @@ export default function UnlockModal({
                         )}
 
                         {showAccessCodeInput || isFree ? (
-                            <form onSubmit={handleUnlockAndClaim} className="space-y-4">
-                                {!user && (
-                                    <div className="relative">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" size={16} />
-                                        <input
-                                            type="email"
-                                            value={emailInput}
-                                            onChange={(e) => setEmailInput(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all font-sans placeholder:font-sans"
-                                            placeholder="Enter your email"
-                                            required
-                                        />
+                            <div className="space-y-4">
+                                {/* If not Free (Access Code Flow) and No User -> Force Sign In */}
+                                {showAccessCodeInput && !user && !isFree ? (
+                                    <div className="text-center space-y-4">
+                                        <p className="text-sm font-bold text-ink/70">
+                                            Please sign in to claim your purchase.
+                                        </p>
+                                        <button
+                                            onClick={onSignIn}
+                                            className="w-full bg-white border border-ink/10 text-ink font-bold py-3 rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-2 shadow-sm"
+                                        >
+                                            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+                                            Sign in with Google
+                                        </button>
+                                        <p className="text-xs text-ink/40">
+                                            Your credits will be linked to your account.
+                                        </p>
                                     </div>
-                                )}
+                                ) : (
+                                    <form onSubmit={handleUnlockAndClaim} className="space-y-4">
+                                        {!user && (
+                                            <div className="relative">
+                                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" size={16} />
+                                                <input
+                                                    type="email"
+                                                    value={emailInput}
+                                                    onChange={(e) => setEmailInput(e.target.value)}
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all font-sans placeholder:font-sans"
+                                                    placeholder="Enter your email"
+                                                    required
+                                                />
+                                            </div>
+                                        )}
 
-                                {!isFree && (
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" size={16} />
-                                        <input
-                                            type="text"
-                                            value={passwordInput}
-                                            onChange={(e) => {
-                                                setPasswordInput(e.target.value);
-                                                setUnlockError('');
-                                            }}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all font-mono placeholder:font-sans"
-                                            placeholder="Enter Access Code"
-                                            required
-                                        />
-                                    </div>
-                                )}
+                                        {!isFree && (
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" size={16} />
+                                                <input
+                                                    type="text"
+                                                    value={passwordInput}
+                                                    onChange={(e) => {
+                                                        setPasswordInput(e.target.value);
+                                                        setUnlockError('');
+                                                    }}
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all font-mono placeholder:font-sans"
+                                                    placeholder="Enter Access Code"
+                                                    required
+                                                />
+                                            </div>
+                                        )}
 
-                                {unlockError && (
-                                    <p className="text-red-500 text-xs font-bold ml-1">{unlockError}</p>
-                                )}
+                                        {unlockError && (
+                                            <p className="text-red-500 text-xs font-bold ml-1">{unlockError}</p>
+                                        )}
 
-                                <button
-                                    type="submit"
-                                    disabled={isClaiming}
-                                    className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 hover:shadow-lg hover:shadow-teal/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                                >
-                                    {isClaiming ? <Loader2 className="animate-spin" /> : <>Unlock & Generate <ArrowRight size={18} /></>}
-                                </button>
+                                        <button
+                                            type="submit"
+                                            disabled={isClaiming}
+                                            className="w-full bg-teal text-cream font-bold py-4 rounded-xl hover:bg-teal/90 hover:shadow-lg hover:shadow-teal/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            {isClaiming ? <Loader2 className="animate-spin" /> : <>Unlock & Generate <ArrowRight size={18} /></>}
+                                        </button>
 
-                                {!user && (
-                                    <p className="text-xs text-ink/40 text-center">
-                                        We'll link your credits to this email.
-                                    </p>
+                                        {!user && isFree && (
+                                            <p className="text-xs text-ink/40 text-center">
+                                                We'll link your credits to this email.
+                                            </p>
+                                        )}
+                                    </form>
                                 )}
-                            </form>
+                            </div>
                         ) : (
                             <div className="space-y-3">
                                 <a
