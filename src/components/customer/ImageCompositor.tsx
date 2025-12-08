@@ -257,6 +257,14 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                         if (layers.length === 0 && parsed.length > 0) {
                             setLayers(parsed);
                             setActiveLayerId(parsed[0].id);
+
+                            // Scroll to the tryout section after a short delay
+                            setTimeout(() => {
+                                const tryoutElement = document.getElementById('tryout');
+                                if (tryoutElement) {
+                                    tryoutElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            }, 100);
                         }
                         localStorage.removeItem(savedLayersKey);
                     } catch (e) {
