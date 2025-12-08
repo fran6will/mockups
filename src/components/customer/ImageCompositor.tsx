@@ -98,7 +98,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     };
 
     // Credit System State
-    const [isUnlocked, setIsUnlocked] = useState(false);
+    // Initialize unlocked to true for free products to prevent race condition
+    const [isUnlocked, setIsUnlocked] = useState(isFree);
     const [passwordInput, setPasswordInput] = useState(searchParams.get('code') || '');
     const [emailInput, setEmailInput] = useState('');
     const [credits, setCredits] = useState<number | null>(null);
