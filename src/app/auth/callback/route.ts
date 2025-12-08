@@ -45,10 +45,13 @@ export async function GET(request: Request) {
 
             // Redirect logic - force #tryout for homepage sign-ins
             let redirectUrl = next;
-            if (!redirectUrl || redirectUrl === '/' || redirectUrl === '/dashboard') {
-                redirectUrl = '/#tryout';
-            } else if (redirectUrl === '/' && !redirectUrl.includes('#')) {
-                // If coming from homepage without hash, add #tryout
+
+            // If coming from homepage (any variation), redirect to #tryout
+            if (!redirectUrl ||
+                redirectUrl === '/' ||
+                redirectUrl === '/dashboard' ||
+                redirectUrl.startsWith('/#') ||
+                redirectUrl === '') {
                 redirectUrl = '/#tryout';
             }
 
