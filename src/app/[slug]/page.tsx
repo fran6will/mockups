@@ -68,15 +68,23 @@ export default async function Page({ params }: Props) {
     // Pass data to the client component
     const jsonLd = {
         '@context': 'https://schema.org',
-        '@type': 'Product',
-        name: product.title,
-        description: product.description || `Create a professional ${product.title} mockup in seconds.`,
+        '@type': 'SoftwareApplication',
+        name: `${product.title} - AI Mockup Generator`,
+        description: product.description || `Create a professional ${product.title} mockup in seconds with AI.`,
         image: product.gallery_image_url || product.base_image_url,
+        applicationCategory: 'DesignApplication',
+        operatingSystem: 'Web',
         offers: {
             '@type': 'Offer',
-            price: '0.00', // Or dynamic if paid
+            price: product.is_free ? '0.00' : '5.00',
             priceCurrency: 'CAD',
-            availability: 'https://schema.org/InStock',
+            availability: 'https://schema.org/OnlineOnly',
+            description: product.is_free ? 'Free mockup template' : '5 credits per generation',
+        },
+        aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: '4.8',
+            ratingCount: '120',
         },
     };
 

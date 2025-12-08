@@ -15,12 +15,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Fetch all products
     const { data: products } = await supabase
         .from('products')
-        .select('slug, created_at, base_image_url, gallery_image_url')
+        .select('slug, created_at, updated_at, base_image_url, gallery_image_url')
         .order('created_at', { ascending: false });
 
     const productUrls = (products || []).map((product) => ({
         url: `${baseUrl}/${product.slug}`,
-        lastModified: product.created_at ? new Date(product.created_at) : new Date(),
+        lastModified: product.updated_at
+            ? new Date(product.updated_at)
+            : (product.created_at ? new Date(product.created_at) : new Date()),
         changeFrequency: 'weekly' as const,
         priority: 0.8,
         images: [product.gallery_image_url || product.base_image_url].filter(Boolean),
