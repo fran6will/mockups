@@ -57,7 +57,7 @@ export default function Footer() {
                         <div>
                             <h4 className="font-bold text-lg mb-6 text-white">Resources</h4>
                             <ul className="space-y-4 text-cream/70">
-                                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                                <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
                                 <li><a href="#" className="hover:text-white transition-colors">Tutorials</a></li>
                                 <li><Link href="/faq" className="hover:text-white transition-colors">FAQ & How-to</Link></li>
                                 <li><a href="mailto:copiecolle.ai@gmail.com" className="hover:text-white transition-colors">Contact Support</a></li>
