@@ -6,21 +6,38 @@ export default function GoogleAds() {
   return (
     <Script id="google-ads-conversion" strategy="afterInteractive">
       {`
-        function gtag_report_conversion(url) {
+        // Google Ads Conversion Tracking
+        // Conversion ID: AW-17764244503
+        
+        // Main conversion function with value support
+        function gtag_report_conversion(url, value, currency) {
           var callback = function () {
             if (typeof(url) != 'undefined') {
               window.location = url;
             }
           };
-          // Check if gtag is defined (it should be by GoogleAnalytics)
+          
           if (typeof gtag === 'function') {
-            // Generate a unique transaction ID for the click event
             var transactionId = 'txn_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
-            gtag('event', 'conversion', {
-                'send_to': 'AW-17764244503/1nGKCKndv8gbEJe405ZC',
-                'transaction_id': transactionId,
-                'event_callback': callback
-            });
+            
+            // Use Free Trial conversion label when value is provided (subscription/purchase)
+            var conversionLabel = value 
+              ? 'AW-17764244503/_2VqCKKuoc4bEJe405ZC'  // Free Trial conversion
+              : 'AW-17764244503/1nGKCKndv8gbEJe405ZC'; // General click conversion
+            
+            var eventParams = {
+              'send_to': conversionLabel,
+              'transaction_id': transactionId,
+              'event_callback': callback
+            };
+            
+            // Add value tracking for purchases/trials
+            if (value) {
+              eventParams.value = value;
+              eventParams.currency = currency || 'CAD';
+            }
+            
+            gtag('event', 'conversion', eventParams);
           } else {
             console.warn('gtag not defined, redirecting anyway');
             if (callback) callback();
@@ -28,7 +45,7 @@ export default function GoogleAds() {
           return false;
         }
         
-        // Expose to window so it can be called globally if needed
+        // Expose to window
         window.gtag_report_conversion = gtag_report_conversion;
       `}
     </Script>

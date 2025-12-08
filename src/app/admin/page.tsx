@@ -29,6 +29,7 @@ export default function AdminPage() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [isFree, setIsFree] = useState(false);
+    const [isVideoProduct, setIsVideoProduct] = useState(false);
     const [slug, setSlug] = useState('');
     const [category, setCategory] = useState('');
     const [password, setPassword] = useState('');
@@ -82,6 +83,7 @@ export default function AdminPage() {
         setTitle(product.title);
         setDescription(product.description || '');
         setIsFree(product.is_free || false);
+        setIsVideoProduct(product.is_video_product || false);
         setSlug(product.slug);
         setCategory(product.category || '');
         setPassword(product.password_hash);
@@ -167,6 +169,7 @@ export default function AdminPage() {
         setTitle('');
         setDescription('');
         setIsFree(false);
+        setIsVideoProduct(false);
         setSlug('');
         setCategory('');
         setPassword('');
@@ -310,6 +313,7 @@ export default function AdminPage() {
             formData.append('customPrompt', customPrompt);
             formData.append('tags', tags);
             formData.append('is_free', String(isFree));
+            formData.append('is_video_product', String(isVideoProduct));
 
             if (publicUrl) {
                 formData.append('baseImageUrl', publicUrl);
@@ -479,6 +483,20 @@ export default function AdminPage() {
                                     />
                                     <label htmlFor="isFree" className="font-bold text-ink text-sm cursor-pointer select-none">
                                         Is Free Product? <span className="text-teal text-xs font-normal">(For Homepage Trial)</span>
+                                    </label>
+                                </div>
+
+                                {/* Is Video Product Checkbox */}
+                                <div className="flex items-center gap-2 p-3 bg-purple-500/5 rounded-xl border border-purple-500/10">
+                                    <input
+                                        type="checkbox"
+                                        id="isVideoProduct"
+                                        checked={isVideoProduct}
+                                        onChange={(e) => setIsVideoProduct(e.target.checked)}
+                                        className="w-5 h-5 accent-purple-600 rounded cursor-pointer"
+                                    />
+                                    <label htmlFor="isVideoProduct" className="font-bold text-ink text-sm cursor-pointer select-none">
+                                        Is Video Product? <span className="text-purple-600 text-xs font-normal">(Grants 25 video credits to Etsy buyers)</span>
                                     </label>
                                 </div>
 

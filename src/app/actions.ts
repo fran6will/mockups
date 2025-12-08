@@ -14,6 +14,7 @@ export async function createProduct(formData: FormData) {
 
     const description = formData.get('description') as string;
     const isFree = formData.get('is_free') === 'true';
+    const isVideoProduct = formData.get('is_video_product') === 'true';
 
     const tags = tagsString ? tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
 
@@ -36,6 +37,7 @@ export async function createProduct(formData: FormData) {
             tags: tags,
             category: category || null,
             is_free: isFree,
+            is_video_product: isVideoProduct,
             is_public: true
         })
         .select()
@@ -61,6 +63,7 @@ export async function updateProduct(formData: FormData) {
     const tagsString = formData.get('tags') as string;
     const category = formData.get('category') as string;
     const isFree = formData.get('is_free') === 'true';
+    const isVideoProduct = formData.get('is_video_product') === 'true';
 
     const tags = tagsString ? tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
 
@@ -77,7 +80,8 @@ export async function updateProduct(formData: FormData) {
         gallery_image_url: galleryImageUrl || null,
         tags: tags,
         category: category || null,
-        is_free: isFree
+        is_free: isFree,
+        is_video_product: isVideoProduct
     };
 
     if (baseImageUrl) {

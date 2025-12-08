@@ -153,7 +153,7 @@ export default function PricingPage() {
                                                 handleInitiateCheckout('Pro Membership', 19.99);
                                                 const url = getCheckoutUrl(SUBSCRIPTION_URL, 19.99);
                                                 if (window.gtag_report_conversion) {
-                                                    window.gtag_report_conversion(url);
+                                                    window.gtag_report_conversion(url, 19.99, 'CAD');
                                                 } else {
                                                     window.location.href = url;
                                                 }
@@ -233,7 +233,7 @@ export default function PricingPage() {
                                         handleInitiateCheckout('Starter Pack', 9.99);
                                         const url = getCheckoutUrl(STARTER_PACK_URL, 9.99);
                                         if (window.gtag_report_conversion) {
-                                            window.gtag_report_conversion(url);
+                                            window.gtag_report_conversion(url, 9.99, 'CAD');
                                         } else {
                                             window.location.href = url;
                                         }
@@ -280,7 +280,7 @@ export default function PricingPage() {
                                         handleInitiateCheckout('Creator Pack', 34.99);
                                         const url = getCheckoutUrl(CREATOR_PACK_URL, 34.99);
                                         if (window.gtag_report_conversion) {
-                                            window.gtag_report_conversion(url);
+                                            window.gtag_report_conversion(url, 34.99, 'CAD');
                                         } else {
                                             window.location.href = url;
                                         }
@@ -324,7 +324,7 @@ export default function PricingPage() {
                                         handleInitiateCheckout('Agency Pack', 59.99);
                                         const url = getCheckoutUrl(AGENCY_PACK_URL, 59.99);
                                         if (window.gtag_report_conversion) {
-                                            window.gtag_report_conversion(url);
+                                            window.gtag_report_conversion(url, 59.99, 'CAD');
                                         } else {
                                             window.location.href = url;
                                         }

@@ -16,10 +16,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // 1. Verify Product Password
+        // 1. Verify Product Password and get video product flag
         const { data: product, error: productError } = await supabaseAdmin
             .from('products')
-            .select('password_hash')
+            .select('password_hash, is_video_product')
             .eq('id', productId)
             .single();
 
@@ -30,6 +30,8 @@ export async function POST(request: Request) {
         if (product.password_hash !== password) {
             return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
         }
+
+        const isVideoProduct = product.is_video_product || false;
 
         // 2. Find or Create User (Smart Linking)
         let user = null;
@@ -97,7 +99,9 @@ export async function POST(request: Request) {
         }
 
         // 4. Award Credits (Transaction)
-        const CREDITS_TO_AWARD = 200;
+        const BASE_CREDITS = 200;
+        const VIDEO_CREDITS = 25; // Extra credits for video products
+        const CREDITS_TO_AWARD = isVideoProduct ? BASE_CREDITS + VIDEO_CREDITS : BASE_CREDITS;
 
         // A. Add Claim record
         const { error: claimInsertError } = await supabaseAdmin
@@ -124,20 +128,29 @@ export async function POST(request: Request) {
         if (updateError) throw updateError;
 
         // C. Log Transaction
+        const description = isVideoProduct
+            ? `Etsy Video Mockup Claim (${BASE_CREDITS} + ${VIDEO_CREDITS} video credits)`
+            : 'Etsy Purchase Claim';
+
         await supabaseAdmin
             .from('transactions')
             .insert([{
                 user_id: user.user_id,
                 amount: CREDITS_TO_AWARD,
                 type: 'credit',
-                description: 'Etsy Purchase Claim'
+                description
             }]);
+
+        const message = isVideoProduct
+            ? `${CREDITS_TO_AWARD} Credits Added! (includes ${VIDEO_CREDITS} for video)`
+            : `${CREDITS_TO_AWARD} Credits Added!`;
 
         return NextResponse.json({
             success: true,
-            message: '200 Credits Added!',
+            message,
             balance: updatedUser.balance,
-            userId: updatedUser.user_id
+            userId: updatedUser.user_id,
+            isVideoProduct
         });
 
     } catch (error: any) {
