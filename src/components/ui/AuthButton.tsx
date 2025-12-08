@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 import { trackPixelEvent } from '@/components/analytics/MetaPixel';
+import { Analytics } from '@/lib/analytics';
 
 export default function AuthButton() {
     const [user, setUser] = useState<any>(null);
@@ -63,6 +64,7 @@ export default function AuthButton() {
     }, []);
 
     const handleGoogleLogin = async () => {
+        Analytics.clickLogin('header_google');
         trackPixelEvent('CompleteRegistration', { content_name: 'Google OAuth' });
         await supabase.auth.signInWithOAuth({
             provider: 'google',
@@ -76,6 +78,7 @@ export default function AuthButton() {
         e.preventDefault();
         if (!email) return;
 
+        Analytics.clickLogin('header_magic_link');
         trackPixelEvent('CompleteRegistration', { content_name: 'Magic Link' });
         setIsMagicLinkLoading(true);
         const { error } = await supabase.auth.signInWithOtp({
@@ -146,7 +149,10 @@ export default function AuthButton() {
     return (
         <>
             <button
-                onClick={() => setIsOpen(true)}
+                onClick={() => {
+                    Analytics.clickLogin('header');
+                    setIsOpen(true);
+                }}
                 className="flex items-center gap-2 bg-white/80 hover:bg-white text-ink font-bold py-2 px-4 rounded-full shadow-sm hover:shadow-md transition-all text-sm border border-ink/5"
             >
                 <LogIn size={16} />

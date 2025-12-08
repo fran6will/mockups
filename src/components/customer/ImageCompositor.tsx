@@ -17,6 +17,7 @@ import { useSearchParams } from 'next/navigation';
 import ShareModal from '@/components/ui/ShareModal';
 import WatermarkOverlay from '@/components/ui/WatermarkOverlay';
 import UnlockModal from './UnlockModal';
+import { Analytics } from '@/lib/analytics';
 
 interface ImageCompositorProps {
     productId: string;
@@ -354,6 +355,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         setIsGenerating(true);
         setError(null);
 
+        // Track generate event
+        Analytics.generateMockup(productSlug, imageSize);
+
         try {
             // 1. Composite Layers
             const compositedFile = await compositeImages(layers);
@@ -426,6 +430,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     };
 
     const handleGoogleSignIn = async () => {
+        Analytics.clickSignUp('product_page');
         await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {

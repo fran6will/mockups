@@ -11,6 +11,7 @@ import { getFavorites } from '@/app/actions';
 
 import { useAccess } from '@/hooks/use-access';
 import WatermarkOverlay from '@/components/ui/WatermarkOverlay';
+import { Analytics } from '@/lib/analytics';
 
 const CATEGORIES = [
     "Men's Clothing",
@@ -310,6 +311,7 @@ export default function Gallery() {
                                     <Link
                                         key={product.id}
                                         href={product.category === 'Scenes' ? `/custom?sceneId=${product.id}` : `/${product.slug}`}
+                                        onClick={() => Analytics.clickProduct(product.slug, 'gallery')}
                                         className="group block relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-teal/10 hover:-translate-y-1 transition-all duration-500 border border-ink/5"
                                     >
                                         {/* Image Container */}

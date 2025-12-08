@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Sparkles, CheckCircle, Play, Video, Layers } from 'lucide-react';
+import { Analytics } from '@/lib/analytics';
 
 export default function Hero() {
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -167,12 +168,14 @@ export default function Hero() {
                                         <div className="flex flex-col sm:flex-row gap-4">
                                             <Link
                                                 href={slide.ctaLink}
+                                                onClick={() => Analytics.clickTryItFree(`hero_slide_${slide.id}`)}
                                                 className="bg-ink text-white font-bold text-lg px-8 py-4 rounded-2xl hover:bg-ink/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-ink/20 flex items-center justify-center gap-2"
                                             >
                                                 {slide.cta} <ArrowRight size={20} />
                                             </Link>
                                             <Link
                                                 href="/pricing"
+                                                onClick={() => Analytics.viewPricing()}
                                                 className="bg-white/50 backdrop-blur-sm text-ink font-bold text-lg px-8 py-4 rounded-2xl border border-ink/10 hover:bg-white hover:border-ink/20 transition-all flex items-center justify-center gap-2"
                                             >
                                                 View Pricing
