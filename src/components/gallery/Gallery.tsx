@@ -48,7 +48,13 @@ export default function Gallery() {
             if (error) {
                 console.error('Error fetching products:', error);
             } else {
-                setProducts(data || []);
+                // Shuffle products randomly (Fisher-Yates)
+                const shuffled = [...(data || [])];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                setProducts(shuffled);
 
                 // Extract unique tags
                 const tags = new Set<string>();

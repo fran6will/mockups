@@ -266,27 +266,7 @@ export async function POST(request: Request) {
             }
 
             // 4. Save to Generations Table (Success)
-            await logAttempt('success', null, { aspect_ratio: aspectRatio, image_size: imageSize });
-
-            // Update the image_url separately since logAttempt is generic
-            // Actually, we should just do a manual update or insert here to include the image_url
-            // But to keep it simple, let's just do a separate update for the image_url if we want to use the helper,
-            // OR just manually insert here like before but using the variables we set up.
-            // Let's stick to the manual insert for success to ensure we capture everything exactly as before + consistency.
-            // Wait, I can just update the helper to take extra fields or just do it manually here.
-            // Let's do it manually here to be safe and explicit, but using the variables.
-            // Actually, wait, I replaced the manual insert with logAttempt in my head, but in the code I should probably just use logAttempt if I can pass everything.
-            // Let's modify logAttempt to take an optional object for overrides.
-
-            // Re-implementing the success log using the helper would require passing image_url.
-            // Let's just do a direct insert here for success to match the exact schema we want (including image_url).
-            // Actually, let's just update the last log entry? No, that's complex.
-            // Let's just use the supabaseAdmin directly here for success, it's fine.
-            // BUT, to avoid code duplication, I'll just use the helper and add an `updates` arg?
-            // No, keep it simple.
-
-            // Let's just use the helper for errors, and keep the success logic mostly as is but updated to use the variables.
-            // Actually, I'll just use the helper for everything.
+            // Using direct insert to include image_url (logAttempt helper doesn't support it)
             await supabaseAdmin.from('generations').insert({
                 product_id: productId,
                 status: 'success',

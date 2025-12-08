@@ -95,7 +95,6 @@ export default function TryItRemix() {
                                         <Upload size={20} />
                                     </div>
                                     <p className="font-bold text-ink text-sm">Click to Upload</p>
-                                    <p className="text-xs text-ink/40 mt-1">Transparent PNG works best</p>
                                 </div>
                             )}
                             <input

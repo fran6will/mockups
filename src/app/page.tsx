@@ -16,7 +16,7 @@ import Header from '@/components/ui/Header';
 import Banner from '@/components/ui/Banner';
 import Hero from '@/components/landing/Hero';
 import TrendingCarousel from '@/components/landing/TrendingCarousel';
-import NewArrivals from '@/components/landing/NewArrivals';
+// import NewArrivals from '@/components/landing/NewArrivals';
 import Features from '@/components/landing/Features';
 import BackgroundDoodles from '@/components/ui/BackgroundDoodles';
 import TryItSection from '@/components/landing/TryItSection';
@@ -54,7 +54,7 @@ export default function HomePage() {
 
                 <TrendingCarousel />
                 <TryItSection />
-                <NewArrivals />
+                {/* <NewArrivals /> */}
                 <Features />
                 <Gallery />
             </main>
