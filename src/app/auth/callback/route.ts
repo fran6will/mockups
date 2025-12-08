@@ -43,9 +43,12 @@ export async function GET(request: Request) {
                 }
             }
 
-            // Redirect logic
+            // Redirect logic - force #tryout for homepage sign-ins
             let redirectUrl = next;
-            if (redirectUrl === '/' || redirectUrl === '/dashboard') {
+            if (!redirectUrl || redirectUrl === '/' || redirectUrl === '/dashboard') {
+                redirectUrl = '/#tryout';
+            } else if (redirectUrl === '/' && !redirectUrl.includes('#')) {
+                // If coming from homepage without hash, add #tryout
                 redirectUrl = '/#tryout';
             }
 
