@@ -1,10 +1,13 @@
-import { supabase } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import TryItPlayground from '@/components/landing/TryItPlayground';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { Suspense } from 'react';
 
+// Force dynamic rendering so products are always fresh
+export const dynamic = 'force-dynamic';
+
 export default async function TryItSection() {
-    const { data: freeProducts } = await supabase
+    const { data: freeProducts } = await supabaseAdmin
         .from('products')
         .select('id, slug, title, base_image_url, gallery_image_url, password_hash')
         .eq('is_free', true)

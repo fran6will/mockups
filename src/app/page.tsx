@@ -21,19 +21,23 @@ import Features from '@/components/landing/Features';
 import BackgroundDoodles from '@/components/ui/BackgroundDoodles';
 import TryItSection from '@/components/landing/TryItSection';
 import StatsSection from '@/components/landing/StatsSection';
+import StickyTryItCTA from '@/components/ui/StickyTryItCTA';
 
 export default function HomePage() {
     return (
         <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-grid-pattern bg-grain relative overflow-hidden">
             <BackgroundDoodles />
+            <StickyTryItCTA />
             <Banner />
             <Header />
 
             <main className="relative z-10">
                 <Hero />
 
+                <TryItSection />
+
                 {/* Free Trial CTA */}
-                <div className="max-w-7xl mx-auto px-6 mb-12 -mt-8 relative z-20">
+                <div className="max-w-7xl mx-auto px-6 mb-12 mt-8 relative z-20">
                     <div className="bg-ink text-white rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-ink/10 border border-white/10">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-ink font-black text-xl shrink-0 animate-pulse">
@@ -53,7 +57,6 @@ export default function HomePage() {
                 <StatsSection />
 
                 <TrendingCarousel />
-                <TryItSection />
                 {/* <NewArrivals /> */}
                 <Features />
                 <Gallery />
