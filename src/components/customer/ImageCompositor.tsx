@@ -176,8 +176,12 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     };
 
     useEffect(() => {
-        if (isFree) {
+        // Check if there's an access code in URL - this takes priority
+        const hasAccessCode = searchParams.get('code');
+
+        if (isFree && !hasAccessCode) {
             // Allow guests to see the UI, but prompt on generate
+            // Only auto-unlock if there's NO access code (Etsy buyers need to claim credits)
             setIsUnlocked(true);
         } else if (accessLevel === 'pro') {
             setIsUnlocked(true);
@@ -186,7 +190,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             setIsUnlocked(true);
             // We don't set credits here because we don't know them yet.
             // They will be updated after the first generation or if we add a fetchCredits call.
-        } else if (user) {
+        } else if (user && !hasAccessCode) {
+            // Only auto-unlock for logged-in users if they don't have an access code
+            // If they have a code, they might want to claim video credits
             setIsUnlocked(true);
         }
 
@@ -196,7 +202,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         }
 
         // Auto-open unlock modal if code or unlock param is present and not yet unlocked
-        if ((searchParams.get('code') || searchParams.get('unlock') === 'true') && !isUnlocked && !showUnlockModal) {
+        if ((hasAccessCode || searchParams.get('unlock') === 'true') && !isUnlocked && !showUnlockModal) {
             setShowUnlockModal(true);
         }
     }, [accessLevel, isFree, user, searchParams, layers.length, isUnlocked]);
