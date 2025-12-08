@@ -456,6 +456,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         if (layers.length > 0) {
             const layersToSave = layers.map(layer => ({
                 id: layer.id,
+                name: layer.file?.name || layer.name || 'Restored Layer',
                 previewUrl: layer.previewUrl,
                 rotation: layer.rotation,
                 scale: layer.scale,
@@ -897,7 +898,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                             >
                                 <img src={layer.previewUrl} className="w-10 h-10 rounded-lg object-cover bg-white border border-ink/5" />
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-ink truncate">{layer.file.name}</p>
+                                    <p className="text-sm font-bold text-ink truncate">{layer.file?.name || layer.name || 'Design'}</p>
                                     <p className="text-xs text-ink/40">Layer {index + 1}</p>
                                 </div>
                                 <button

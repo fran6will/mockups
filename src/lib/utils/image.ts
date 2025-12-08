@@ -1,6 +1,7 @@
 export interface Layer {
     id: string;
-    file: File;
+    file?: File; // Optional - restored layers from localStorage won't have this
+    name?: string; // Optional - for displaying layer name when file is not available
     rotation: number;
     scale: number;
     moveX: number;
