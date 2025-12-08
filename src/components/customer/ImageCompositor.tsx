@@ -453,20 +453,40 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         Analytics.clickSignUp('product_page');
 
         // Save current layers to localStorage before redirect so they persist
+        // Convert blob URLs to base64 data URLs since blob URLs are session-only
         if (layers.length > 0) {
-            const layersToSave = layers.map(layer => ({
-                id: layer.id,
-                name: layer.file?.name || layer.name || 'Restored Layer',
-                previewUrl: layer.previewUrl,
-                rotation: layer.rotation,
-                scale: layer.scale,
-                moveX: layer.moveX,
-                moveY: layer.moveY,
-                skewX: layer.skewX,
-                skewY: layer.skewY,
-                opacity: layer.opacity
-            }));
-            localStorage.setItem(`pending_layers_${productSlug}`, JSON.stringify(layersToSave));
+            try {
+                const layersToSave = await Promise.all(layers.map(async (layer) => {
+                    let base64Url = layer.previewUrl;
+
+                    // If it's a blob URL, convert to data URL
+                    if (layer.previewUrl.startsWith('blob:')) {
+                        const response = await fetch(layer.previewUrl);
+                        const blob = await response.blob();
+                        base64Url = await new Promise<string>((resolve) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result as string);
+                            reader.readAsDataURL(blob);
+                        });
+                    }
+
+                    return {
+                        id: layer.id,
+                        name: layer.file?.name || layer.name || 'Restored Layer',
+                        previewUrl: base64Url,
+                        rotation: layer.rotation,
+                        scale: layer.scale,
+                        moveX: layer.moveX,
+                        moveY: layer.moveY,
+                        skewX: layer.skewX,
+                        skewY: layer.skewY,
+                        opacity: layer.opacity
+                    };
+                }));
+                localStorage.setItem(`pending_layers_${productSlug}`, JSON.stringify(layersToSave));
+            } catch (e) {
+                console.error('Failed to save layers:', e);
+            }
         }
 
         await supabase.auth.signInWithOAuth({
