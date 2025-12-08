@@ -39,7 +39,7 @@ export async function GET() {
             return `
     <item>
       <g:id>${product.id}</g:id>
-      <g:title><![CDATA[${product.title}]]></g:title>
+      <g:title><![CDATA[${product.title} - AI Mockup Template]]></g:title>
       <g:description><![CDATA[${description}]]></g:description>
       <g:link>${link}</g:link>
       <g:image_link>${imageLink}</g:image_link>
@@ -47,16 +47,10 @@ export async function GET() {
       <g:price>5.00 CAD</g:price>
       <g:brand>Copié-Collé</g:brand>
       <g:condition>new</g:condition>
-      <g:google_product_category>${googleCategory}</g:google_product_category>
-      <g:product_type><![CDATA[${product.category || 'Mockups'}]]></g:product_type>
-      <g:color>${color}</g:color>
-      <g:age_group>adult</g:age_group>
-      <g:gender>unisex</g:gender>
-      <g:shipping>
-        <g:country>CA</g:country>
-        <g:service>Standard</g:service>
-        <g:price>0.00 CAD</g:price>
-      </g:shipping>
+      <g:google_product_category>299</g:google_product_category>
+      <g:product_type><![CDATA[Software > Design Software > AI Mockup Generator]]></g:product_type>
+      <g:is_bundle>no</g:is_bundle>
+      <g:identifier_exists>no</g:identifier_exists>
     </item>`;
         }).join('\n');
 

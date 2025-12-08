@@ -72,6 +72,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.5,
         },
         {
+            url: `${baseUrl}/legal/refunds`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.5,
+        },
+        {
             url: `${baseUrl}/bytedance-seedream-4-5-release-review`,
             lastModified: new Date(),
             changeFrequency: 'monthly',
