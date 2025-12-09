@@ -13,7 +13,7 @@ export default function Logo({ className = '', showText = true, variant = 'dark'
         <div className={`flex items-center gap-3 ${className}`}>
             <div className="relative w-8 h-8">
                 <Image
-                    src="/logo.png?v=1"
+                    src="/logo-v2.png"
                     alt="CopiéCollé Logo"
                     fill
                     className="object-contain"
