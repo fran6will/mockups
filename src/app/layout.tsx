@@ -49,6 +49,10 @@ export const metadata: Metadata = {
     images: ['/banner.webp'],
     creator: '@copiecolle',
   },
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({
