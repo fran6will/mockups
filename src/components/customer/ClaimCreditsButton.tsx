@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, Loader2, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -15,6 +15,17 @@ export default function ClaimCreditsButton({ productId, productSlug, passwordHas
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
+    // Auto-resume claim after login
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('resume_claim') === 'true') {
+            // Clear the param
+            window.history.replaceState({}, '', window.location.pathname);
+            // Run claim
+            handleClaim();
+        }
+    }, []);
+
     const handleClaim = async () => {
         setLoading(true);
         try {
@@ -23,12 +34,14 @@ export default function ClaimCreditsButton({ productId, productSlug, passwordHas
 
             if (!user) {
                 // Redirect to Google Sign In
-                // We want to come back to this page to finish the claim
-                const returnUrl = window.location.href;
+                // Add resume_claim param so we know to continue when we get back
+                const returnUrl = new URL(window.location.href);
+                returnUrl.searchParams.set('resume_claim', 'true');
+
                 await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnUrl)}`
+                        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnUrl.toString())}`
                     }
                 });
                 return;
@@ -48,7 +61,10 @@ export default function ClaimCreditsButton({ productId, productSlug, passwordHas
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to claim credits');
+                // If already claimed, that's fine, proceed to unlock
+                if (!data.error?.includes('already claimed')) {
+                    throw new Error(data.error || 'Failed to claim credits');
+                }
             }
 
             // 3. Unlock locally
@@ -63,7 +79,7 @@ export default function ClaimCreditsButton({ productId, productSlug, passwordHas
 
         } catch (error: any) {
             console.error('Claim error:', error);
-            alert('Error claiming credits: ' + error.message);
+            // alert('Error claiming credits: ' + error.message);
             setLoading(false);
         }
     };

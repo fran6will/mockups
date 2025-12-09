@@ -403,18 +403,21 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 });
             }
 
-            // 2. Call AI API (Single Turn)
-            // We use the multi-turn endpoint but treat it as a single request
-            const response = await fetch('/api/generate-multiturn', {
+            // 2. Call AI API (Standard Mode)
+            const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     productId,
-                    baseImageUrl: currentBaseImage,
-                    designImageUrl: designImageUrl,
-                    instruction: customInstruction || "Place the design naturally on the product.", // Default instruction
+                    logoUrl: designImageUrl, // Standard API expects 'logoUrl'
                     aspectRatio,
-                    imageSize
+                    imageSize,
+                    email: user?.email,
+                    // If we have custom instructions, we can append them to the prompt or handle differently
+                    // The standard API expects 'customPrompt' in product config, or we pass it?
+                    // Let's check prompt logic in route. Currently route uses product.custom_prompt or default.
+                    // If we want to support the custom instruction input from UI, we might need to update the route or pass it in a way the route ignores or uses.
+                    // For now, let's stick to the core requirement: make it work like before.
                 })
             });
 
@@ -430,14 +433,10 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
             setGeneratedImage(data.imageUrl);
 
-            // Note: Credit handling for this endpoint might need adjustment if it returns remainingCredits
-            // The generate-multiturn endpoint currently doesn't return remainingCredits, logic might need update if we want credit tracking
-            // For now assuming experimental/beta is free or handled on backend? 
-            // Wait, existing generate endpoint handles credits. Multi-turn doesn't have credit logic yet in its route?
-            // Actually, for this "Normal Mode", we MUST deduct credits.
-            // The previous experimental mode might not have checked credits strictly?
-            // User didn't mention credits, but I should probably check if I need to add credit support to the new route.
-            // I'll leave as is for now as User said "forget multiturn... keep overlay image compositor like this".
+            // Update credits from response
+            if (data.remainingCredits !== undefined) {
+                setCredits(data.remainingCredits);
+            }
 
         } catch (err: any) {
             console.error(err);

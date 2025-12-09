@@ -37,20 +37,21 @@ export async function GET(request: Request) {
                         type: 'credit',
                         description: 'Welcome Bonus'
                     });
-
-                    // New user - redirect to home page #tryout section
-                    return NextResponse.redirect(`${origin}/#tryout`);
                 }
             }
 
-            // Redirect logic - force #tryout for homepage sign-ins
+            // Redirect logic
             let redirectUrl = next;
 
-            // If coming from homepage (any variation), redirect to #tryout
+            // Handle full URL redirects (e.g. from ClaimCreditsButton)
+            if (redirectUrl.startsWith('http')) {
+                return NextResponse.redirect(redirectUrl);
+            }
+
+            // If no specific destination (and not a full URL), fallback to #tryout
             if (!redirectUrl ||
                 redirectUrl === '/' ||
                 redirectUrl === '/dashboard' ||
-                redirectUrl.startsWith('/#') ||
                 redirectUrl === '') {
                 redirectUrl = '/#tryout';
             }
