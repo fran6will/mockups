@@ -421,3 +421,165 @@ export const refinePrompt = async (prompt: string) => {
         throw new Error("Failed to refine prompt: " + error.message);
     }
 };
+
+/**
+ * Multi-turn mockup generation using Gemini 3 Pro Image Preview.
+ * Allows users to provide custom instructions and refine results iteratively.
+ * 
+ * @param baseImageUrl - The blank product mockup image
+ * @param designImageUrl - The raw design image to be placed
+ * @param instruction - User's custom instruction (e.g., "make it fit in the frame")
+ * @param previousResultUrl - Previous generated image URL (for refinement)
+ * @param history - Conversation history from previous turns
+ * @param aspectRatio - Output aspect ratio
+ * @param imageSize - Output size (1K, 2K)
+ */
+export const generateMockupMultiTurn = async (
+    baseImageUrl: string | null,
+    designImageUrl: string | null,
+    instruction: string,
+    previousResultUrl?: string,
+    history?: any[],
+    aspectRatio: string = '1:1',
+    imageSize: string = '1K'
+) => {
+    if (!apiKey) {
+        throw new Error("Missing GEMINI_API_KEY in environment variables.");
+    }
+
+    try {
+        console.log(`[Multi-Turn] Starting with instruction: "${instruction}", history length: ${history?.length || 0}`);
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({
+            model: modelId,
+            generationConfig: {
+                // Gemini 3 Pro Image requires both TEXT and IMAGE modalities
+                responseModalities: ["TEXT", "IMAGE"],
+                imageConfig: {
+                    aspectRatio: aspectRatio,
+                    imageSize: imageSize
+                }
+            } as any
+        });
+
+        // Helper to convert URL/DataURL to Part
+        const urlToPart = async (url: string) => {
+            if (url.startsWith('data:')) {
+                const [mimeTypePart, base64] = url.split(';base64,');
+                return {
+                    inlineData: {
+                        data: base64,
+                        mimeType: mimeTypePart.replace('data:', '')
+                    }
+                };
+            }
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            const base64 = Buffer.from(arrayBuffer).toString('base64');
+            const mimeType = response.headers.get('content-type') || 'image/png';
+            return {
+                inlineData: {
+                    data: base64,
+                    mimeType
+                }
+            };
+        };
+
+        // Sanitize history to remove inlineData from model responses
+        // This prevents the [GoogleGenerativeAI Error]: Content with role 'model' can't contain 'inlineData' part
+        const sanitizedHistory = history?.map(item => {
+            if (item.role === 'model') {
+                const newParts = item.parts.filter((part: any) => !part.inlineData);
+                // If we stripped everything (e.g. it was just an image), add placeholder text
+                // so the history item remains valid (must have at least 1 part).
+                if (newParts.length === 0) {
+                    newParts.push({ text: "[Image Generated]" });
+                }
+                return {
+                    role: item.role,
+                    parts: newParts
+                };
+            }
+            return item;
+        }) || [];
+
+        // Start a chat session with history
+        const chat = model.startChat({
+            history: sanitizedHistory
+        });
+
+        // Build the message parts
+        const messageParts: any[] = [];
+
+        // If this is a refinement (we have a previous result), use different prompting
+        if (previousResultUrl) {
+            const previousPart = await urlToPart(previousResultUrl);
+            messageParts.push(
+                `This is my previous generated mockup. Please refine it based on this instruction: ${instruction}. Keep the overall composition but apply the requested changes. Generate a new image.`,
+                previousPart
+            );
+        } else {
+            // First generation - send base mockup + design image separately
+            if (!baseImageUrl || !designImageUrl) {
+                throw new Error("Base image and Design image are required for first generation");
+            }
+
+            const basePart = await urlToPart(baseImageUrl);
+            const designPart = await urlToPart(designImageUrl);
+
+            messageParts.push(
+                `Task: Create a photorealistic product mockup.
+                Instruction: ${instruction}.
+                Image 1: The blank product (Base Mockup).
+                Image 2: The design/logo to place.
+                
+                Action: Place the design (Image 2) onto the product (Image 1) according to the user's instruction.
+                - Preserve the exact colors and details of the design.
+                - Apply it realistically to the product surface (curvature, texture, fabric wrinkles, lighting, shadows).
+                - Do NOT change the product background or shape, just apply the design.
+                Generate the final composite image.`,
+                basePart,
+                designPart
+            );
+        }
+
+        console.log("[Multi-Turn] Sending message to chat...");
+        const result = await chat.sendMessage(messageParts);
+        const response = await result.response;
+
+        // Extract image from response
+        const parts = response.candidates?.[0]?.content?.parts;
+        const imagePart = parts?.find((part: any) => part.inlineData);
+        const textPart = parts?.find((part: any) => part.text);
+
+        if (!imagePart?.inlineData) {
+            const errorText = textPart?.text || "No image generated";
+            console.warn("[Multi-Turn] No image returned:", errorText);
+            throw new Error(errorText);
+        }
+
+        const base64Image = imagePart.inlineData.data;
+        const mimeType = imagePart.inlineData.mimeType || 'image/png';
+
+        // Get updated history for next turn
+        const updatedHistory = await chat.getHistory();
+
+        console.log(`[Multi-Turn] Success! Updated history length: ${updatedHistory.length}`);
+
+        return {
+            success: true,
+            mockUrl: `data:${mimeType};base64,${base64Image}`,
+            modelResponse: textPart?.text || null,
+            history: updatedHistory
+        };
+
+    } catch (error: any) {
+        console.error("[Multi-Turn] Error:", error);
+        return {
+            success: false,
+            error: error.message || "Unknown error",
+            history: history || []
+        };
+    }
+};

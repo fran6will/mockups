@@ -18,7 +18,7 @@ export default async function TryItSection() {
     }
 
     return (
-        <section id="tryout" className="py-24 relative overflow-hidden">
+        <section id="tryout" className="pt-0 pb-24 relative overflow-hidden">
             {/* Background Decor */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-teal/5 rounded-full blur-3xl -z-10"></div>
 

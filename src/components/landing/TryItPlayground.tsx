@@ -27,23 +27,29 @@ export default function TryItPlayground({ products }: TryItPlaygroundProps) {
     return (
         <div className="space-y-8">
             {/* Mode Toggle */}
-            <div className="flex justify-center mb-8">
+            {/* Mode Toggle */}
+            <div className="flex flex-col items-center justify-center mb-8 gap-4">
                 <div className="bg-white p-1 rounded-xl shadow-sm border border-ink/5 inline-flex">
                     <button
                         onClick={() => setMode('template')}
-                        className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all ${mode === 'template' ? 'bg-teal text-white shadow-md' : 'text-ink/60 hover:bg-gray-50'}`}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all ${mode === 'template' ? 'bg-teal text-white shadow-md' : 'text-ink/60 hover:bg-gray-50'}`}
                     >
                         <LayoutTemplate size={16} />
                         Use a Template
                     </button>
                     <button
                         onClick={() => setMode('remix')}
-                        className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all ${mode === 'remix' ? 'bg-teal text-white shadow-md' : 'text-ink/60 hover:bg-gray-50'}`}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm transition-all ${mode === 'remix' ? 'bg-purple-600 text-white shadow-md' : 'text-ink/60 hover:bg-gray-50'}`}
                     >
                         <Wand2 size={16} />
                         Create Product Shot
                     </button>
                 </div>
+                <p className="text-sm text-ink/50 font-medium max-w-md text-center">
+                    {mode === 'template'
+                        ? "Choose a professionally photographed base product and apply your design."
+                        : "Upload your own product photo and let AI place it in a realistic scene."}
+                </p>
             </div>
 
             {mode === 'template' ? (
