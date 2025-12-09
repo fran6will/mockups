@@ -9,6 +9,15 @@ import { Analytics } from '@/lib/analytics';
 export default function Hero() {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+    const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+
+    // Defer video loading to prioritize LCP
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShouldLoadVideo(true);
+        }, 2500);
+        return () => clearTimeout(timer);
+    }, []);
 
     const slides = [
         {
@@ -63,17 +72,18 @@ export default function Hero() {
                             fill
                             sizes="(max-width: 768px) 100vw, 50vw"
                             className="object-cover opacity-90"
-                            priority
                         />
-                        <video
-                            className="absolute inset-0 w-full h-full object-cover opacity-90"
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                        >
-                            <source src="https://uvkdeuavzhhkcclrzdjj.supabase.co/storage/v1/object/public/assets/video-preview.mp4" type="video/mp4" />
-                        </video>
+                        {shouldLoadVideo && (
+                            <video
+                                className="absolute inset-0 w-full h-full object-cover opacity-90 animate-in fade-in duration-1000"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                            >
+                                <source src="https://uvkdeuavzhhkcclrzdjj.supabase.co/storage/v1/object/public/assets/video-preview.mp4" type="video/mp4" />
+                            </video>
+                        )}
                     </div>
                     {/* Floating Badge */}
                     <div className="absolute bottom-8 left-8 right-8 glass p-4 rounded-xl border border-white/60 shadow-lg flex items-center gap-4 backdrop-blur-xl bg-white/40">
