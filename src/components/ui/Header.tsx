@@ -16,24 +16,24 @@ export default function Header({ className = "" }: { className?: string }) {
 
             <div className="absolute inset-0 bg-white/80 backdrop-blur-xl -z-10"></div>
 
-            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-8">
                     <Link href="/" className="hover:opacity-80 transition-opacity group">
                         <Logo showText={true} />
                     </Link>
                     <nav className="hidden md:flex items-center gap-1">
-                        <Link href="/#gallery" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Gallery</Link>
-                        <Link href="/custom" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Create Scene</Link>
-                        <Link href="/animate" className="relative px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all group flex items-center gap-2">
+                        <Link href="/#gallery" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all text-sm">Gallery</Link>
+                        <Link href="/custom" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all text-sm">Create Scene</Link>
+                        <Link href="/animate" className="relative px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all group flex items-center gap-2 text-sm">
                             Animate
                             <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm group-hover:shadow-md transition-shadow">NEW</span>
                         </Link>
-                        <Link href="/experimental" className="relative px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all group flex items-center gap-2">
+                        <Link href="/experimental" className="relative px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all group flex items-center gap-2 text-sm">
                             Experimental
                             <span className="bg-teal/10 text-teal text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-teal/20">LAB</span>
                         </Link>
-                        <Link href="/pricing" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Pricing</Link>
-                        <Link href="/faq" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all">Help</Link>
+                        <Link href="/pricing" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all text-sm">Pricing</Link>
+                        <Link href="/faq" className="px-4 py-2 rounded-full text-ink/60 hover:text-teal hover:bg-teal/5 font-medium transition-all text-sm">Help</Link>
                     </nav>
                 </div>
                 <div className="flex items-center gap-4">
@@ -45,7 +45,7 @@ export default function Header({ className = "" }: { className?: string }) {
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         aria-label="Toggle mobile menu"
                     >
-                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
                     </button>
                 </div>
             </div>

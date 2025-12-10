@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Check, Sparkles, ArrowRight, Settings } from 'lucide-react';
 import Header from '@/components/ui/Header';
-import Banner from '@/components/ui/Banner';
+
 import { useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabase/client';
@@ -97,7 +97,7 @@ export default function PricingPage() {
         <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-fixed" style={{
             backgroundImage: 'radial-gradient(circle at 50% -20%, rgba(42, 127, 127, 0.15) 0%, var(--color-cream) 60%)'
         }}>
-            <Banner />
+
             <Header />
 
             <main className="max-w-7xl mx-auto px-6 pb-20 pt-12">

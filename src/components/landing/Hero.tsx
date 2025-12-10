@@ -7,8 +7,10 @@ import { ArrowRight, Sparkles, CheckCircle, Play, Video, Layers } from 'lucide-r
 import { Analytics } from '@/lib/analytics';
 
 export default function Hero() {
-    const [currentSlide, setCurrentSlide] = useState(0);
-    const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+    // const [currentSlide, setCurrentSlide] = useState(0);
+    // const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+    const currentSlide = 0; // Force first slide
+
     const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
 
     // Defer video loading to prioritize LCP
@@ -22,15 +24,16 @@ export default function Hero() {
     const slides = [
         {
             id: 0,
-            badge: "#1 AI Mockup Generator",
+            badge: "#1 AI Mockup & Video Generator",
             badgeIcon: Layers,
-            badgeColor: "text-blue-600 bg-blue-50 border-blue-100",
-            title: <>Sell More with <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Instant Mockups</span></>,
-            description: "Stop wasting hours on photoshoots or settling for poor quality Canva mockups. Upload your design and get professional, 4K product images in seconds.",
-            cta: "Start Creating Free",
-            ctaLink: "/#tryout",
+            badgeColor: "text-teal bg-teal/5 border-teal/10",
+            title: <>Sell More with <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-teal to-emerald-600">Instant Mockups</span></>,
+            description: "Stop wasting hours on photoshoots. Get 4K, realistic product photos and videos in seconds. No Photoshop needed.",
+            cta: "Start Free 7-Day Trial",
+            ctaSub: "No credit card required",
+            ctaLink: "/pricing",
             visual: (
-                <div className="relative w-full max-w-md aspect-[4/5] glass rounded-3xl border border-white/40 shadow-2xl shadow-blue-500/20 overflow-hidden">
+                <div className="relative w-full max-w-md aspect-[4/5] glass rounded-3xl border border-white/40 shadow-2xl shadow-teal/20 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
                         <Image
                             src="/hero-wallpaper.png"
@@ -43,7 +46,7 @@ export default function Hero() {
                     </div>
                     {/* Floating Badge */}
                     <div className="absolute bottom-8 left-8 right-8 glass p-4 rounded-xl border border-white/60 shadow-lg flex items-center gap-4 backdrop-blur-xl bg-white/40">
-                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg">
+                        <div className="w-10 h-10 rounded-full bg-teal flex items-center justify-center text-white shadow-lg">
                             <Sparkles size={20} />
                         </div>
                         <div>
@@ -54,86 +57,9 @@ export default function Hero() {
                 </div>
             )
         },
-        {
-            id: 1,
-            badge: "New: Video Generation",
-            badgeIcon: Video,
-            badgeColor: "text-teal bg-teal/5 border-teal/10",
-            title: <>Stop the Scroll with <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-teal to-emerald-600">Animated Mockups</span></>,
-            description: "Don't just show your design—sell the feeling. Our AI adds realistic movement to your mockups, helping you stand out in search results and convert more shoppers.",
-            cta: "Try Video Generator",
-            ctaLink: "/animate",
-            visual: (
-                <div className="relative w-full max-w-md aspect-square glass rounded-3xl border border-white/40 shadow-2xl shadow-teal/20 overflow-hidden">
-                    <div className="absolute inset-0 bg-black">
-                        <Image
-                            src="/hero-wallpaper.png"
-                            alt="Hero Video Poster"
-                            fill
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                            className="object-cover opacity-90"
-                        />
-                        {shouldLoadVideo && (
-                            <video
-                                className="absolute inset-0 w-full h-full object-cover opacity-90 animate-in fade-in duration-1000"
-                                autoPlay
-                                loop
-                                muted
-                                playsInline
-                            >
-                                <source src="https://uvkdeuavzhhkcclrzdjj.supabase.co/storage/v1/object/public/assets/video-preview.mp4" type="video/mp4" />
-                            </video>
-                        )}
-                    </div>
-                    {/* Floating Badge */}
-                    <div className="absolute bottom-8 left-8 right-8 glass p-4 rounded-xl border border-white/60 shadow-lg flex items-center gap-4 backdrop-blur-xl bg-white/40">
-                        <div className="w-10 h-10 rounded-full bg-teal flex items-center justify-center text-white shadow-lg">
-                            <Play size={20} className="fill-current ml-0.5" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold text-ink/50 uppercase tracking-wider">Effect</p>
-                            <p className="text-sm font-bold text-ink">Cinematic Motion</p>
-                        </div>
-                    </div>
-                </div>
-            )
-        },
-        {
-            id: 2,
-            badge: "Custom Templates",
-            badgeIcon: Sparkles,
-            badgeColor: "text-purple-600 bg-purple-50 border-purple-100",
-            title: <>Create Your Own <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Magic Scenes</span></>,
-            description: "Have a specific vision? Upload any blank product photo and describe the scene. Our AI will place your product in a professional environment instantly.",
-            cta: "Create Custom Mockup",
-            ctaLink: "/custom",
-            visual: (
-                <div className="relative w-full max-w-md aspect-[4/5] glass rounded-3xl border border-white/40 shadow-2xl shadow-purple-500/20 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
-                        <div className="relative w-3/4 aspect-square bg-white rounded-xl shadow-2xl transform rotate-3 border border-ink/5 p-2">
-                            <div className="w-full h-full bg-gray-50 rounded-lg flex items-center justify-center text-ink/20 border border-dashed border-ink/10">
-                                <Sparkles size={48} />
-                            </div>
-                            <div className="absolute -top-4 -right-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg border border-white/20">
-                                AI Generated
-                            </div>
-                        </div>
-                    </div>
-                    {/* Floating Badge */}
-                    <div className="absolute bottom-8 left-8 right-8 glass p-4 rounded-xl border border-white/60 shadow-lg flex items-center gap-4 backdrop-blur-xl bg-white/40">
-                        <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white shadow-lg">
-                            <Sparkles size={20} />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold text-ink/50 uppercase tracking-wider">Feature</p>
-                            <p className="text-sm font-bold text-ink">Text-to-Mockup</p>
-                        </div>
-                    </div>
-                </div>
-            )
-        }
     ];
 
+    /*
     useEffect(() => {
         if (!isAutoPlaying) return;
         const timer = setInterval(() => {
@@ -142,6 +68,7 @@ export default function Hero() {
 
         return () => clearInterval(timer);
     }, [isAutoPlaying, slides.length]);
+    */
 
     return (
         <section className="relative pt-12 pb-12 lg:pt-24 lg:pb-20 overflow-hidden">
@@ -179,16 +106,13 @@ export default function Hero() {
                                             <Link
                                                 href={slide.ctaLink}
                                                 onClick={() => Analytics.clickTryItFree(`hero_slide_${slide.id}`)}
-                                                className="bg-ink text-white font-bold text-lg px-8 py-4 rounded-2xl hover:bg-ink/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-ink/20 flex items-center justify-center gap-2"
+                                                className="bg-teal text-white font-bold text-lg px-8 py-3 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-teal/20 flex flex-col items-center justify-center leading-tight"
                                             >
-                                                {slide.cta} <ArrowRight size={20} />
-                                            </Link>
-                                            <Link
-                                                href="/pricing"
-                                                onClick={() => Analytics.viewPricing()}
-                                                className="bg-white/50 backdrop-blur-sm text-ink font-bold text-lg px-8 py-4 rounded-2xl border border-ink/10 hover:bg-white hover:border-ink/20 transition-all flex items-center justify-center gap-2"
-                                            >
-                                                View Pricing
+                                                <span className="flex items-center gap-2">
+                                                    {slide.cta} <ArrowRight size={20} />
+                                                </span>
+                                                {/* @ts-ignore */}
+                                                {slide.ctaSub && <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest">{slide.ctaSub}</span>}
                                             </Link>
                                         </div>
                                     </div>
@@ -208,22 +132,7 @@ export default function Hero() {
                             </div>
                         </div>
 
-                        {/* Slide Indicators */}
-                        <div className="mt-8 flex gap-3 z-20 relative">
-                            {slides.map((_, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => {
-                                        setCurrentSlide(index);
-                                        setIsAutoPlaying(false); // Pause on interaction
-                                    }}
-                                    className={`p-2 group transition-all duration-500`}
-                                    aria-label={`Go to slide ${index + 1}`}
-                                >
-                                    <div className={`h-2 rounded-full transition-all duration-500 ${currentSlide === index ? 'w-12 bg-ink' : 'w-2 bg-ink/10 group-hover:bg-ink/30'}`} />
-                                </button>
-                            ))}
-                        </div>
+
                     </div>
 
                     {/* Right Column: Visual Stack */}

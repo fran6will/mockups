@@ -132,7 +132,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
     const loadDemoImage = async () => {
         try {
-            const response = await fetch('/test_logo.png');
+            const response = await fetch('/logo-v2.png');
             const blob = await response.blob();
             const file = new File([blob], "sample-pattern.png", { type: "image/png" });
 

@@ -45,7 +45,7 @@ export default function TrendingCarousel() {
                         <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
                             <Sparkles size={20} className="fill-current" />
                         </div>
-                        <h2 className="text-2xl font-bold text-ink">Users Have Generated</h2>
+                        <h2 className="text-2xl font-bold text-ink">Community Showcase</h2>
                     </div>
                     <Link href="/gallery" className="text-teal font-bold text-sm hover:underline flex items-center gap-1">
                         View All <ArrowRight size={16} />
