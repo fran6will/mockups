@@ -35,9 +35,9 @@ export default function AuthButton() {
         } else if (error) {
             console.error('[AuthButton] Error fetching credits:', error);
 
-            // Attempt recovery if error suggests missing row (PGRST116 or 406)
+            // Attempt recovery on ANY error (empty object, PGRST116, 406, etc.)
             // But ONLY if we haven't tried already in this session
-            if (!hasAttemptedRecovery.current && (error.code === 'PGRST116' || error.message?.includes('406') || error.message?.includes('JSON'))) {
+            if (!hasAttemptedRecovery.current) {
                 console.log('[AuthButton] Attempting recovery...');
                 hasAttemptedRecovery.current = true; // Mark as attempted
 
