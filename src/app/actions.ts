@@ -297,3 +297,36 @@ export async function addUserCredits(email: string, amount: number) {
 
     return { success: true, newBalance };
 }
+
+export async function fetchUserCredits(authUserId: string) {
+    if (!authUserId) return { error: 'No user ID provided' };
+
+    try {
+        // Use supabaseAdmin to bypass RLS
+        const { data, error } = await supabaseAdmin
+            .from('user_credits')
+            .select('balance')
+            .eq('auth_user_id', authUserId)
+            .single();
+
+        if (data) {
+            return { balance: data.balance };
+        } else if (error) {
+            console.error('[fetchUserCredits] Database Error:', error);
+            // Fallback: try by user_id just in case
+            const { data: retryData } = await supabaseAdmin
+                .from('user_credits')
+                .select('balance')
+                .eq('user_id', authUserId)
+                .single();
+
+            if (retryData) return { balance: retryData.balance };
+
+            return { error: error.message };
+        }
+        return { error: 'No data found' };
+    } catch (e: any) {
+        console.error('[fetchUserCredits] Exception:', e);
+        return { error: e.message };
+    }
+}

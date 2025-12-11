@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import { fetchUserCredits } from '@/app/actions';
 import { LogIn, LogOut, User, LayoutDashboard, Coins, Mail, X, Check, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -24,39 +25,36 @@ export default function AuthButton() {
     const hasAttemptedRecovery = useRef(false);
 
     const fetchCredits = async (userId: string, retry = false) => {
-        const { data, error } = await supabase
-            .from('user_credits')
-            .select('balance')
-            .eq('auth_user_id', userId)
-            .single();
+        try {
+            // Use Server Action to bypass RLS
+            const result = await fetchUserCredits(userId);
 
-        if (data) {
-            setCredits(data.balance);
-        } else if (error) {
-            console.error('[AuthButton] Error fetching credits:', error);
+            if (result.balance !== undefined) {
+                setCredits(result.balance);
+            } else {
+                console.error('[AuthButton] Error fetching credits:', result.error);
 
-            // Attempt recovery on ANY error (empty object, PGRST116, 406, etc.)
-            // But ONLY if we haven't tried already in this session
-            if (!hasAttemptedRecovery.current) {
-                console.log('[AuthButton] Attempting recovery...');
-                hasAttemptedRecovery.current = true; // Mark as attempted
+                // Only attempt recovery if we haven't already
+                if (!hasAttemptedRecovery.current) {
+                    console.log('[AuthButton] Attempting recovery...');
+                    hasAttemptedRecovery.current = true;
 
-                try {
-                    const res = await fetch('/api/auth/recover-credits', { method: 'POST' });
-                    if (res.ok) {
-                        const recoveryData = await res.json();
-                        // Retry check if recovered or simply ensuring it exists
-                        const { data: retryData } = await supabase
-                            .from('user_credits')
-                            .select('balance')
-                            .eq('auth_user_id', userId)
-                            .single();
-                        if (retryData) setCredits(retryData.balance);
+                    try {
+                        const res = await fetch('/api/auth/recover-credits', { method: 'POST' });
+                        if (res.ok) {
+                            // Retry fetch after recovery
+                            const retryResult = await fetchUserCredits(userId);
+                            if (retryResult.balance !== undefined) {
+                                setCredits(retryResult.balance);
+                            }
+                        }
+                    } catch (err) {
+                        console.error('[AuthButton] Recovery failed:', err);
                     }
-                } catch (err) {
-                    console.error('[AuthButton] Recovery failed:', err);
                 }
             }
+        } catch (err) {
+            console.error('[AuthButton] Exception:', err);
         }
     };
 
