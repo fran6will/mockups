@@ -22,18 +22,18 @@ export async function GET(request: Request) {
                     .single();
 
                 if (!existingCredits) {
-                    // Grant 5 free credits
+                    // Grant 20 free credits
                     await supabaseAdmin.from('user_credits').insert({
                         user_id: user.id, // Sync user_id with Auth ID for RLS
                         auth_user_id: user.id,
                         email: user.email,
-                        balance: 5
+                        balance: 20
                     });
 
                     // Log Transaction
                     await supabaseAdmin.from('transactions').insert({
                         user_id: user.id,
-                        amount: 5,
+                        amount: 20,
                         type: 'credit',
                         description: 'Welcome Bonus'
                     });
@@ -48,12 +48,12 @@ export async function GET(request: Request) {
                 return NextResponse.redirect(redirectUrl);
             }
 
-            // If no specific destination (and not a full URL), fallback to #tryout
+            // If no specific destination (and not a full URL), fallback to /create
             if (!redirectUrl ||
                 redirectUrl === '/' ||
                 redirectUrl === '/dashboard' ||
                 redirectUrl === '') {
-                redirectUrl = '/#tryout';
+                redirectUrl = '/create';
             }
 
             return NextResponse.redirect(`${origin}${redirectUrl}`);

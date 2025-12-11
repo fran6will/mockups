@@ -19,7 +19,6 @@ import TrendingCarousel from '@/components/landing/TrendingCarousel';
 // import NewArrivals from '@/components/landing/NewArrivals';
 import Features from '@/components/landing/Features';
 import BackgroundDoodles from '@/components/ui/BackgroundDoodles';
-import TryItSection from '@/components/landing/TryItSection';
 import StatsSection from '@/components/landing/StatsSection';
 import StickyTryItCTA from '@/components/ui/StickyTryItCTA';
 
@@ -34,10 +33,7 @@ export default function HomePage() {
             <main className="relative z-10">
                 <Hero />
 
-                <TryItSection />
-
-                {/* Free Trial CTA */}
-
+                {/* TryItSection removed - now lives at /create */}
 
                 <StatsSection />
 

@@ -2,9 +2,11 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { ArrowRight, Sparkles, CheckCircle, Play, Video, Layers } from 'lucide-react';
 import { Analytics } from '@/lib/analytics';
+import { supabase } from '@/lib/supabase/client';
+import ImageComparisonSlider from '@/components/ui/ImageComparisonSlider';
+
 
 export default function Hero() {
     // const [currentSlide, setCurrentSlide] = useState(0);
@@ -21,6 +23,14 @@ export default function Hero() {
         return () => clearTimeout(timer);
     }, []);
 
+    const handleTryForFree = async () => {
+        Analytics.clickTryItFree('hero_try_for_free');
+        await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: `${window.location.origin}/auth/callback?next=/create` },
+        });
+    };
+
     const slides = [
         {
             id: 0,
@@ -29,32 +39,14 @@ export default function Hero() {
             badgeColor: "text-teal bg-teal/5 border-teal/10",
             title: <>Sell More with <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-teal to-emerald-600">Instant Mockups</span></>,
             description: "Stop wasting hours on photoshoots. Get 4K, realistic product photos and videos in seconds. No Photoshop needed.",
-            cta: "Start Free 7-Day Trial",
-            ctaSub: "No credit card required",
-            ctaLink: "/pricing",
+            cta: "Try for Free",
             visual: (
-                <div className="relative w-full max-w-md aspect-[4/5] glass rounded-3xl border border-white/40 shadow-2xl shadow-teal/20 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
-                        <Image
-                            src="/hero-wallpaper.png"
-                            alt="AI Mockup Preview"
-                            fill
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                            className="object-cover"
-                            priority
-                        />
-                    </div>
-                    {/* Floating Badge */}
-                    <div className="absolute bottom-8 left-8 right-8 glass p-4 rounded-xl border border-white/60 shadow-lg flex items-center gap-4 backdrop-blur-xl bg-white/40">
-                        <div className="w-10 h-10 rounded-full bg-teal flex items-center justify-center text-white shadow-lg">
-                            <Sparkles size={20} />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold text-ink/50 uppercase tracking-wider">Status</p>
-                            <p className="text-sm font-bold text-ink">Generated in 2.4s</p>
-                        </div>
-                    </div>
-                </div>
+                <ImageComparisonSlider
+                    beforeImage="/canva_bad.png"
+                    afterImage="/hero-wallpaper.png"
+                    beforeLabel="Canva"
+                    afterLabel="CopiéCollé"
+                />
             )
         },
     ];
@@ -103,17 +95,12 @@ export default function Hero() {
                                         </p>
 
                                         <div className="flex flex-col sm:flex-row gap-4">
-                                            <Link
-                                                href={slide.ctaLink}
-                                                onClick={() => Analytics.clickTryItFree(`hero_slide_${slide.id}`)}
-                                                className="bg-teal text-white font-bold text-lg px-8 py-3 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-teal/20 flex flex-col items-center justify-center leading-tight"
+                                            <button
+                                                onClick={handleTryForFree}
+                                                className="bg-teal text-white font-bold text-lg px-8 py-4 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-teal/20 flex items-center justify-center gap-2"
                                             >
-                                                <span className="flex items-center gap-2">
-                                                    {slide.cta} <ArrowRight size={20} />
-                                                </span>
-                                                {/* @ts-ignore */}
-                                                {slide.ctaSub && <span className="text-[10px] font-medium opacity-80 uppercase tracking-widest">{slide.ctaSub}</span>}
-                                            </Link>
+                                                {slide.cta} <ArrowRight size={20} />
+                                            </button>
                                         </div>
                                     </div>
                                 );

@@ -128,61 +128,18 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: msg }, { status: 403 });
         }
 
-        // SKIP CHECKS IF PRODUCT IS FREE
-        if (!product.is_free) {
-            // Enforce Payment for Paid Products
-            if (!isPro) {
-                if (!userCredits) {
-                    const msg = 'User not found. Please claim credits first.';
-                    await logAttempt('auth_error', msg);
-                    return NextResponse.json({ error: msg }, { status: 403 });
-                }
-
-                if (userCredits.balance < creditCost) {
-                    const msg = `Insufficient credits. This requires ${creditCost} credits.`;
-                    await logAttempt('insufficient_credits', msg, { balance: userCredits.balance, cost: creditCost });
-                    return NextResponse.json({ error: msg }, { status: 402 });
-                }
+        // CREDIT CHECK FOR NON-PRO USERS (Always required now, is_free only controls display)
+        if (!isPro) {
+            if (!userCredits) {
+                const msg = 'User not found. Please sign in first.';
+                await logAttempt('auth_error', msg);
+                return NextResponse.json({ error: msg }, { status: 403 });
             }
-        } else {
-            // FREE PRODUCT LIMIT CHECK
-            // Bypass limit if Pro or has ANY credits
-            const hasCredits = userCredits && userCredits.balance > 0;
 
-            if (!isPro && !hasCredits) {
-                // Check limit by IP if no email, or by email if provided
-                let count = 0;
-                let countError = null;
-
-                if (email) {
-                    const { count: c, error: e } = await supabaseAdmin
-                        .from('generations')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('status', 'success')
-                        .contains('meta', { user_email: email });
-                    count = c || 0;
-                    countError = e;
-                } else {
-                    // Check by IP
-                    const { count: c, error: e } = await supabaseAdmin
-                        .from('generations')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('status', 'success')
-                        .eq('ip_address', userIp);
-                    count = c || 0;
-                    countError = e;
-                }
-
-                if (countError) {
-                    console.error("Error checking free limit:", countError);
-                } else if (count >= 3) {
-                    const msg = 'Free limit reached';
-                    await logAttempt('limit_reached', msg, { count });
-                    return NextResponse.json({
-                        error: msg,
-                        code: 'FREE_LIMIT_REACHED'
-                    }, { status: 403 });
-                }
+            if (userCredits.balance < creditCost) {
+                const msg = `Insufficient credits. This requires ${creditCost} credits.`;
+                await logAttempt('insufficient_credits', msg, { balance: userCredits.balance, cost: creditCost });
+                return NextResponse.json({ error: msg, code: 'FREE_LIMIT_REACHED' }, { status: 402 });
             }
         }
 
@@ -219,8 +176,8 @@ export async function POST(request: Request) {
 
         // 3. Log Usage & Deduct Credit
         if (result.success) {
-            // Deduct Credit ONLY if not Pro AND not Free
-            if (!isPro && !product.is_free && userCredits) {
+            // Deduct Credit for non-Pro users (always deduct now)
+            if (!isPro && userCredits) {
                 await supabaseAdmin
                     .from('user_credits')
                     .update({ balance: userCredits.balance - creditCost, total_used: userCredits.total_used + creditCost })

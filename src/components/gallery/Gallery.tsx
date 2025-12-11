@@ -318,11 +318,12 @@ export default function Gallery() {
                                         <WatermarkOverlay showWatermark={!isPro} className="aspect-[4/3] relative overflow-hidden bg-gray-100">
                                             <div className="absolute inset-0 bg-teal/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 mix-blend-multiply"></div>
                                             <Image
-                                                src={getOptimizedSupabaseUrl(product.gallery_image_url || product.base_image_url, 600)}
+                                                src={getOptimizedSupabaseUrl(product.gallery_image_url || product.base_image_url, 400)}
                                                 alt={product.title}
                                                 fill
                                                 unoptimized
-                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                loading="lazy"
+                                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                                             />
 

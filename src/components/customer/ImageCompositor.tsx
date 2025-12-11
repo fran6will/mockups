@@ -15,6 +15,40 @@ import WatermarkOverlay from '@/components/ui/WatermarkOverlay';
 import UnlockModal from './UnlockModal';
 import { Analytics } from '@/lib/analytics';
 
+// Witty loading messages to entertain users during generation
+const wittyMessages = [
+    "Brewing some AI magic... ✨",
+    "Teaching robots to appreciate art...",
+    "Convincing pixels to behave...",
+    "Making your design look fabulous...",
+    "Sprinkling creative dust... 🎨",
+    "Wrapping your logo in style...",
+    "Almost there, perfecting the shadows...",
+    "AI is having a 'eureka!' moment...",
+    "Photoshop? Never heard of her. 💅",
+    "Generating pure awesomeness...",
+    "Your mockup is on its way... 📦",
+    "Training tiny digital artists...",
+];
+
+function WittyLoadingMessage() {
+    const [messageIndex, setMessageIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setMessageIndex((prev) => (prev + 1) % wittyMessages.length);
+        }, 2500);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <span className="animate-pulse transition-all duration-500">
+            {wittyMessages[messageIndex]}
+        </span>
+    );
+}
+
+
 interface ImageCompositorProps {
     productId: string;
     productSlug: string;
@@ -666,35 +700,38 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                     {/* Generated Result */}
                     {generatedImage && !videoUrl && (
-                        <div className="relative w-full h-full z-30">
+                        <div className="relative w-full h-full z-30 group">
                             <img
                                 src={generatedImage}
                                 alt="Generated Mockup"
                                 className="w-full h-full object-contain rounded-2xl"
                             />
-                            <div className="absolute inset-0 bg-black/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 rounded-2xl backdrop-blur-sm md:backdrop-blur-sm">
+                            {/* Action buttons - Bottom bar on mobile, hover overlay on desktop */}
+                            <div className="absolute inset-x-0 bottom-0 md:inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent md:bg-black/40 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end md:justify-center gap-3 p-4 md:p-6 rounded-b-2xl md:rounded-2xl md:backdrop-blur-sm">
                                 <a
                                     href={generatedImage}
-                                    download="mockup.png"
-                                    className="bg-white text-ink font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl"
+                                    download={`mockup-${imageSize}.png`}
+                                    className="bg-white text-ink font-bold px-5 py-2.5 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl text-sm md:text-base"
                                 >
-                                    <Download size={18} />
-                                    Download 4K
+                                    <Download size={16} />
+                                    Download {imageSize}
                                 </a>
-                                <button
-                                    onClick={() => setShowAnimateDialog(true)}
-                                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl border border-white/20"
-                                >
-                                    <Video size={18} />
-                                    Animate (25 Credits)
-                                </button>
-                                <button
-                                    onClick={() => setShowShareModal(true)}
-                                    className="bg-white text-ink font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl"
-                                >
-                                    <Share2 size={18} />
-                                    Share
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setShowAnimateDialog(true)}
+                                        className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold px-4 py-2 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl border border-white/20 text-sm"
+                                    >
+                                        <Video size={14} />
+                                        <span className="hidden md:inline">Animate</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setShowShareModal(true)}
+                                        className="bg-white/90 text-ink font-bold px-4 py-2 rounded-full hover:scale-105 transition-transform flex items-center gap-2 shadow-xl text-sm"
+                                    >
+                                        <Share2 size={14} />
+                                        <span className="hidden md:inline">Share</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -727,10 +764,17 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                     {/* Loading States */}
                     {(isGenerating || isAnimating) && (
-                        <div className="absolute inset-0 z-40 bg-white/80 backdrop-blur-md flex flex-col items-center justify-center">
-                            <div className="w-20 h-20 border-4 border-teal/20 border-t-teal rounded-full animate-spin mb-4"></div>
-                            <p className="font-bold text-teal animate-pulse text-lg">
-                                {isAnimating ? animationStatus : 'Designing your product...'}
+                        <div className="absolute inset-0 z-40 bg-white/90 backdrop-blur-md flex flex-col items-center justify-center">
+                            <div className="relative">
+                                {/* Animated rings */}
+                                <div className="w-24 h-24 border-4 border-teal/10 rounded-full absolute animate-ping"></div>
+                                <div className="w-24 h-24 border-4 border-teal/20 border-t-teal rounded-full animate-spin"></div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <Sparkles className="text-teal animate-pulse" size={28} />
+                                </div>
+                            </div>
+                            <p className="font-bold text-teal text-lg mt-6 text-center px-8">
+                                {isAnimating ? animationStatus : <WittyLoadingMessage />}
                             </p>
                         </div>
                     )}
@@ -887,7 +931,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                             <Plus size={20} />
                         </div>
                         <p className="text-sm font-bold text-ink">
-                            {category === 'Scenes' ? "Add Product" : "Add Design"}
+                            UPLOAD YOUR DESIGN
                         </p>
                         <p className="text-xs text-ink/40">Drop or click to upload</p>
                     </div>
@@ -1005,7 +1049,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-ink/40">Cost</span>
-                            <span className="font-bold text-teal">{isFree ? 'Free' : `${currentCost} Credits`}</span>
+                            <span className="font-bold text-teal">{currentCost} Credits</span>
                         </div>
 
                         {/* Custom Instructions */}
@@ -1039,8 +1083,8 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                                 <>
                                     <Sparkles size={20} />
                                     {!user
-                                        ? (isFree ? 'Sign in to Generate (Free)' : 'Sign in to Generate')
-                                        : (isFree ? 'Generate (Free)' : `Generate (${currentCost} Credits)`)
+                                        ? `Sign in to Generate (${currentCost} Credits)`
+                                        : `Generate (${currentCost} Credits)`
                                     }
                                 </>
                             )}
@@ -1155,24 +1199,25 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                             >
                                 <X size={24} />
                             </button>
-                            <div className="w-24 h-24 bg-teal/10 text-teal rounded-full flex items-center justify-center mx-auto animate-bounce">
+                            <div className="w-24 h-24 bg-teal/10 text-teal rounded-full flex items-center justify-center mx-auto">
                                 <Sparkles size={48} />
                             </div>
                             <div>
-                                <h3 className="text-3xl font-bold text-ink mb-3 tracking-tight">Whoa, slow down Picasso! 🎨</h3>
+                                <h3 className="text-3xl font-bold text-ink mb-3 tracking-tight">You're on a roll! 🚀</h3>
                                 <p className="text-lg text-ink/60 leading-relaxed">
-                                    You've used up your free samples. Ready to create without limits?
+                                    You've used your free credits. Start a <strong>7-day free trial</strong> to keep creating unlimited mockups.
                                 </p>
                             </div>
                             <div className="grid gap-3 pt-2">
                                 <a href="/pricing" className="w-full bg-gradient-to-r from-teal to-teal/80 text-cream font-bold py-4 rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-lg shadow-teal/20">
-                                    <Sparkles size={18} /> Get Unlimited Access
+                                    <Sparkles size={18} /> Start 7-Day Free Trial
                                 </a>
+                                <p className="text-xs text-ink/40">No credit card required. Cancel anytime.</p>
                                 <button
                                     onClick={() => setShowLimitPopup(false)}
                                     className="text-sm font-bold text-ink/40 hover:text-ink transition-colors"
                                 >
-                                    No thanks, I'll wait
+                                    Maybe later
                                 </button>
                             </div>
                         </div>
