@@ -24,7 +24,7 @@ export default function AuthButton() {
         const { data } = await supabase
             .from('user_credits')
             .select('balance')
-            .eq('auth_user_id', userId)
+            .eq('user_id', userId)
             .single();
 
         if (data) {
