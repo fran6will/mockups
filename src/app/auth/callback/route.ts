@@ -15,28 +15,50 @@ export async function GET(request: Request) {
             const { data: { user } } = await supabase.auth.getUser();
 
             if (user && user.email) {
-                const { data: existingCredits } = await supabaseAdmin
+                // Step 1: Check if user already has credits by their AUTH ID (correct state)
+                const { data: byUserId } = await supabaseAdmin
                     .from('user_credits')
-                    .select('user_id')
-                    .eq('email', user.email)
-                    .single();
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
 
-                if (!existingCredits) {
-                    // Grant 20 free credits
-                    await supabaseAdmin.from('user_credits').insert({
-                        user_id: user.id, // Sync user_id with Auth ID for RLS
-                        auth_user_id: user.id,
-                        email: user.email,
-                        balance: 20
-                    });
+                if (!byUserId) {
+                    // Step 2: Check if they have an orphaned row by EMAIL (from Etsy claim)
+                    const { data: byEmail } = await supabaseAdmin
+                        .from('user_credits')
+                        .select('id, user_id')
+                        .eq('email', user.email)
+                        .maybeSingle();
 
-                    // Log Transaction
-                    await supabaseAdmin.from('transactions').insert({
-                        user_id: user.id,
-                        amount: 20,
-                        type: 'credit',
-                        description: 'Welcome Bonus'
-                    });
+                    if (byEmail) {
+                        // Link the existing email row to this auth user
+                        console.log('[Callback] Linking existing email row to auth user:', user.id);
+                        await supabaseAdmin
+                            .from('user_credits')
+                            .update({ user_id: user.id, auth_user_id: user.id })
+                            .eq('email', user.email);
+                    } else {
+                        // Completely new user - create fresh row with welcome bonus
+                        console.log('[Callback] Creating new credits for user:', user.id);
+                        const { error: insertError } = await supabaseAdmin.from('user_credits').insert({
+                            user_id: user.id,
+                            auth_user_id: user.id,
+                            email: user.email,
+                            balance: 20
+                        });
+
+                        if (insertError) {
+                            console.error('[Callback] Failed to insert credits:', insertError);
+                        } else {
+                            // Log welcome transaction
+                            await supabaseAdmin.from('transactions').insert({
+                                user_id: user.id,
+                                amount: 20,
+                                type: 'credit',
+                                description: 'Welcome Bonus'
+                            });
+                        }
+                    }
                 }
             }
 
