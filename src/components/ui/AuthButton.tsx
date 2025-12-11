@@ -21,7 +21,7 @@ export default function AuthButton() {
     const [magicLinkSent, setMagicLinkSent] = useState(false);
 
     const fetchCredits = async (userId: string) => {
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('user_credits')
             .select('balance')
             .eq('user_id', userId)
@@ -29,6 +29,29 @@ export default function AuthButton() {
 
         if (data) {
             setCredits(data.balance);
+        } else if (error) {
+            console.error('[AuthButton] Error fetching credits:', error);
+            // Attempt recovery if error suggests missing row (PGRST116 or 406)
+            if (error.code === 'PGRST116' || error.message?.includes('406') || error.message?.includes('JSON')) {
+                console.log('[AuthButton] Attempting recovery...');
+                try {
+                    const res = await fetch('/api/auth/recover-credits', { method: 'POST' });
+                    if (res.ok) {
+                        const recoveryData = await res.json();
+                        if (recoveryData.recovered || recoveryData.success) {
+                            // Retry fetch once
+                            const { data: retryData } = await supabase
+                                .from('user_credits')
+                                .select('balance')
+                                .eq('user_id', userId)
+                                .single();
+                            if (retryData) setCredits(retryData.balance);
+                        }
+                    }
+                } catch (err) {
+                    console.error('[AuthButton] Recovery failed:', err);
+                }
+            }
         }
     };
 
