@@ -27,7 +27,7 @@ export default function Hero() {
         Analytics.clickTryItFree('hero_try_for_free');
         await supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: `${window.location.origin}/auth/callback?next=/create` },
+            options: { redirectTo: `${window.location.origin}/auth/callback` },
         });
     };
 
