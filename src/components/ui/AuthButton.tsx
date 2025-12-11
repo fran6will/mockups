@@ -142,7 +142,7 @@ export default function AuthButton() {
         return (
             <div className="flex items-center gap-4">
                 {credits !== null && (
-                    <div className="hidden sm:flex items-center gap-1.5 bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">
+                    <div className="flex items-center gap-1.5 bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200">
                         <Coins size={14} />
                         <span>{credits}</span>
                     </div>

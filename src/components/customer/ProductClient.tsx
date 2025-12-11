@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabase/client';
 import { getOptimizedSupabaseUrl } from '@/lib/utils/supabase-image';
 import ImageCompositor from '@/components/customer/ImageCompositor';
 import { Zap, Ban, Star } from 'lucide-react';
-import Banner from '@/components/ui/Banner';
 import Header from '@/components/ui/Header';
 import { useAccess } from '@/hooks/use-access';
 import FavoriteButton from '@/components/ui/FavoriteButton';
@@ -49,7 +48,7 @@ export default function ProductClient({ product: initialProduct, slug }: Product
         <div className="min-h-screen font-sans text-ink selection:bg-teal/20 bg-fixed" style={{
             backgroundImage: 'radial-gradient(circle at 50% -20%, rgba(42, 127, 127, 0.15) 0%, var(--color-cream) 60%)'
         }}>
-            <Banner />
+
             <Header />
 
             <main className="max-w-7xl mx-auto p-4 lg:p-8 pt-8">
