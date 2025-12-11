@@ -32,7 +32,13 @@ export default function AuthButton() {
             if (result.balance !== undefined) {
                 setCredits(result.balance);
             } else {
-                console.error('[AuthButton] Error fetching credits:', result.error);
+                // If explicitly not found (new user?) or other error
+                if (result.notFound || result.error === 'No credits found') {
+                    console.log('[AuthButton] Credits not found (new user?). Balance 0.');
+                    // Optional: setCredits(0); // If you want to show 0 instead of null
+                } else {
+                    console.error('[AuthButton] Error fetching credits:', result.error);
+                }
 
                 // Only attempt recovery if we haven't already
                 if (!hasAttemptedRecovery.current) {

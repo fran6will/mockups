@@ -307,24 +307,27 @@ export async function fetchUserCredits(authUserId: string) {
             .from('user_credits')
             .select('balance')
             .eq('auth_user_id', authUserId)
-            .single();
+            .maybeSingle();
 
         if (data) {
             return { balance: data.balance };
         } else if (error) {
             console.error('[fetchUserCredits] Database Error:', error);
-            // Fallback: try by user_id just in case
-            const { data: retryData } = await supabaseAdmin
-                .from('user_credits')
-                .select('balance')
-                .eq('user_id', authUserId)
-                .single();
-
-            if (retryData) return { balance: retryData.balance };
-
             return { error: error.message };
         }
-        return { error: 'No data found' };
+
+        // Fallback: try by user_id just in case (legacy users)
+        const { data: retryData } = await supabaseAdmin
+            .from('user_credits')
+            .select('balance')
+            .eq('user_id', authUserId)
+            .maybeSingle();
+
+        if (retryData) return { balance: retryData.balance };
+
+        // If genuinely no row, return null balance (or 0 if we want to default)
+        // Returning undefined balance signals "not found" to the frontend but without a crash
+        return { error: 'No credits found', notFound: true };
     } catch (e: any) {
         console.error('[fetchUserCredits] Exception:', e);
         return { error: e.message };
