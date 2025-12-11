@@ -27,7 +27,7 @@ export default function AuthButton() {
         const { data, error } = await supabase
             .from('user_credits')
             .select('balance')
-            .eq('user_id', userId)
+            .eq('auth_user_id', userId)
             .single();
 
         if (data) {
@@ -49,7 +49,7 @@ export default function AuthButton() {
                         const { data: retryData } = await supabase
                             .from('user_credits')
                             .select('balance')
-                            .eq('user_id', userId)
+                            .eq('auth_user_id', userId)
                             .single();
                         if (retryData) setCredits(retryData.balance);
                     }
