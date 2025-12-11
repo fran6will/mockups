@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { LogIn, LogOut, User, LayoutDashboard, Coins, Mail, X, Check, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -20,7 +20,10 @@ export default function AuthButton() {
     const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
     const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-    const fetchCredits = async (userId: string) => {
+    // Prevent infinite recovery loops
+    const hasAttemptedRecovery = useRef(false);
+
+    const fetchCredits = async (userId: string, retry = false) => {
         const { data, error } = await supabase
             .from('user_credits')
             .select('balance')
@@ -31,22 +34,24 @@ export default function AuthButton() {
             setCredits(data.balance);
         } else if (error) {
             console.error('[AuthButton] Error fetching credits:', error);
+
             // Attempt recovery if error suggests missing row (PGRST116 or 406)
-            if (error.code === 'PGRST116' || error.message?.includes('406') || error.message?.includes('JSON')) {
+            // But ONLY if we haven't tried already in this session
+            if (!hasAttemptedRecovery.current && (error.code === 'PGRST116' || error.message?.includes('406') || error.message?.includes('JSON'))) {
                 console.log('[AuthButton] Attempting recovery...');
+                hasAttemptedRecovery.current = true; // Mark as attempted
+
                 try {
                     const res = await fetch('/api/auth/recover-credits', { method: 'POST' });
                     if (res.ok) {
                         const recoveryData = await res.json();
-                        if (recoveryData.recovered || recoveryData.success) {
-                            // Retry fetch once
-                            const { data: retryData } = await supabase
-                                .from('user_credits')
-                                .select('balance')
-                                .eq('user_id', userId)
-                                .single();
-                            if (retryData) setCredits(retryData.balance);
-                        }
+                        // Retry check if recovered or simply ensuring it exists
+                        const { data: retryData } = await supabase
+                            .from('user_credits')
+                            .select('balance')
+                            .eq('user_id', userId)
+                            .single();
+                        if (retryData) setCredits(retryData.balance);
                     }
                 } catch (err) {
                     console.error('[AuthButton] Recovery failed:', err);
@@ -76,8 +81,9 @@ export default function AuthButton() {
             const currentUser = session?.user || null;
             setUser(currentUser);
             if (currentUser) {
+                hasAttemptedRecovery.current = false; // Reset on new login
                 fetchCredits(currentUser.id);
-                setIsOpen(false); // Close modal on login
+                setIsOpen(false);
             } else {
                 setCredits(null);
             }
