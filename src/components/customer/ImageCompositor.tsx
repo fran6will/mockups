@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, CheckCircle, Loader2, Sparkles, Download, Image as ImageIcon, Lock, ArrowRight, Coins, Mail, Layers, Trash2, Plus, X, Info, Video, Play, Film, Share2 } from 'lucide-react';
 import Image from 'next/image';
@@ -63,6 +63,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     const searchParams = useSearchParams();
     const [showAccessCodeInput, setShowAccessCodeInput] = useState(searchParams.get('unlock') === 'true' || searchParams.get('code') !== null);
     const [showUnlockModal, setShowUnlockModal] = useState(false);
+    const previewRef = useRef<HTMLDivElement>(null);
 
     // Variant State
     const [variants, setVariants] = useState<any[]>([]);
@@ -418,6 +419,11 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
         setIsGenerating(true);
         setError(null);
 
+        // Auto-scroll to preview on mobile
+        if (previewRef.current) {
+            previewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         // Track generate event
         Analytics.generateMockup(productSlug, imageSize);
 
@@ -635,7 +641,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             />
 
             {/* Top Section: Canvas / Preview */}
-            <div className="max-w-2xl mx-auto w-full">
+            <div className="max-w-2xl mx-auto w-full" ref={previewRef}>
                 <WatermarkOverlay
                     {...getRootProps()}
                     className="glass p-4 rounded-[2.5rem] border border-white/40 shadow-2xl bg-white/30 aspect-square flex items-center justify-center relative overflow-hidden group"
