@@ -150,6 +150,7 @@ export default function CustomMockupContent() {
                     title,
                     aspectRatio,
                     imageSize,
+                    mode, // PASS MODE
                     styleReferences: styleRefsBase64
                 })
             });
@@ -255,15 +256,25 @@ export default function CustomMockupContent() {
             {/* How it Works */}
             <div className="grid md:grid-cols-3 gap-6 mb-16">
                 {(mode === 'template' ? [
-                    { icon: UploadCloud, title: "1. Upload Blank", desc: "Upload a clean photo of your blank product (e.g. from Printify)." },
-                    { icon: Sparkles, title: "2. Describe Scene", desc: "Tell the AI where to place it. 'On a marble table', 'In a cozy coffee shop'." },
-                    { icon: LayoutTemplate, title: "3. Get Template", desc: "We'll generate a reusable template you can use for unlimited mockups." }
+                    { icon: UploadCloud, title: "1. Upload Blank", desc: "Upload a clean photo of your blank product.", image: "/steps/template_01.webp" },
+                    { icon: Sparkles, title: "2. Describe Scene", desc: "Tell the AI where to place it.", image: "/steps/template_02.webp" },
+                    { icon: LayoutTemplate, title: "3. Get Template", desc: "We'll generate a reusable template.", image: "/steps/template_03.webp" }
                 ] : [
-                    { icon: UploadCloud, title: "1. Upload Product", desc: "Upload your existing product photo (with or without design)." },
-                    { icon: Wand2, title: "2. Describe Vibe", desc: "Describe the new environment you want to see your product in." },
-                    { icon: Download, title: "3. Download", desc: "Get a high-quality marketing image ready for social media." }
+                    { icon: UploadCloud, title: "1. Upload Product", desc: "Upload your existing product photo.", image: "/steps/remix-step-1.webp" },
+                    { icon: Wand2, title: "2. Describe Vibe", desc: "Describe the new environment.", image: "/steps/remix-step-2.webp" },
+                    { icon: Download, title: "3. Download", desc: "Get a high-quality marketing image.", image: "/steps/remix-step-3.webp" }
                 ]).map((step, i) => (
                     <div key={i} className="glass p-6 rounded-2xl border border-white/40 shadow-lg shadow-teal/5 relative overflow-hidden group hover:-translate-y-1 transition-transform">
+                        {/* Step Image */}
+                        <div className="aspect-video w-full bg-gray-100 rounded-xl mb-4 relative overflow-hidden">
+                            <Image
+                                src={step.image}
+                                alt={step.title}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                unoptimized // Local assets
+                            />
+                        </div>
                         <div className={`absolute top-0 right-0 p-4 opacity-10 font-black text-6xl select-none ${mode === 'template' ? 'text-teal' : 'text-purple-600'}`}>
                             {i + 1}
                         </div>

@@ -6,6 +6,35 @@ const apiKey = process.env.GEMINI_API_KEY;
 // Using Copié-Collé (Gemini 3 Pro Image)
 const modelId = 'gemini-3-pro-image-preview';
 
+/**
+ * Helper to fetch and convert URL or Data URL to a Generative AI Part.
+ * Supports both remote URLs (fetch) and Data URLs (base64).
+ */
+export const getImagePart = async (url: string) => {
+    // 1. Handle Data URLs (e.g. "data:image/png;base64,...")
+    if (url.startsWith('data:')) {
+        const [mimeTypePart, base64] = url.split(';base64,');
+        return {
+            inlineData: {
+                data: base64,
+                mimeType: mimeTypePart.replace('data:', '')
+            }
+        };
+    }
+
+    // 2. Handle Remote URLs
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = response.headers.get('content-type') || 'image/png';
+    return {
+        inlineData: {
+            data: base64,
+            mimeType
+        }
+    };
+};
+
 export const generateMockup = async (
     baseImageUrl: string,
     logoUrl: string,
@@ -33,24 +62,10 @@ export const generateMockup = async (
             } as any
         });
 
-        // Helper to fetch and convert URL to Base64
-        const urlToPart = async (url: string) => {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            const base64 = Buffer.from(arrayBuffer).toString('base64');
-            const mimeType = response.headers.get('content-type') || 'image/png';
-            return {
-                inlineData: {
-                    data: base64,
-                    mimeType
-                }
-            };
-        };
-
         console.log("Fetching image assets...");
         const [baseImagePart, logoImagePart] = await Promise.all([
-            urlToPart(baseImageUrl),
-            urlToPart(logoUrl)
+            getImagePart(baseImageUrl),
+            getImagePart(logoUrl)
         ]);
 
         // 1. Prepare Inputs
@@ -114,11 +129,8 @@ export const analyzeMockupImage = async (imageUrl: string, productType: 'mockup'
         // Use Gemini 3 Pro Preview as requested
         const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
 
-        // Fetch image and convert to base64
-        const response = await fetch(imageUrl);
-        const arrayBuffer = await response.arrayBuffer();
-        const base64 = Buffer.from(arrayBuffer).toString('base64');
-        const mimeType = response.headers.get('content-type') || 'image/png';
+        // Fetch image part using shared helper
+        const imagePart = await getImagePart(imageUrl);
 
         let prompt = '';
 
@@ -157,12 +169,7 @@ export const analyzeMockupImage = async (imageUrl: string, productType: 'mockup'
 
         const result = await model.generateContent([
             prompt,
-            {
-                inlineData: {
-                    data: base64,
-                    mimeType
-                }
-            }
+            imagePart // Pass the part object directly
         ]);
 
         const text = result.response.text();
@@ -204,34 +211,10 @@ export const generateScene = async (
             } as any
         });
 
-        // Helper to fetch and convert URL to Base64 (reused from generateProductPlacement logic if needed, or defined here)
-        const urlToPart = async (url: string) => {
-            // Check if it's already a data URL
-            if (url.startsWith('data:')) {
-                const [mimeType, base64] = url.split(';base64,');
-                return {
-                    inlineData: {
-                        data: base64,
-                        mimeType: mimeType.replace('data:', '')
-                    }
-                };
-            }
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            const base64 = Buffer.from(arrayBuffer).toString('base64');
-            const mimeType = response.headers.get('content-type') || 'image/png';
-            return {
-                inlineData: {
-                    data: base64,
-                    mimeType
-                }
-            };
-        };
-
-        const baseImagePart = await urlToPart(baseImageUrl);
+        const baseImagePart = await getImagePart(baseImageUrl);
 
         const styleParts = await Promise.all(
-            styleReferenceUrls.map(url => urlToPart(url))
+            styleReferenceUrls.map(url => getImagePart(url))
         );
 
         // Construct Prompt
@@ -302,31 +285,17 @@ export const generateProductPlacement = async (
             } as any
         });
 
-        // Helper to fetch and convert URL to Base64
-        const urlToPart = async (url: string) => {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            const base64 = Buffer.from(arrayBuffer).toString('base64');
-            const mimeType = response.headers.get('content-type') || 'image/png';
-            return {
-                inlineData: {
-                    data: base64,
-                    mimeType
-                }
-            };
-        };
-
         console.log("Fetching image assets...");
 
         // Fetch Scene and Main Product
         const [sceneImagePart, mainProductPart] = await Promise.all([
-            urlToPart(sceneImageUrl),
-            urlToPart(mainProductImageUrl)
+            getImagePart(sceneImageUrl),
+            getImagePart(mainProductImageUrl)
         ]);
 
         // Fetch Reference Images
         const referenceParts = await Promise.all(
-            referenceProductImageUrls.map(url => urlToPart(url))
+            referenceProductImageUrls.map(url => getImagePart(url))
         );
 
         // Construct Prompt for Product Placement
@@ -463,29 +432,6 @@ export const generateMockupMultiTurn = async (
             } as any
         });
 
-        // Helper to convert URL/DataURL to Part
-        const urlToPart = async (url: string) => {
-            if (url.startsWith('data:')) {
-                const [mimeTypePart, base64] = url.split(';base64,');
-                return {
-                    inlineData: {
-                        data: base64,
-                        mimeType: mimeTypePart.replace('data:', '')
-                    }
-                };
-            }
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            const base64 = Buffer.from(arrayBuffer).toString('base64');
-            const mimeType = response.headers.get('content-type') || 'image/png';
-            return {
-                inlineData: {
-                    data: base64,
-                    mimeType
-                }
-            };
-        };
-
         // Sanitize history to remove inlineData from model responses
         // This prevents the [GoogleGenerativeAI Error]: Content with role 'model' can't contain 'inlineData' part
         const sanitizedHistory = history?.map(item => {
@@ -514,7 +460,7 @@ export const generateMockupMultiTurn = async (
 
         // If this is a refinement (we have a previous result), use different prompting
         if (previousResultUrl) {
-            const previousPart = await urlToPart(previousResultUrl);
+            const previousPart = await getImagePart(previousResultUrl);
             messageParts.push(
                 `This is my previous generated mockup. Please refine it based on this instruction: ${instruction}. Keep the overall composition but apply the requested changes. Generate a new image.`,
                 previousPart
@@ -525,8 +471,8 @@ export const generateMockupMultiTurn = async (
                 throw new Error("Base image and Design image are required for first generation");
             }
 
-            const basePart = await urlToPart(baseImageUrl);
-            const designPart = await urlToPart(designImageUrl);
+            const basePart = await getImagePart(baseImageUrl);
+            const designPart = await getImagePart(designImageUrl);
 
             messageParts.push(
                 `Task: Create a photorealistic product mockup.
@@ -581,5 +527,57 @@ export const generateMockupMultiTurn = async (
             error: error.message || "Unknown error",
             history: history || []
         };
+    }
+};
+
+/**
+ * Brainstorms multiple unique SEO angles/strategies based on a seed keyword.
+ * Used for Programmatic SEO (pSEO) batch generation.
+ */
+export const generateSeoStrategy = async (seedKeyword: string, count: number = 5, guidance?: string) => {
+    if (!apiKey) {
+        throw new Error("Missing GEMINI_API_KEY in environment variables.");
+    }
+
+    try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+
+        const prompt = `
+            You are an expert SEO Strategist and Creative Director.
+            Target Product/Topic: "${seedKeyword}".
+            ${guidance ? `\nUSER GUIDANCE / CREATIVE DIRECTION: "${guidance}"\n(Strictly follow this direction for all generated angles)\n` : ''}
+            
+            Task: Generate ${count} DISTINCT and UNIQUE visual/SEO angles for this product to target different long-tail search intents.
+            Avoid generic repetition. Think about:
+            1. Different Environments (e.g., Urban, Nature, Studio, Home)
+            2. Different Visual Styles (e.g., Minimalist, Vintage, High-Contrast, Pastel)
+            3. Different Target Audiences (e.g., Students, Professionals, Hikers)
+            
+            Return ONLY a JSON array with ${count} objects. Each object must have:
+            - title: A catchy, SEO-friendly page title (e.g., "Vintage Aesthetic ${seedKeyword} Mockup").
+            - keyword: The main focus keyword for this angle (e.g., "vintage ${seedKeyword}").
+            - image_prompt: A precise instruction for an AI image generator to place the design on the product in this specific context/style. (e.g., "Place the design on the hoodie worn by a model in a cozy coffee shop setting, soft warm lighting.").
+            
+            Example Format:
+            [
+              { "title": "...", "keyword": "...", "image_prompt": "..." },
+              ...
+            ]
+            
+            Do not include markdown formatting like \`\`\`json. Just the raw JSON string.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+
+        // Clean up markdown if present
+        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        return JSON.parse(cleanText);
+
+    } catch (error: any) {
+        console.error("Gemini Strategy Generation Error:", error);
+        throw new Error("Failed to generate SEO strategy: " + error.message);
     }
 };

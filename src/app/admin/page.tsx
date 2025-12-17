@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { Upload, Save, Loader2, ShieldCheck, Edit, Trash2, X, Plus, UploadCloud, CheckCircle, Image as ImageIcon, Layers, Sparkles, Users, Clock } from 'lucide-react';
+import { Upload, Save, Loader2, ShieldCheck, Edit, Trash2, X, Plus, UploadCloud, CheckCircle, Image as ImageIcon, Layers, Sparkles, Users, Clock, Eye, EyeOff, Globe } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import Header from '@/components/ui/Header';
 import Link from 'next/link';
 
 import { useRouter } from 'next/navigation';
-import { analyzeImageAction } from '../actions';
+import { analyzeImageAction, fetchAdminProducts } from '../actions';
 import EtsyLinksManager from '@/components/admin/EtsyLinksManager';
 
 const CATEGORIES = [
@@ -30,6 +30,7 @@ export default function AdminPage() {
     const [description, setDescription] = useState('');
     const [isFree, setIsFree] = useState(false);
     const [isVideoProduct, setIsVideoProduct] = useState(false);
+    const [isPublic, setIsPublic] = useState(true);
     const [slug, setSlug] = useState('');
     const [category, setCategory] = useState('');
     const [password, setPassword] = useState('');
@@ -66,15 +67,17 @@ export default function AdminPage() {
             }
             fetchProducts();
         };
+        // Refresh products every few seconds or similar if needed, but manual refresh is fine
         checkAdmin();
     }, []);
 
     const fetchProducts = async () => {
-        const { data } = await supabase
-            .from('products')
-            .select('*')
-            .order('created_at', { ascending: false });
-        setProducts(data || []);
+        const result = await fetchAdminProducts();
+        if (result.success && result.data) {
+            setProducts(result.data);
+        } else {
+            console.error("Failed to fetch products:", result.error);
+        }
     };
 
     const handleEdit = (product: any) => {
@@ -84,6 +87,7 @@ export default function AdminPage() {
         setDescription(product.description || '');
         setIsFree(product.is_free || false);
         setIsVideoProduct(product.is_video_product || false);
+        setIsPublic(product.is_public !== false); // Default true unless false
         setSlug(product.slug);
         setCategory(product.category || '');
         setPassword(product.password_hash);
@@ -170,6 +174,7 @@ export default function AdminPage() {
         setDescription('');
         setIsFree(false);
         setIsVideoProduct(false);
+        setIsPublic(true);
         setSlug('');
         setCategory('');
         setPassword('');
@@ -314,6 +319,7 @@ export default function AdminPage() {
             formData.append('tags', tags);
             formData.append('is_free', String(isFree));
             formData.append('is_video_product', String(isVideoProduct));
+            formData.append('is_public', String(isPublic));
 
             if (publicUrl) {
                 formData.append('baseImageUrl', publicUrl);
@@ -368,6 +374,11 @@ export default function AdminPage() {
                         </h1>
                     </div>
                     <div className="flex gap-3">
+                        <Link href="/admin/batch" className="bg-white text-ink font-bold px-6 py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2 border border-ink/5 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-teal/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Sparkles size={20} className="text-teal" />
+                            Batch Gen (SEO)
+                        </Link>
                         <Link href="/admin/generations" className="bg-white text-ink font-bold px-6 py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2 border border-ink/5">
                             <Clock size={20} className="text-teal" />
                             Generations Log
@@ -400,6 +411,7 @@ export default function AdminPage() {
                             </div>
 
                             <div className="space-y-4">
+                                {/* Title Input */}
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Title</label>
                                     <input
@@ -410,6 +422,7 @@ export default function AdminPage() {
                                         placeholder="Product Title"
                                     />
                                 </div>
+                                {/* Description Input */}
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Description</label>
                                     <textarea
@@ -419,6 +432,7 @@ export default function AdminPage() {
                                         placeholder="Product description for SEO..."
                                     />
                                 </div>
+                                {/* Slug Input */}
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Slug</label>
                                     <input
@@ -429,6 +443,7 @@ export default function AdminPage() {
                                         placeholder="url-slug"
                                     />
                                 </div>
+                                {/* Category Select */}
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Category</label>
                                     <select
@@ -442,6 +457,7 @@ export default function AdminPage() {
                                         ))}
                                     </select>
                                 </div>
+                                {/* Password Input */}
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Password</label>
                                     <input
@@ -452,6 +468,7 @@ export default function AdminPage() {
                                         placeholder="Secret Code"
                                     />
                                 </div>
+                                {/* Tags Input */}
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Tags</label>
                                     <input
@@ -462,6 +479,7 @@ export default function AdminPage() {
                                         placeholder="comma, separated, tags"
                                     />
                                 </div>
+                                {/* Custom Prompt Input */}
                                 <div>
                                     <label className="block text-xs font-bold text-ink/70 mb-1 uppercase tracking-wider">Custom Prompt</label>
                                     <textarea
@@ -470,6 +488,30 @@ export default function AdminPage() {
                                         className="w-full bg-white/50 border border-white/60 rounded-xl p-3 text-sm text-ink focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all h-20 resize-none"
                                         placeholder="AI Instructions..."
                                     />
+                                </div>
+
+                                {/* Is Public Checkbox */}
+                                <div className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${isPublic ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-100 border-gray-200'}`}>
+                                    <input
+                                        type="checkbox"
+                                        id="isPublic"
+                                        checked={isPublic}
+                                        onChange={(e) => setIsPublic(e.target.checked)}
+                                        className="w-5 h-5 accent-emerald-500 rounded cursor-pointer"
+                                    />
+                                    <label htmlFor="isPublic" className="font-bold text-ink text-sm cursor-pointer select-none flex items-center gap-2 w-full">
+                                        {isPublic ? (
+                                            <>
+                                                <Globe size={16} className="text-emerald-500" />
+                                                Public (Visible)
+                                            </>
+                                        ) : (
+                                            <>
+                                                <EyeOff size={16} className="text-gray-400" />
+                                                Draft (Hidden)
+                                            </>
+                                        )}
+                                    </label>
                                 </div>
 
                                 {/* Is Free Checkbox */}
@@ -698,7 +740,14 @@ export default function AdminPage() {
                                                     </div>
                                                 </td>
                                                 <td className="py-3 font-bold text-ink">
-                                                    <div>{product.title}</div>
+                                                    <div className="flex items-center gap-2">
+                                                        {product.title}
+                                                        {product.is_public === false && (
+                                                            <span className="text-[10px] bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded font-bold flex items-center gap-1">
+                                                                <EyeOff size={10} /> Draft
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     {product.is_free && (
                                                         <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">FREE</span>
                                                     )}

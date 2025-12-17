@@ -6,6 +6,7 @@ import { generateScene } from '@/lib/vertex/client';
 export const maxDuration = 60; // Allow longer timeout for AI generation
 
 export async function POST(request: Request) {
+    const startTime = Date.now();
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -14,7 +15,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { image, imageUrl, prompt, title, styleReferences, aspectRatio, imageSize = '1K' } = await request.json();
+        const { image, imageUrl, prompt, title, styleReferences, aspectRatio, imageSize = '1K', mode = 'template' } = await request.json();
+
+        // Get IP Address for logging (if in remix mode)
+        const forwardedFor = request.headers.get('x-forwarded-for');
+        const userIp = forwardedFor ? forwardedFor.split(',')[0] : '127.0.0.1';
 
         if ((!image && !imageUrl) || !prompt || !title) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -76,16 +81,7 @@ export async function POST(request: Request) {
         }
 
         // 2. Generate Scene using AI
-        // The image comes as a Data URL (Base64)
-        // Note: generateScene might need to be updated to accept imageSize if it doesn't already, 
-        // but based on previous context generateScene uses generateProductPlacement which accepts imageSize.
-        // Let's verify generateScene signature or just pass it if it supports it.
-        // Looking at previous edits, generateScene calls the vertex client. 
-        // I should check if generateScene accepts imageSize. 
-        // Wait, I didn't check generateScene signature in the planning phase.
-        // Let's assume I need to update generateScene too if it doesn't support it.
-        // But for now, let's pass it.
-
+        // The image comes as a Data URL (Base64) or URL
         const sceneResult = await generateScene(imageUrl || image, prompt, styleReferences || [], aspectRatio || '1:1', imageSize);
 
         if (!sceneResult.success || !sceneResult.mockUrl) {
@@ -106,17 +102,20 @@ export async function POST(request: Request) {
                     user_id: user.id,
                     amount: -creditCost,
                     type: 'debit',
-                    description: `Custom Scene Generation (${imageSize})`
+                    description: `Custom ${mode === 'template' ? 'Scene' : 'Remix'} Generation (${imageSize})`
                 }]);
         }
 
-        // 3. Upload Generated Scene to Storage (This becomes the Product Base Image)
+        // 3. Upload Generated Scene to Storage (This becomes the Product Base Image or Generation Image)
         const base64Data = sceneResult.mockUrl.split(',')[1];
         const buffer = Buffer.from(base64Data, 'base64');
         const fileName = `custom-${user.id}-${Date.now()}.png`;
 
+        // Choose bucket based on mode
+        const bucketName = mode === 'remix' ? 'generated-mockups' : 'mockup-bases';
+
         const { error: uploadError } = await supabaseAdmin.storage
-            .from('mockup-bases')
+            .from(bucketName)
             .upload(fileName, buffer, {
                 contentType: 'image/png',
                 upsert: false
@@ -127,37 +126,69 @@ export async function POST(request: Request) {
         }
 
         const { data: urlData } = supabaseAdmin.storage
-            .from('mockup-bases')
+            .from(bucketName)
             .getPublicUrl(fileName);
 
         const publicUrl = urlData.publicUrl;
 
-        // 4. Create Product in Database
-        // Generate a slug from title
-        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(7);
+        // 4. Handle Result based on Mode
+        if (mode === 'remix') {
+            // REMIX MODE: Insert into Generations table
+            await supabaseAdmin.from('generations').insert({
+                product_id: null, // No specific product template used
+                status: 'success',
+                duration_ms: Date.now() - startTime,
+                meta: {
+                    aspect_ratio: aspectRatio,
+                    user_email: user.email,
+                    image_size: imageSize,
+                    prompt: prompt,
+                    title: title,
+                    mode: 'remix'
+                },
+                user_id: user.id,
+                image_url: publicUrl,
+                ip_address: userIp
+            });
 
-        const { data: product, error: dbError } = await supabaseAdmin
-            .from('products')
-            .insert({
+            // Return a "fake" product structure so the frontend can display it without changes
+            const fakeProduct = {
+                id: 'generated-' + Date.now(),
                 title: title,
-                slug: slug,
+                slug: null, // Results in no "Use Template" button
                 base_image_url: publicUrl,
-                password_hash: 'custom', // Placeholder, not used for custom templates
-                custom_prompt: 'Place the design realistically on the product.', // Default prompt for usage
-                user_id: user.id, // Admin ID (we use user.id here as the "owner")
-                created_by: user.id,
-                status: 'pending',
-                is_public: false,
-                tags: ['custom']
-            })
-            .select()
-            .single();
+                status: 'generated'
+            };
 
-        if (dbError) {
-            throw new Error('Failed to save product: ' + dbError.message);
+            return NextResponse.json({ success: true, product: fakeProduct });
+
+        } else {
+            // TEMPLATE MODE: Create Product in Database
+            const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(7);
+
+            const { data: product, error: dbError } = await supabaseAdmin
+                .from('products')
+                .insert({
+                    title: title,
+                    slug: slug,
+                    base_image_url: publicUrl,
+                    password_hash: 'custom',
+                    custom_prompt: 'Place the design realistically on the product.',
+                    user_id: user.id,
+                    created_by: user.id,
+                    status: 'pending',
+                    is_public: false,
+                    tags: ['custom']
+                })
+                .select()
+                .single();
+
+            if (dbError) {
+                throw new Error('Failed to save product: ' + dbError.message);
+            }
+
+            return NextResponse.json({ success: true, product });
         }
-
-        return NextResponse.json({ success: true, product });
 
     } catch (error: any) {
         console.error('Custom Create Error:', error);

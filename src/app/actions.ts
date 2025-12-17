@@ -16,6 +16,10 @@ export async function createProduct(formData: FormData) {
     const isFree = formData.get('is_free') === 'true';
     const isVideoProduct = formData.get('is_video_product') === 'true';
 
+    // Public/Draft Status
+    const isPublicString = formData.get('is_public');
+    const isPublic = isPublicString !== 'false'; // Default to true unless explicitly false
+
     const tags = tagsString ? tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
 
     if (!title || !slug || !password || !baseImageUrl) {
@@ -38,7 +42,7 @@ export async function createProduct(formData: FormData) {
             category: category || null,
             is_free: isFree,
             is_video_product: isVideoProduct,
-            is_public: true
+            is_public: isPublic
         })
         .select()
         .single();
@@ -65,6 +69,9 @@ export async function updateProduct(formData: FormData) {
     const isFree = formData.get('is_free') === 'true';
     const isVideoProduct = formData.get('is_video_product') === 'true';
 
+    const isPublicString = formData.get('is_public');
+    const isPublic = isPublicString !== 'false';
+
     const tags = tagsString ? tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
 
     if (!id || !title || !slug || !password) {
@@ -81,7 +88,8 @@ export async function updateProduct(formData: FormData) {
         tags: tags,
         category: category || null,
         is_free: isFree,
-        is_video_product: isVideoProduct
+        is_video_product: isVideoProduct,
+        is_public: isPublic
     };
 
     if (baseImageUrl) {
@@ -223,7 +231,7 @@ export async function deleteVariant(id: string) {
     return { success: true };
 }
 
-import { analyzeMockupImage } from '@/lib/vertex/client';
+import { analyzeMockupImage, generateSeoStrategy, generateMockup, generateScene } from '@/lib/vertex/client';
 
 export async function analyzeImageAction(imageUrl: string, productType: 'mockup' | 'scene' = 'mockup', productNameHint?: string, keywordsHint?: string) {
     try {
@@ -331,5 +339,135 @@ export async function fetchUserCredits(authUserId: string) {
     } catch (e: any) {
         console.error('[fetchUserCredits] Exception:', e);
         return { error: e.message };
+    }
+}
+
+export async function generatePSeoStrategyAction(seedKeyword: string, guidance?: string) {
+    if (!seedKeyword) return { error: 'Seed keyword is required' };
+
+    try {
+        const strategy = await generateSeoStrategy(seedKeyword, 5, guidance);
+        return { success: true, data: strategy };
+    } catch (error: any) {
+        console.error("Strategy Action Error:", error);
+        return { error: error.message };
+    }
+}
+
+export async function generatePSeoItemAction(params: {
+    angle: any,
+    baseImageUrl: string,
+    logoUrl?: string,
+    seedKeyword: string
+}) {
+    const { angle, baseImageUrl, logoUrl, seedKeyword } = params;
+
+    try {
+        let mockupResult;
+
+        // MODE SWITCH:
+        // 1. If Logo provided -> Generate Mockup (Design ON Product)
+        // 2. If No Logo -> Generate Scene (Product IN Context)
+        if (logoUrl) {
+            console.log("Generating Mockup (Logo provided)");
+            mockupResult = await generateMockup(
+                baseImageUrl,
+                logoUrl,
+                angle.image_prompt
+            );
+        } else {
+            console.log("Generating Scene (No Logo)");
+            mockupResult = await generateScene(
+                baseImageUrl,
+                angle.image_prompt,
+                [] // No style refs for now
+            );
+        }
+
+        if (!mockupResult.success || !mockupResult.mockUrl) {
+            throw new Error(mockupResult.error || "Failed to generate image");
+        }
+
+        // 2. Analyze for final SEO
+        const productType = logoUrl ? 'mockup' : 'scene';
+
+        const analysis = await analyzeMockupImage(
+            mockupResult.mockUrl,
+            productType,
+            angle.title,
+            angle.keyword
+        );
+
+        // NORMALIZE TAGS: Ensure tags is always an array of strings
+        let tagsArray: string[] = [];
+        if (Array.isArray(analysis.tags)) {
+            tagsArray = analysis.tags;
+        } else if (typeof analysis.tags === 'string') {
+            tagsArray = analysis.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
+        }
+
+        // Merge strategy data with analysis data
+        const finalData = {
+            title: angle.title,
+            description: analysis.description,
+            tags: tagsArray,
+            slug: analysis.slug || angle.keyword.replace(/\s+/g, '-').toLowerCase(),
+            custom_prompt: angle.image_prompt,
+            image_url: mockupResult.mockUrl
+        };
+
+        return { success: true, data: finalData };
+
+    } catch (error: any) {
+        console.error("Item Generation Error:", error);
+        return { error: error.message };
+    }
+}
+
+// Helper to save a completed pSEO result as a real product
+export async function savePSeoResultAction(result: any) {
+    if (!result || !result.title || !result.image_url) {
+        return { error: 'Invalid result data' };
+    }
+
+    try {
+        // Use supabaseAdmin to insert directly
+        const { data, error } = await supabaseAdmin
+            .from('products')
+            .insert({
+                title: result.title,
+                slug: result.slug,
+                description: result.description || '',
+                password_hash: 'pseo-generated', // Placeholder, user should update
+                base_image_url: result.image_url, // The generated mockup IS the base image now
+                custom_prompt: result.custom_prompt || '',
+                tags: Array.isArray(result.tags) ? result.tags : [],
+                is_public: false, // Draft mode initially
+                category: 'generated'
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return { success: true, data };
+    } catch (error: any) {
+        console.error("Save pSEO Error:", error);
+        return { error: error.message };
+    }
+}
+
+export async function fetchAdminProducts() {
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return { success: true, data };
+    } catch (error: any) {
+        console.error("Fetch Admin Products Error:", error);
+        return { error: error.message };
     }
 }
