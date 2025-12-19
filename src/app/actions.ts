@@ -20,6 +20,9 @@ export async function createProduct(formData: FormData) {
     const isPublicString = formData.get('is_public');
     const isPublic = isPublicString !== 'false'; // Default to true unless explicitly false
 
+    // Trending Status
+    const isTrending = formData.get('is_trending') === 'true';
+
     const tags = tagsString ? tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
 
     if (!title || !slug || !password || !baseImageUrl) {
@@ -42,7 +45,8 @@ export async function createProduct(formData: FormData) {
             category: category || null,
             is_free: isFree,
             is_video_product: isVideoProduct,
-            is_public: isPublic
+            is_public: isPublic,
+            is_trending: isTrending
         })
         .select()
         .single();
@@ -68,6 +72,7 @@ export async function updateProduct(formData: FormData) {
     const category = formData.get('category') as string;
     const isFree = formData.get('is_free') === 'true';
     const isVideoProduct = formData.get('is_video_product') === 'true';
+    const isTrending = formData.get('is_trending') === 'true';
 
     const isPublicString = formData.get('is_public');
     const isPublic = isPublicString !== 'false';
@@ -89,7 +94,8 @@ export async function updateProduct(formData: FormData) {
         category: category || null,
         is_free: isFree,
         is_video_product: isVideoProduct,
-        is_public: isPublic
+        is_public: isPublic,
+        is_trending: isTrending
     };
 
     if (baseImageUrl) {

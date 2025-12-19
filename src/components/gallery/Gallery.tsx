@@ -44,6 +44,7 @@ export default function Gallery() {
             const { data, error } = await supabase
                 .from('products')
                 .select('id, title, slug, gallery_image_url, base_image_url, category, tags, is_free, is_public, created_by, description')
+                .neq('category', 'Showcase') // Exclude community showcase items from the main gallery
                 .order('created_at', { ascending: false });
 
             if (error) {

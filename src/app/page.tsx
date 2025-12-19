@@ -16,6 +16,8 @@ import Header from '@/components/ui/Header';
 import Banner from '@/components/ui/Banner';
 import Hero from '@/components/landing/Hero';
 import TrendingCarousel from '@/components/landing/TrendingCarousel';
+import LiveActivity from '@/components/landing/LiveActivity';
+import Testimonials from '@/components/landing/Testimonials';
 // import NewArrivals from '@/components/landing/NewArrivals';
 import Features from '@/components/landing/Features';
 import BackgroundDoodles from '@/components/ui/BackgroundDoodles';
@@ -38,6 +40,8 @@ export default function HomePage() {
                 <StatsSection />
 
                 <TrendingCarousel />
+                <LiveActivity />
+                <Testimonials />
                 {/* <NewArrivals /> */}
                 <Features />
                 <Gallery />

@@ -31,6 +31,7 @@ export default function AdminPage() {
     const [isFree, setIsFree] = useState(false);
     const [isVideoProduct, setIsVideoProduct] = useState(false);
     const [isPublic, setIsPublic] = useState(true);
+    const [isTrending, setIsTrending] = useState(false);
     const [slug, setSlug] = useState('');
     const [category, setCategory] = useState('');
     const [password, setPassword] = useState('');
@@ -44,6 +45,13 @@ export default function AdminPage() {
     const [variantName, setVariantName] = useState('');
     const [variantImage, setVariantImage] = useState<File | null>(null);
     const [variantLoading, setVariantLoading] = useState(false);
+
+    // Showcase Quick Upload
+    const [showcaseFile, setShowcaseFile] = useState<File | null>(null);
+    const [showcaseTitle, setShowcaseTitle] = useState('');
+    const [showcaseCreator, setShowcaseCreator] = useState('');
+    const [showcaseMode, setShowcaseMode] = useState<'Template' | 'Remixed'>('Template');
+    const [showcaseLoading, setShowcaseLoading] = useState(false);
 
     const [editingProduct, setEditingProduct] = useState<any>(null);
 
@@ -88,6 +96,7 @@ export default function AdminPage() {
         setIsFree(product.is_free || false);
         setIsVideoProduct(product.is_video_product || false);
         setIsPublic(product.is_public !== false); // Default true unless false
+        setIsTrending(product.is_trending || false);
         setSlug(product.slug);
         setCategory(product.category || '');
         setPassword(product.password_hash);
@@ -143,6 +152,69 @@ export default function AdminPage() {
         }
     };
 
+    const handleQuickShowcaseUpload = async () => {
+        if (!showcaseFile || !showcaseTitle || !showcaseCreator) {
+            setMessage('Error: Please fill in all showcase fields');
+            return;
+        }
+        setShowcaseLoading(true);
+        setMessage('');
+
+        try {
+            // 1. Upload Image
+            const fileExt = showcaseFile.name.split('.').pop();
+            const fileName = `showcase-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('mockup-bases')
+                .upload(filePath, showcaseFile);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('mockup-bases')
+                .getPublicUrl(filePath);
+
+            const publicUrl = data.publicUrl;
+
+            // 2. Create Trending Product
+            const slug = `showcase-${Math.random().toString(36).slice(-6)}`;
+            const modeTag = showcaseMode.toLowerCase(); // 'template' or 'remixed'
+
+            const formData = new FormData();
+            formData.append('title', showcaseTitle);
+            formData.append('description', showcaseCreator); // Storing Creator Name in description
+            formData.append('slug', slug);
+            formData.append('category', 'Showcase');
+            formData.append('password', 'showcase'); // Dummy
+            formData.append('customPrompt', '');
+            formData.append('tags', `showcase,community,${modeTag}`);
+            formData.append('is_free', 'false');
+            formData.append('is_video_product', 'false');
+            formData.append('is_public', 'true');
+            formData.append('is_trending', 'true'); // Key flag
+            formData.append('baseImageUrl', publicUrl);
+
+            const { createProduct } = await import('../actions');
+            const result = await createProduct(formData);
+
+            if (result.error) throw new Error(result.error);
+
+            setMessage(`Success: Added "${showcaseTitle}" to Showcase!`);
+            setShowcaseFile(null);
+            setShowcaseTitle('');
+            setShowcaseCreator('');
+            fetchProducts();
+
+        } catch (error: any) {
+            console.error("Showcase Upload Error:", error);
+            setMessage('Error: ' + error.message);
+        } finally {
+            setShowcaseLoading(false);
+        }
+    };
+
     const handleDeleteVariant = async (id: string) => {
         if (!confirm('Delete variant?')) return;
         const { deleteVariant } = await import('../actions');
@@ -175,6 +247,7 @@ export default function AdminPage() {
         setIsFree(false);
         setIsVideoProduct(false);
         setIsPublic(true);
+        setIsTrending(false);
         setSlug('');
         setCategory('');
         setPassword('');
@@ -320,6 +393,7 @@ export default function AdminPage() {
             formData.append('is_free', String(isFree));
             formData.append('is_video_product', String(isVideoProduct));
             formData.append('is_public', String(isPublic));
+            formData.append('is_trending', String(isTrending));
 
             if (publicUrl) {
                 formData.append('baseImageUrl', publicUrl);
@@ -395,6 +469,81 @@ export default function AdminPage() {
                 </header>
 
                 <div className="grid lg:grid-cols-3 gap-8">
+                    {/* Quick Showcase Upload */}
+                    <div className="lg:col-span-3">
+                        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-3xl p-6 border border-orange-100 flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-white rounded-2xl shadow-sm text-orange-500">
+                                    <Sparkles size={24} className="fill-current" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-ink text-lg">Quick Add to Showcase</h3>
+                                    <p className="text-ink/60 text-sm">Upload an image here to instantly add it to the Community Carousel.</p>
+                                </div>
+                            </div>
+                            <div className="flex flex-col md:flex-row items-center gap-6 w-full">
+                                <div className="flex-1 space-y-3 w-full">
+                                    <div className="flex gap-3">
+                                        <input
+                                            type="text"
+                                            placeholder="Design Title (e.g. Modern Tee)"
+                                            value={showcaseTitle}
+                                            onChange={(e) => setShowcaseTitle(e.target.value)}
+                                            className="flex-1 bg-white border border-orange-200 rounded-xl px-4 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-orange-200"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Creator Name"
+                                            value={showcaseCreator}
+                                            onChange={(e) => setShowcaseCreator(e.target.value)}
+                                            className="flex-1 bg-white border border-orange-200 rounded-xl px-4 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-orange-200"
+                                        />
+                                        <select
+                                            value={showcaseMode}
+                                            onChange={(e) => setShowcaseMode(e.target.value as any)}
+                                            className="bg-white border border-orange-200 rounded-xl px-4 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-orange-200"
+                                        >
+                                            <option value="Template">Template</option>
+                                            <option value="Remixed">Remixed</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="file"
+                                            id="showcaseInput"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={(e) => setShowcaseFile(e.target.files?.[0] || null)}
+                                        />
+                                        {showcaseFile ? (
+                                            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-orange-200 flex-1">
+                                                <span className="font-bold text-sm text-ink truncate">{showcaseFile.name}</span>
+                                                <button onClick={() => setShowcaseFile(null)} className="text-ink/40 hover:text-red-500 ml-auto"><X size={16} /></button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => document.getElementById('showcaseInput')?.click()}
+                                                className="bg-white hover:bg-orange-100 text-ink font-bold px-4 py-2 rounded-xl border border-orange-200 transition-colors text-sm flex-1 text-left text-ink/60"
+                                            >
+                                                Select Image File...
+                                            </button>
+                                        )}
+
+                                        <button
+                                            onClick={handleQuickShowcaseUpload}
+                                            disabled={!showcaseFile || !showcaseTitle || !showcaseCreator || showcaseLoading}
+                                            className="bg-orange-500 text-white font-bold px-6 py-2 rounded-xl shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                                        >
+                                            {showcaseLoading ? <Loader2 size={18} className="animate-spin" /> : <UploadCloud size={18} />}
+                                            Add to Carousel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Form Section */}
                     <div className="lg:col-span-1">
                         <div className="glass p-8 rounded-3xl shadow-2xl sticky top-8">
@@ -539,6 +688,30 @@ export default function AdminPage() {
                                     />
                                     <label htmlFor="isVideoProduct" className="font-bold text-ink text-sm cursor-pointer select-none">
                                         Is Video Product? <span className="text-purple-600 text-xs font-normal">(Grants 25 video credits to Etsy buyers)</span>
+                                    </label>
+                                </div>
+
+                                {/* Is Trending Checkbox */}
+                                <div className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${isTrending ? 'bg-orange-50 border-orange-200' : 'bg-gray-100 border-gray-200'}`}>
+                                    <input
+                                        type="checkbox"
+                                        id="isTrending"
+                                        checked={isTrending}
+                                        onChange={(e) => setIsTrending(e.target.checked)}
+                                        className="w-5 h-5 accent-orange-500 rounded cursor-pointer"
+                                    />
+                                    <label htmlFor="isTrending" className="font-bold text-ink text-sm cursor-pointer select-none flex items-center gap-2 w-full">
+                                        {isTrending ? (
+                                            <>
+                                                <Sparkles size={16} className="text-orange-500 fill-orange-500" />
+                                                Show in Community Showcase
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles size={16} className="text-gray-400" />
+                                                Hide from Showcase
+                                            </>
+                                        )}
                                     </label>
                                 </div>
 
@@ -747,6 +920,9 @@ export default function AdminPage() {
                                                                 <EyeOff size={10} /> Draft
                                                             </span>
                                                         )}
+                                                        {product.is_trending && (
+                                                            <Sparkles size={12} className="text-orange-500 fill-orange-500" />
+                                                        )}
                                                     </div>
                                                     {product.is_free && (
                                                         <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">FREE</span>
@@ -803,6 +979,6 @@ export default function AdminPage() {
                     <EtsyLinksManager products={products} />
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
