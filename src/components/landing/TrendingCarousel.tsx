@@ -76,10 +76,9 @@ export default function TrendingCarousel() {
                         ) : (
                             products.map((product, index) => {
                                 return (
-                                    <Link
+                                    <div
                                         key={`${product.id}-${index}`} // Unique key for duplicates
-                                        href={`/${product.slug}`}
-                                        className="min-w-[280px] md:min-w-[320px] pr-6 group relative transition-all duration-300"
+                                        className="min-w-[280px] md:min-w-[320px] pr-6 group relative transition-all duration-300 cursor-default"
                                     >
                                         <div className="aspect-[4/5] relative overflow-hidden bg-white rounded-2xl shadow-sm hover:shadow-xl hover:shadow-teal/10 border border-ink/5">
                                             <Image
@@ -129,7 +128,7 @@ export default function TrendingCarousel() {
                                                 </div>
                                             </div>
                                         </div>
-                                    </Link>
+                                    </div>
                                 );
                             })
                         )}
