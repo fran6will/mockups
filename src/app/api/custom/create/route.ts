@@ -28,13 +28,27 @@ export async function POST(request: Request) {
         const effectiveUserId = user?.id || (shopHeader ? `shopify:${shopHeader}` : 'shopify-internal');
         const effectiveUserEmail = user?.email || (shopHeader ? `admin@${shopHeader}` : 'shopify@internal.cc');
 
-        const { image, imageUrl, prompt, title, styleReferences, aspectRatio, imageSize = '1K', mode = 'template' } = await request.json();
+        const { image, imageUrl, prompt, title, styleReferences, aspectRatio, imageSize = '1K', mode = 'template', action } = await request.json();
+
+        // QUICK CREDIT CHECK ACTION
+        if (action === "check_credits" && isInternal && shopHeader) {
+            const { data: credits } = await supabaseAdmin
+                .from('user_credits')
+                .select('balance')
+                .eq('user_id', effectiveUserId)
+                .single();
+
+            return NextResponse.json({
+                success: true,
+                remainingCredits: credits ? credits.balance : 10
+            });
+        }
 
         // Get IP Address for logging (if in remix mode)
         const forwardedFor = request.headers.get('x-forwarded-for');
         const userIp = forwardedFor ? forwardedFor.split(',')[0] : '127.0.0.1';
 
-        if ((!image && !imageUrl) || !prompt || !title) {
+        if ((!image && !imageUrl && action !== "check_credits") || !prompt || !title) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
