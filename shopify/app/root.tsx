@@ -21,8 +21,11 @@ export default function App() {
         <Links />
       </head>
       <body>
+        {/* @ts-ignore */}
         <Outlet />
+        {/* @ts-ignore */}
         <ScrollRestoration />
+        {/* @ts-ignore */}
         <Scripts />
       </body>
     </html>
