@@ -136,12 +136,15 @@ export async function POST(request: Request) {
         }
 
         // 2. Generate Scene using AI
-        // The image comes as a Data URL (Base64) or URL
+        console.log(`[API] Calling generateScene for user: ${effectiveUserId}`);
         const sceneResult = await generateScene(imageUrl || image, prompt, styleReferences || [], aspectRatio || '1:1', imageSize);
 
         if (!sceneResult.success || !sceneResult.mockUrl) {
+            console.error(`[API] Scene generation failed: ${sceneResult.error || 'No mockUrl'}`);
             throw new Error(sceneResult.error || 'Failed to generate scene');
         }
+
+        console.log(`[API] Scene generation successful. Length: ${sceneResult.mockUrl.length}`);
 
         // Deduct Credit ONLY if not Pro
         if (!isPro && userCredits) {
@@ -161,13 +164,14 @@ export async function POST(request: Request) {
                 }]);
         }
 
-        // 3. Upload Generated Scene to Storage (This becomes the Product Base Image or Generation Image)
-        const base64Data = sceneResult.mockUrl.split(',')[1];
+        // 3. Upload Generated Scene to Storage
+        const parts = sceneResult.mockUrl.split(',');
+        const base64Data = parts.length > 1 ? parts[1] : parts[0];
         const buffer = Buffer.from(base64Data, 'base64');
-        const fileName = `custom-${effectiveUserId}-${Date.now()}.png`;
+        const fileName = `custom-${effectiveUserId.replace(/:/g, '-')}-${Date.now()}.png`;
 
-        // Choose bucket based on mode
         const bucketName = mode === 'remix' ? 'generated-mockups' : 'mockup-bases';
+        console.log(`[API] Uploading to bucket: ${bucketName}, file: ${fileName}`);
 
         const { error: uploadError } = await supabaseAdmin.storage
             .from(bucketName)
@@ -177,6 +181,7 @@ export async function POST(request: Request) {
             });
 
         if (uploadError) {
+            console.error(`[API] Storage upload failed:`, uploadError);
             throw new Error('Failed to upload generated scene: ' + uploadError.message);
         }
 

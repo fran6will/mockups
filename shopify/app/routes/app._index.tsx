@@ -93,6 +93,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const apiUrl = process.env.NEXTJS_API_URL || "http://localhost:3000";
     const shop = session.shop;
 
+    console.log(`[Generate] Starting generation for shop: ${shop}`);
+    console.log(`[Generate] apiUrl: ${apiUrl}`);
+
     try {
       const results = [];
       const shotTypes = numShots > 1 ? [
@@ -105,6 +108,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         const shotConfig = shotTypes[i] || shotTypes[0];
         const combinedPrompt = `${prompt}${shotConfig.suffix}. ${presetPrompt}`;
 
+        console.log(`[Generate] Sending request to AI API for shot ${i + 1}/${numShots}`);
         const apiResponse = await fetch(`${apiUrl}/api/custom/create`, {
           method: "POST",
           headers: {
@@ -121,18 +125,27 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             imageSize: "1K",
           }),
         });
+
+        console.log(`[Generate] API Response status: ${apiResponse.status}`);
         const data = await apiResponse.json();
+        console.log(`[Generate] API Response data:`, JSON.stringify(data).substring(0, 200));
+
         if (data.success) {
           results.push(data.product);
+        } else {
+          console.error(`[Generate] AI API returned failure: ${data.error || "Unknown error"}`);
         }
       }
 
       if (results.length === 0) {
+        console.error(`[Generate] No images were successfully generated.`);
         return { result: { success: false, error: "Failed to generate any shots" } };
       }
 
+      console.log(`[Generate] Successfully generated ${results.length} shots.`);
       return { result: { success: true, products: results } };
     } catch (error: any) {
+      console.error(`[Generate] Exception during generation:`, error);
       return { result: { success: false, error: error.message } };
     }
   }
@@ -270,25 +283,25 @@ export default function Index() {
 
   return (
     <Page>
-      {/* @ts-ignore */}
-      <TitleBar
-        title="Copié-Collé Mockups"
-        primaryAction={{
-          content: 'Select Product',
-          onAction: selectProduct,
-        }}
-        secondaryActions={!isPro ? [
-          {
-            content: 'Upgrade to Pro',
-            onAction: () => {
+      <TitleBar title="Copié-Collé Mockups">
+        <button key="select" onClick={selectProduct} variant="primary">
+          Select Product
+        </button>
+        {!isPro ? (
+          <button
+            key="upgrade"
+            onClick={() => {
+              console.log("Subscribing to Monthly Subscription");
               generationFetcher.submit(
                 { actionType: "subscribe", plan: "Monthly Subscription" },
                 { method: "POST" }
               );
-            },
-          }
-        ] : []}
-      />
+            }}
+          >
+            Upgrade to Pro
+          </button>
+        ) : null}
+      </TitleBar>
       <BlockStack gap="500">
         {/* @ts-ignore */}
         <Layout>
