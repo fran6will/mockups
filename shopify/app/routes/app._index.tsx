@@ -270,24 +270,25 @@ export default function Index() {
 
   return (
     <Page>
-      <TitleBar title="Copié-Collé Mockups">
-        <button key="select" onClick={selectProduct}>
-          Select Product
-        </button>
-        {!isPro ? (
-          <button
-            key="upgrade"
-            onClick={() => {
+      {/* @ts-ignore */}
+      <TitleBar
+        title="Copié-Collé Mockups"
+        primaryAction={{
+          content: 'Select Product',
+          onAction: selectProduct,
+        }}
+        secondaryActions={!isPro ? [
+          {
+            content: 'Upgrade to Pro',
+            onAction: () => {
               generationFetcher.submit(
                 { actionType: "subscribe", plan: "Monthly Subscription" },
                 { method: "POST" }
               );
-            }}
-          >
-            Upgrade to Pro
-          </button>
-        ) : null}
-      </TitleBar>
+            },
+          }
+        ] : []}
+      />
       <BlockStack gap="500">
         {/* @ts-ignore */}
         <Layout>
@@ -298,7 +299,7 @@ export default function Index() {
                 <BlockStack gap="400">
                   <InlineStack align="space-between">
                     <Text as="h2" variant="headingMd">
-                      Selected: {selectedProduct.title}
+                      Selected: {String(selectedProduct.title)}
                     </Text>
                     <InlineStack gap="200">
                       {!isPro ? (
@@ -468,6 +469,6 @@ export default function Index() {
           </Layout.Section>
         </Layout>
       </BlockStack>
-    </Page >
+    </Page>
   );
 }
