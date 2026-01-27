@@ -2,6 +2,9 @@
   "name": "mockups",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "shopify"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -19,6 +22,8 @@
     "fabric": "^6.9.0",
     "lucide-react": "^0.554.0",
     "next": "^16.0.7",
+    "prisma": "6.19.2",
+    "@prisma/client": "6.19.2",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-dropzone": "^14.3.8",

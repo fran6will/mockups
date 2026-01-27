@@ -8,12 +8,25 @@ export const maxDuration = 60; // Allow longer timeout for AI generation
 export async function POST(request: Request) {
     const startTime = Date.now();
     try {
+        const authHeader = request.headers.get('Authorization');
+        const shopHeader = request.headers.get('x-shopify-shop');
+        const internalSecret = process.env.INTERNAL_API_SECRET;
+        let isInternal = false;
+
+        if (authHeader === `Bearer ${internalSecret}`) {
+            isInternal = true;
+        }
+
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
-        if (!user) {
+        if (!user && !isInternal) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
+        // Use a placeholder ID if it's an internal call without a user
+        const effectiveUserId = user?.id || (shopHeader ? `shopify:${shopHeader}` : 'shopify-internal');
+        const effectiveUserEmail = user?.email || (shopHeader ? `admin@${shopHeader}` : 'shopify@internal.cc');
 
         const { image, imageUrl, prompt, title, styleReferences, aspectRatio, imageSize = '1K', mode = 'template' } = await request.json();
 
@@ -38,7 +51,7 @@ export async function POST(request: Request) {
         const { data: subscription } = await supabaseAdmin
             .from('subscriptions')
             .select('status, ends_at')
-            .eq('user_id', user.id)
+            .eq('user_id', effectiveUserId)
             .order('updated_at', { ascending: false })
             .limit(1)
             .maybeSingle();
@@ -54,6 +67,11 @@ export async function POST(request: Request) {
             }
         }
 
+        // Bypass some checks for internal calls
+        if (isInternal) {
+            isPro = true; // Treat internal Shopify calls as Pro for now
+        }
+
         // RESTRICT 4K TO PRO USERS
         if (imageSize === '4K' && !isPro) {
             return NextResponse.json({ error: '4K export is reserved for Pro members.' }, { status: 403 });
@@ -64,7 +82,7 @@ export async function POST(request: Request) {
             const { data: credits, error: userError } = await supabaseAdmin
                 .from('user_credits')
                 .select('*')
-                .eq('user_id', user.id)
+                .eq('user_id', effectiveUserId)
                 .single();
 
             if (credits && !userError) {
@@ -93,13 +111,13 @@ export async function POST(request: Request) {
             await supabaseAdmin
                 .from('user_credits')
                 .update({ balance: userCredits.balance - creditCost, total_used: userCredits.total_used + creditCost })
-                .eq('user_id', user.id);
+                .eq('user_id', effectiveUserId);
 
             // Log Transaction
             await supabaseAdmin
                 .from('transactions')
                 .insert([{
-                    user_id: user.id,
+                    user_id: effectiveUserId,
                     amount: -creditCost,
                     type: 'debit',
                     description: `Custom ${mode === 'template' ? 'Scene' : 'Remix'} Generation (${imageSize})`
@@ -109,7 +127,7 @@ export async function POST(request: Request) {
         // 3. Upload Generated Scene to Storage (This becomes the Product Base Image or Generation Image)
         const base64Data = sceneResult.mockUrl.split(',')[1];
         const buffer = Buffer.from(base64Data, 'base64');
-        const fileName = `custom-${user.id}-${Date.now()}.png`;
+        const fileName = `custom-${effectiveUserId}-${Date.now()}.png`;
 
         // Choose bucket based on mode
         const bucketName = mode === 'remix' ? 'generated-mockups' : 'mockup-bases';
@@ -140,13 +158,13 @@ export async function POST(request: Request) {
                 duration_ms: Date.now() - startTime,
                 meta: {
                     aspect_ratio: aspectRatio,
-                    user_email: user.email,
+                    user_email: effectiveUserEmail,
                     image_size: imageSize,
                     prompt: prompt,
                     title: title,
                     mode: 'remix'
                 },
-                user_id: user.id,
+                user_id: effectiveUserId,
                 image_url: publicUrl,
                 ip_address: userIp
             });
@@ -174,8 +192,8 @@ export async function POST(request: Request) {
                     base_image_url: publicUrl,
                     password_hash: 'custom',
                     custom_prompt: 'Place the design realistically on the product.',
-                    user_id: user.id,
-                    created_by: user.id,
+                    user_id: effectiveUserId,
+                    created_by: effectiveUserId,
                     status: 'pending',
                     is_public: false,
                     tags: ['custom']
