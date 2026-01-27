@@ -48,28 +48,51 @@ export async function POST(request: Request) {
         let isPro = false;
         let userCredits = null;
 
-        const { data: subscription } = await supabaseAdmin
-            .from('subscriptions')
-            .select('status, ends_at')
-            .eq('user_id', effectiveUserId)
-            .order('updated_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        if (isInternal && shopHeader) {
+            // Check if this shop has a credit entry or active subscription
+            const { data: credits, error: creditError } = await supabaseAdmin
+                .from('user_credits')
+                .select('*')
+                .eq('user_id', effectiveUserId)
+                .single();
 
-        if (subscription) {
-            const isActive = subscription.status === 'active' || subscription.status === 'on_trial';
-            const isCancelledButValid = subscription.status === 'cancelled' &&
-                subscription.ends_at &&
-                new Date(subscription.ends_at) > new Date();
+            if (credits && !creditError) {
+                userCredits = credits;
+                // For now, only check credits. We can expand to Shopify-specific subscriptions later.
+            } else {
+                // AUTO-INITIALIZE 10 FREE CREDITS FOR NEW SHOPS
+                const { data: newCredits, error: initError } = await supabaseAdmin
+                    .from('user_credits')
+                    .insert([{
+                        user_id: effectiveUserId,
+                        email: effectiveUserEmail,
+                        balance: 10,
+                        total_used: 0
+                    }])
+                    .select()
+                    .single();
 
-            if (isActive || isCancelledButValid) {
-                isPro = true;
+                if (!initError) userCredits = newCredits;
             }
-        }
+        } else if (user) {
+            const { data: subscription } = await supabaseAdmin
+                .from('subscriptions')
+                .select('status, ends_at')
+                .eq('user_id', user.id)
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
-        // Bypass some checks for internal calls
-        if (isInternal) {
-            isPro = true; // Treat internal Shopify calls as Pro for now
+            if (subscription) {
+                const isActive = subscription.status === 'active' || subscription.status === 'on_trial';
+                const isCancelledButValid = subscription.status === 'cancelled' &&
+                    subscription.ends_at &&
+                    new Date(subscription.ends_at) > new Date();
+
+                if (isActive || isCancelledButValid) {
+                    isPro = true;
+                }
+            }
         }
 
         // RESTRICT 4K TO PRO USERS

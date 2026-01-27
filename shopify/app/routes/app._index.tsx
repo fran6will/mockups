@@ -18,15 +18,64 @@ import { authenticate } from "../shopify.server";
 import { TextField, Select } from "@shopify/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
+  const shop = session.shop;
 
-  return null;
+  // Check for active subscriptions
+  const billingCheck = await billing.check({
+    plans: ["Monthly Subscription", "Pro Subscription"],
+    isTest: true,
+  });
+
+  // Fetch credits from Supabase
+  const apiSecret = process.env.INTERNAL_API_SECRET;
+  const apiUrl = process.env.NEXTJS_API_URL || "http://localhost:3000";
+
+  let credits = 10;
+  try {
+    const response = await fetch(`${apiUrl}/api/custom/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiSecret}`,
+        "x-shopify-shop": shop,
+      },
+      body: JSON.stringify({
+        action: "check_credits",
+        prompt: "ping",
+        title: "ping"
+      }),
+    });
+    const data = await response.json();
+    credits = data.remainingCredits !== undefined ? data.remainingCredits : 10;
+  } catch (e) {
+    console.error("Failed to fetch credits:", e);
+  }
+
+  return {
+    shop,
+    isPro: billingCheck.hasActivePayment,
+    plans: billingCheck.appSubscriptions,
+    credits
+  };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, billing } = await authenticate.admin(request);
   const formData = await request.formData();
   const actionType = formData.get("actionType");
+
+  if (actionType === "subscribe") {
+    const plan = formData.get("plan") as string;
+    await billing.require({
+      plans: [plan],
+      isTest: true,
+      onFailure: async () => billing.request({
+        plan,
+        isTest: true,
+      }),
+    });
+  }
 
   if (actionType === "generate") {
     const prompt = formData.get("prompt") as string;
@@ -212,15 +261,29 @@ export default function Index() {
 
   const generatedImages = generationFetcher.data?.result?.products as any[] || [];
 
+  const { isPro, shop: shopDomain, credits } = generationFetcher.data?.loaderData || ({} as any);
+
   return (
     <Page>
       <TitleBar title="Copié-Collé Mockups">
         <button variant="primary" onClick={selectProduct}>
           Select Product
         </button>
+        {!isPro && (
+          <button onClick={() => {
+            generationFetcher.submit(
+              { actionType: "subscribe", plan: "Monthly Subscription" },
+              { method: "POST" }
+            );
+          }}>
+            Upgrade to Pro
+          </button>
+        )}
       </TitleBar>
       <BlockStack gap="500">
+        {/* @ts-ignore */}
         <Layout>
+          {/* @ts-ignore */}
           <Layout.Section>
             {selectedProduct ? (
               <Card>
@@ -229,9 +292,18 @@ export default function Index() {
                     <Text as="h2" variant="headingMd">
                       Selected: {selectedProduct.title}
                     </Text>
-                    <Button onClick={selectProduct}>Change Product</Button>
+                    <InlineStack gap="200">
+                      {!isPro && (
+                        /* @ts-ignore */
+                        <Box padding="100" background="bg-surface-info" borderRadius="100">
+                          <Text as="span" variant="bodySm">Credits: {credits}</Text>
+                        </Box>
+                      )}
+                      <Button onClick={selectProduct}>Change Product</Button>
+                    </InlineStack>
                   </InlineStack>
 
+                  {/* @ts-ignore */}
                   <Box padding="400" background="bg-surface-secondary" borderRadius="200">
                     <Text as="p" variant="bodyMd" tone="subdued">
                       Now, choose an image for your mockup.
@@ -259,6 +331,7 @@ export default function Index() {
 
                   {selectedImage && (
                     <BlockStack gap="400">
+                      {/* @ts-ignore */}
                       <Box padding="400" borderStyle="dashed" borderWidth="025" borderColor="border" borderRadius="200">
                         <BlockStack gap="400">
                           <TextField
@@ -303,6 +376,7 @@ export default function Index() {
                             value={numShots}
                           />
                           {numShots === "3" && (
+                            /* @ts-ignore */
                             <Box paddingBlockStart="200">
                               <Text as="p" variant="bodySm" tone="subdued">
                                 Campaign Pack will generate: 1 Hero shot, 1 Close-up, and 1 Minimalist variation.
@@ -352,6 +426,7 @@ export default function Index() {
                       {generatedImages.map((product, idx) => (
                         <Card key={product.id || idx}>
                           <BlockStack gap="400">
+                            {/* @ts-ignore */}
                             <Box borderRadius="200" overflowX="hidden" overflowY="hidden" borderStyle="solid" borderWidth="025" borderColor="border">
                               <img src={product.base_image_url} alt={`Gen ${idx + 1}`} style={{ width: '100%', display: 'block' }} />
                             </Box>
@@ -372,6 +447,7 @@ export default function Index() {
                   </BlockStack>
                 ) : (
                   <InlineStack align="center">
+                    {/* @ts-ignore */}
                     <Box padding="600">
                       <Text as="p" variant="bodyMd" tone="subdued">
                         Generated mockups will appear here.
@@ -384,6 +460,6 @@ export default function Index() {
           </Layout.Section>
         </Layout>
       </BlockStack>
-    </Page>
+    </Page >
   );
 }
