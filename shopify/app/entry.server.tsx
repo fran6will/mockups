@@ -24,6 +24,7 @@ export default async function handleRequest(
 
   return new Promise((resolve, reject) => {
     const { pipe, abort } = renderToPipeableStream(
+      /* @ts-ignore */
       <RemixServer
         context={remixContext}
         url={request.url}
