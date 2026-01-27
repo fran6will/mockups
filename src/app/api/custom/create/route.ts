@@ -2,8 +2,15 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { generateScene } from '@/lib/vertex/client';
+import { createHash } from 'crypto';
 
 export const maxDuration = 60; // Allow longer timeout for AI generation
+
+const shopToUUID = (shop: string) => {
+    const hash = createHash('sha256').update(shop).digest('hex');
+    // Format as a valid-looking UUID (v4-like variant for local consistency)
+    return `${hash.substring(0, 8)}-${hash.substring(8, 12)}-4${hash.substring(13, 16)}-a${hash.substring(17, 20)}-${hash.substring(20, 32)}`;
+};
 
 export async function POST(request: Request) {
     const startTime = Date.now();
@@ -25,7 +32,13 @@ export async function POST(request: Request) {
         }
 
         // Use a placeholder ID if it's an internal call without a user
-        const effectiveUserId = user?.id || (shopHeader ? `shopify:${shopHeader}` : 'shopify-internal');
+        let effectiveUserId = user?.id;
+        if (!effectiveUserId && shopHeader) {
+            effectiveUserId = shopToUUID(shopHeader);
+        } else if (!effectiveUserId) {
+            effectiveUserId = '00000000-0000-0000-0000-000000000000';
+        }
+
         const effectiveUserEmail = user?.email || (shopHeader ? `admin@${shopHeader}` : 'shopify@internal.cc');
 
         const { image, imageUrl, prompt, title, styleReferences, aspectRatio, imageSize = '1K', mode = 'template', action } = await request.json();
@@ -63,7 +76,7 @@ export async function POST(request: Request) {
         let userCredits = null;
 
         if (isInternal && shopHeader) {
-            // Check if this shop has a credit entry or active subscription
+            // Check if this shop has a credit entry
             const { data: credits, error: creditError } = await supabaseAdmin
                 .from('user_credits')
                 .select('*')
@@ -72,9 +85,9 @@ export async function POST(request: Request) {
 
             if (credits && !creditError) {
                 userCredits = credits;
-                // For now, only check credits. We can expand to Shopify-specific subscriptions later.
             } else {
                 // AUTO-INITIALIZE 10 FREE CREDITS FOR NEW SHOPS
+                console.log(`[API] Initializing credits for new shop: ${shopHeader} (UUID: ${effectiveUserId})`);
                 const { data: newCredits, error: initError } = await supabaseAdmin
                     .from('user_credits')
                     .insert([{
@@ -86,7 +99,11 @@ export async function POST(request: Request) {
                     .select()
                     .single();
 
-                if (!initError) userCredits = newCredits;
+                if (initError) {
+                    console.error(`[API] Failed to initialize credits:`, initError);
+                } else {
+                    userCredits = newCredits;
+                }
             }
         } else if (user) {
             const { data: subscription } = await supabaseAdmin
@@ -116,17 +133,20 @@ export async function POST(request: Request) {
 
         // Check Credits (If NOT Pro)
         if (!isPro) {
-            const { data: credits, error: userError } = await supabaseAdmin
-                .from('user_credits')
-                .select('*')
-                .eq('user_id', effectiveUserId)
-                .single();
+            if (!userCredits) {
+                const { data: credits, error: userError } = await supabaseAdmin
+                    .from('user_credits')
+                    .select('*')
+                    .eq('user_id', effectiveUserId)
+                    .single();
 
-            if (credits && !userError) {
-                userCredits = credits;
+                if (credits && !userError) {
+                    userCredits = credits;
+                }
             }
 
             if (!userCredits) {
+                console.error(`[API] Credits still not found for user ${effectiveUserId}. Pro: ${isPro}`);
                 return NextResponse.json({ error: 'User credits not found. Please claim credits first.' }, { status: 403 });
             }
 
@@ -194,11 +214,12 @@ export async function POST(request: Request) {
         // 4. Handle Result based on Mode
         if (mode === 'remix') {
             // REMIX MODE: Insert into Generations table
-            // Only set user_id if it's a valid UUID (not a shopify: string)
-            const dbUserId = effectiveUserId.startsWith('shopify:') ? null : effectiveUserId;
+            // Only set user_id if it's a real Supabase user (not our deterministic UUID)
+            const isShopifyUser = shopHeader !== null;
+            const dbUserId = isShopifyUser ? null : effectiveUserId;
 
             await supabaseAdmin.from('generations').insert({
-                product_id: null, // No specific product template used
+                product_id: null,
                 status: 'success',
                 duration_ms: Date.now() - startTime,
                 meta: {
@@ -208,18 +229,17 @@ export async function POST(request: Request) {
                     prompt: prompt,
                     title: title,
                     mode: 'remix',
-                    shopify_shop: effectiveUserId.startsWith('shopify:') ? effectiveUserId.replace('shopify:', '') : null
+                    shopify_shop: shopHeader || null
                 },
                 user_id: dbUserId,
                 image_url: publicUrl,
                 ip_address: userIp
             });
 
-            // Return a "fake" product structure so the frontend can display it without changes
             const fakeProduct = {
                 id: 'generated-' + Date.now(),
                 title: title,
-                slug: null, // Results in no "Use Template" button
+                slug: null,
                 base_image_url: publicUrl,
                 status: 'generated'
             };
