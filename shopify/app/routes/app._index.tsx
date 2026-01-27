@@ -271,19 +271,22 @@ export default function Index() {
   return (
     <Page>
       <TitleBar title="Copié-Collé Mockups">
-        <button variant="primary" onClick={selectProduct}>
+        <button key="select" onClick={selectProduct}>
           Select Product
         </button>
-        {!isPro && (
-          <button onClick={() => {
-            generationFetcher.submit(
-              { actionType: "subscribe", plan: "Monthly Subscription" },
-              { method: "POST" }
-            );
-          }}>
+        {!isPro ? (
+          <button
+            key="upgrade"
+            onClick={() => {
+              generationFetcher.submit(
+                { actionType: "subscribe", plan: "Monthly Subscription" },
+                { method: "POST" }
+              );
+            }}
+          >
             Upgrade to Pro
           </button>
-        )}
+        ) : null}
       </TitleBar>
       <BlockStack gap="500">
         {/* @ts-ignore */}
@@ -298,12 +301,12 @@ export default function Index() {
                       Selected: {selectedProduct.title}
                     </Text>
                     <InlineStack gap="200">
-                      {!isPro && (
+                      {!isPro ? (
                         /* @ts-ignore */
                         <Box padding="100" background="bg-surface-info" borderRadius="100">
-                          <Text as="span" variant="bodySm">Credits: {credits}</Text>
+                          <Text as="span" variant="bodySm">Credits: {String(credits)}</Text>
                         </Box>
-                      )}
+                      ) : null}
                       <Button onClick={selectProduct}>Change Product</Button>
                     </InlineStack>
                   </InlineStack>
