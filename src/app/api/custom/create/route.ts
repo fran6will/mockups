@@ -87,7 +87,6 @@ export async function POST(request: Request) {
                 userCredits = credits;
             } else {
                 // AUTO-INITIALIZE 10 FREE CREDITS FOR NEW SHOPS
-                console.log(`[API] Initializing credits for new shop: ${shopHeader} (UUID: ${effectiveUserId})`);
                 const { data: newCredits, error: initError } = await supabaseAdmin
                     .from('user_credits')
                     .insert([{
@@ -99,9 +98,7 @@ export async function POST(request: Request) {
                     .select()
                     .single();
 
-                if (initError) {
-                    console.error(`[API] Failed to initialize credits:`, initError);
-                } else {
+                if (!initError) {
                     userCredits = newCredits;
                 }
             }
@@ -146,7 +143,6 @@ export async function POST(request: Request) {
             }
 
             if (!userCredits) {
-                console.error(`[API] Credits still not found for user ${effectiveUserId}. Pro: ${isPro}`);
                 return NextResponse.json({ error: 'User credits not found. Please claim credits first.' }, { status: 403 });
             }
 
@@ -156,15 +152,11 @@ export async function POST(request: Request) {
         }
 
         // 2. Generate Scene using AI
-        console.log(`[API] Calling generateScene for user: ${effectiveUserId}`);
         const sceneResult = await generateScene(imageUrl || image, prompt, styleReferences || [], aspectRatio || '1:1', imageSize);
 
         if (!sceneResult.success || !sceneResult.mockUrl) {
-            console.error(`[API] Scene generation failed: ${sceneResult.error || 'No mockUrl'}`);
             throw new Error(sceneResult.error || 'Failed to generate scene');
         }
-
-        console.log(`[API] Scene generation successful. Length: ${sceneResult.mockUrl.length}`);
 
         // Deduct Credit ONLY if not Pro
         if (!isPro && userCredits) {
@@ -191,7 +183,6 @@ export async function POST(request: Request) {
         const fileName = `custom-${effectiveUserId.replace(/:/g, '-')}-${Date.now()}.png`;
 
         const bucketName = mode === 'remix' ? 'generated-mockups' : 'mockup-bases';
-        console.log(`[API] Uploading to bucket: ${bucketName}, file: ${fileName}`);
 
         const { error: uploadError } = await supabaseAdmin.storage
             .from(bucketName)
@@ -201,7 +192,6 @@ export async function POST(request: Request) {
             });
 
         if (uploadError) {
-            console.error(`[API] Storage upload failed:`, uploadError);
             throw new Error('Failed to upload generated scene: ' + uploadError.message);
         }
 
@@ -214,7 +204,6 @@ export async function POST(request: Request) {
         // 4. Handle Result based on Mode
         if (mode === 'remix') {
             // REMIX MODE: Insert into Generations table
-            // Only set user_id if it's a real Supabase user (not our deterministic UUID)
             const isShopifyUser = shopHeader !== null;
             const dbUserId = isShopifyUser ? null : effectiveUserId;
 
