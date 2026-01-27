@@ -152,6 +152,9 @@ export async function POST(request: Request) {
         // 4. Handle Result based on Mode
         if (mode === 'remix') {
             // REMIX MODE: Insert into Generations table
+            // Only set user_id if it's a valid UUID (not a shopify: string)
+            const dbUserId = effectiveUserId.startsWith('shopify:') ? null : effectiveUserId;
+
             await supabaseAdmin.from('generations').insert({
                 product_id: null, // No specific product template used
                 status: 'success',
@@ -162,9 +165,10 @@ export async function POST(request: Request) {
                     image_size: imageSize,
                     prompt: prompt,
                     title: title,
-                    mode: 'remix'
+                    mode: 'remix',
+                    shopify_shop: effectiveUserId.startsWith('shopify:') ? effectiveUserId.replace('shopify:', '') : null
                 },
-                user_id: effectiveUserId,
+                user_id: dbUserId,
                 image_url: publicUrl,
                 ip_address: userIp
             });
