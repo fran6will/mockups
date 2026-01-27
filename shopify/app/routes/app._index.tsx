@@ -265,12 +265,30 @@ export default function Index() {
 
   const generatedImages = generationFetcher.data?.result?.products as any[] || [];
 
-  const isPro = false;
-  const credits = 10;
+  const isPro = Boolean(generationFetcher.data?.loaderData?.isPro ?? initialIsPro);
+  const credits = Number(generationFetcher.data?.loaderData?.credits ?? initialCredits ?? 0);
 
   return (
     <Page>
-      <TitleBar title="Copié-Collé Mockups" />
+      {/* @ts-ignore */}
+      <TitleBar
+        title="Copié-Collé Mockups"
+        primaryAction={{
+          content: 'Select Product',
+          onAction: selectProduct,
+        }}
+        secondaryActions={!isPro ? [
+          {
+            content: 'Upgrade to Pro',
+            onAction: () => {
+              generationFetcher.submit(
+                { actionType: "subscribe", plan: "Monthly Subscription" },
+                { method: "POST" }
+              );
+            },
+          }
+        ] : []}
+      />
       <BlockStack gap="500">
         {/* @ts-ignore */}
         <Layout>
@@ -284,6 +302,12 @@ export default function Index() {
                       Selected: {String(selectedProduct.title)}
                     </Text>
                     <InlineStack gap="200">
+                      {!isPro ? (
+                        /* @ts-ignore */
+                        <Box padding="100" background="bg-surface-info" borderRadius="100">
+                          <Text as="span" variant="bodySm">Credits: {String(credits)}</Text>
+                        </Box>
+                      ) : null}
                       <Button onClick={selectProduct}>Change Product</Button>
                     </InlineStack>
                   </InlineStack>
