@@ -68,7 +68,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   if (actionType === "subscribe") {
     const plan = formData.get("plan") as string;
-    await billing.require({
+    return await billing.require({
       // @ts-ignore
       plans: [plan],
       isTest: true,
@@ -265,10 +265,8 @@ export default function Index() {
 
   const generatedImages = generationFetcher.data?.result?.products as any[] || [];
 
-  // @ts-ignore
-  const isPro = generationFetcher.data?.loaderData?.isPro ?? initialIsPro;
-  // @ts-ignore
-  const credits = generationFetcher.data?.loaderData?.credits ?? initialCredits;
+  const isPro = Boolean(generationFetcher.data?.loaderData?.isPro ?? initialIsPro);
+  const credits = Number(generationFetcher.data?.loaderData?.credits ?? initialCredits ?? 0);
 
   return (
     <Page>
