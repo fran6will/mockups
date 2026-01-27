@@ -25,17 +25,13 @@ const shopify = shopifyApp({
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),
   billing: {
+    /* @ts-ignore */
     "Monthly Subscription": {
       amount: 19.99,
       currencyCode: "USD",
       interval: BillingInterval.Every30Days,
     },
-    "Pro Subscription": {
-      amount: 49.99,
-      currencyCode: "USD",
-      interval: BillingInterval.Every30Days,
-    },
-  } as any, // Cast to any to bypass strict interval typing mismatch if any
+  },
 });
 
 export default shopify;

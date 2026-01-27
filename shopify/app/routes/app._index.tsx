@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, useLoaderData } from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -23,7 +23,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // Check for active subscriptions
   const billingCheck = await billing.check({
-    plans: ["Monthly Subscription", "Pro Subscription"],
+    // @ts-ignore
+    plans: ["Monthly Subscription"],
     isTest: true,
   });
 
@@ -68,9 +69,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (actionType === "subscribe") {
     const plan = formData.get("plan") as string;
     await billing.require({
+      // @ts-ignore
       plans: [plan],
       isTest: true,
       onFailure: async () => billing.request({
+        // @ts-ignore
         plan,
         isTest: true,
       }),
@@ -181,6 +184,7 @@ const STYLE_PRESETS = [
 ];
 
 export default function Index() {
+  const { isPro: initialIsPro, credits: initialCredits } = useLoaderData<typeof loader>();
   const generationFetcher = useFetcher<any>();
   const mediaFetcher = useFetcher<any>();
   const shopify = useAppBridge();
@@ -261,7 +265,10 @@ export default function Index() {
 
   const generatedImages = generationFetcher.data?.result?.products as any[] || [];
 
-  const { isPro, shop: shopDomain, credits } = generationFetcher.data?.loaderData || ({} as any);
+  // @ts-ignore
+  const isPro = generationFetcher.data?.loaderData?.isPro ?? initialIsPro;
+  // @ts-ignore
+  const credits = generationFetcher.data?.loaderData?.credits ?? initialCredits;
 
   return (
     <Page>
