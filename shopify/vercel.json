@@ -1,5 +1,5 @@
 {
-    "buildCommand": "npm run build",
-    "installCommand": "npm install --legacy-peer-deps",
-    "outputDirectory": "build/client"
+  "buildCommand": "npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
+  "framework": "remix"
 }
