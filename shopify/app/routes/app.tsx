@@ -20,6 +20,14 @@ export default function App() {
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
+      <NavMenu>
+        <Link to="/app" rel="home">
+          Home
+        </Link>
+        <Link to="/app/additional">Help</Link>
+        <a href="https://copiecolle.ai/faq" target="_blank" rel="noopener noreferrer">FAQ</a>
+        <a href="https://copiecolle.ai/legal/privacy" target="_blank" rel="noopener noreferrer">Privacy</a>
+      </NavMenu>
       <Outlet />
     </AppProvider>
   );

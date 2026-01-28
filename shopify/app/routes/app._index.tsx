@@ -303,12 +303,17 @@ export default function Index() {
                       Selected: {String(selectedProduct.title)}
                     </Text>
                     <InlineStack gap="200">
-                      {!isPro ? (
+                      {isPro ? (
+                        /* @ts-ignore */
+                        <Box padding="100" background="bg-surface-success" borderRadius="100">
+                          <Text as="span" variant="bodySm" fontWeight="bold" tone="success">PRO PLAN</Text>
+                        </Box>
+                      ) : (
                         /* @ts-ignore */
                         <Box padding="100" background="bg-surface-info" borderRadius="100">
                           <Text as="span" variant="bodySm">Credits: {String(credits)}</Text>
                         </Box>
-                      ) : null}
+                      )}
                       <Button onClick={selectProduct}>Change Product</Button>
                     </InlineStack>
                   </InlineStack>

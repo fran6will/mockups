@@ -9,6 +9,10 @@ import db from "../db.server";
  * This app stores minimal personal data (only shop owner info in Session table).
  * No individual customer data is stored.
  */
+export const loader = async () => {
+    return new Response("GDPR Webhooks are operational. Please use POST.", { status: 200 });
+};
+
 export const action = async ({ request }: ActionFunctionArgs) => {
     const { topic, shop, session, admin } = await authenticate.webhook(request);
 

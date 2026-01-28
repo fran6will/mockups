@@ -17,11 +17,14 @@ export async function POST(request: Request) {
     try {
         const authHeader = request.headers.get('Authorization');
         const shopHeader = request.headers.get('x-shopify-shop');
-        const internalSecret = process.env.INTERNAL_API_SECRET;
+        const internalSecrets = (process.env.INTERNAL_API_SECRET || "").split(',').map(s => s.trim());
         let isInternal = false;
 
-        if (authHeader === `Bearer ${internalSecret}`) {
-            isInternal = true;
+        if (authHeader?.startsWith('Bearer ')) {
+            const token = authHeader.substring(7);
+            if (internalSecrets.includes(token)) {
+                isInternal = true;
+            }
         }
 
         const supabase = await createClient();
