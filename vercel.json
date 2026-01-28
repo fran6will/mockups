@@ -4,5 +4,11 @@
             "path": "/api/cron/follow-up",
             "schedule": "0 14 * * *"
         }
+    ],
+    "rewrites": [
+        {
+            "source": "/webhooks/gdpr",
+            "destination": "https://mockups-shopify-69z6.vercel.app/webhooks/gdpr"
+        }
     ]
 }
