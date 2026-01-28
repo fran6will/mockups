@@ -2,7 +2,7 @@
 
 client_id = "aa6780bb19b945b90b9b2072035c87a9"
 name = "copie-colle-plugin\r"
-application_url = "https://mockups-shopify-69z6.vercel.app"
+application_url = "https://app.copiecolle.ai"
 embedded = true
 
 [build]
@@ -37,4 +37,4 @@ api_version = "2026-04"
 scopes = "write_products"
 
 [auth]
-redirect_urls = [ "https://mockups-shopify-69z6.vercel.app/api/auth" ]
+redirect_urls = [ "https://app.copiecolle.ai/api/auth" ]

@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "0ede52df96d4e8b9552709e042c8496e"
-name = "Copié-Collé Pro Test\r"
-application_url = "https://mockups-shopify-69z6.vercel.app"
+name = "Copie-Colle - Instant Mockups"
+application_url = "https://app.copiecolle.ai"
 embedded = true
 
 [build]
@@ -13,11 +13,15 @@ api_version = "2024-04"
 
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
-  uri = "/api/webhooks/app/uninstalled"
+  uri = "/webhooks/app/uninstalled"
+
+[[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+  uri = "/webhooks/gdpr"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "write_products"
 
 [auth]
-redirect_urls = [ "https://mockups-shopify-69z6.vercel.app/api/auth" ]
+redirect_urls = [ "https://app.copiecolle.ai/api/auth" ]
