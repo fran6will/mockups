@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 const posts = [
     {
         slug: 'google-genie-3-ai-3d-ecommerce-revolution',
-        title: 'Google Genie 3: The AI Generating 3D Worlds and the Future of E-commerce',
-        excerpt: 'Discover how Google Genie 3 is revolutionizing 3D environment creation and why the future of online shopping lies in generative virtual boutiques.',
+        title: 'Google Genie 3: The Rise of Generative 3D Worlds in E-commerce',
+        excerpt: 'Dive into how Google Genie 3 and world-model AI are transforming online retail into immersive 3D virtual shopping experiences. Discover the future of AI e-commerce.',
         date: 'January 30, 2026',
-        readTime: '5 min read',
+        readTime: '12 min read',
         category: 'Innovation',
         image: '/hero-wallpaper.png',
     },
