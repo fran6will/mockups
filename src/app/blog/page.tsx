@@ -12,6 +12,15 @@ export const metadata: Metadata = {
 // Blog posts data - can be moved to a CMS or database later
 const posts = [
     {
+        slug: 'google-genie-3-ai-3d-ecommerce-revolution',
+        title: 'Google Genie 3: The AI Generating 3D Worlds and the Future of E-commerce',
+        excerpt: 'Discover how Google Genie 3 is revolutionizing 3D environment creation and why the future of online shopping lies in generative virtual boutiques.',
+        date: 'January 30, 2026',
+        readTime: '5 min read',
+        category: 'Innovation',
+        image: '/hero-wallpaper.png',
+    },
+    {
         slug: 'bytedance-seedream-4-5-release-review',
         title: 'ByteDance 4.5 (Seedream) Just Dropped: The New King of AI Consistency?',
         excerpt: 'ByteDance has released Seedream 4.5, a new AI image model targeting professional creators. Discover how it outperforms Midjourney in consistency and spatial reasoning.',

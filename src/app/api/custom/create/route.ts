@@ -263,6 +263,28 @@ export async function POST(request: Request) {
                 throw new Error('Failed to save product: ' + dbError.message);
             }
 
+            // Log generation for template mode too
+            const isShopifyUser = shopHeader !== null;
+            const dbUserId = isShopifyUser ? null : effectiveUserId;
+
+            await supabaseAdmin.from('generations').insert({
+                product_id: product.id,
+                status: 'success',
+                duration_ms: Date.now() - startTime,
+                meta: {
+                    aspect_ratio: aspectRatio,
+                    user_email: effectiveUserEmail,
+                    image_size: imageSize,
+                    prompt: prompt,
+                    title: title,
+                    mode: 'template',
+                    shopify_shop: shopHeader || null
+                },
+                user_id: dbUserId,
+                image_url: publicUrl,
+                ip_address: userIp
+            });
+
             return NextResponse.json({ success: true, product });
         }
 
