@@ -116,6 +116,90 @@ export default function GenieBlog() {
                             </p>
                         </section>
 
+                        <div className="h-px bg-gradient-to-r from-transparent via-teal/20 to-transparent"></div>
+
+                        <section className="space-y-8">
+                            <h2 className="text-3xl md:text-4xl font-bold text-ink">4 Ways Genie 3 Will Revolutionize Retail</h2>
+                            <p>
+                                Genie 3’s ability to generate "world models" moves online shopping from a flat, 2D scroll to an interactive 3D simulation. While current e-commerce uses static 3D models (like a 360° spin of a shoe), Genie 3 allows you to step inside the product's environment.
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div className="space-y-3">
+                                    <h3 className="text-xl font-bold text-teal">1. "Contextual" Virtual Showrooms</h3>
+                                    <p className="text-lg">
+                                        Instead of looking at a sofa against a white background, you could upload a photo of your living room. Genie 3 could then generate a playable 3D version of your home where you can walk around, move the virtual furniture, and see how the sunlight at 4:00 PM hits the fabric.
+                                    </p>
+                                    <p className="text-sm italic opacity-60">The Shift: From "Does this look good?" to "How does this feel in my space?"</p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h3 className="text-xl font-bold text-teal">2. High-Fidelity Virtual Try-Ons</h3>
+                                    <p className="text-lg">
+                                        Current virtual try-ons often look like stickers placed over a video. Genie 3 understands physics and deformation. It could simulate how a silk dress actually flows when you walk or how a backpack sits on your shoulders while you’re "moving" through a generated hiking trail.
+                                    </p>
+                                    <p className="text-sm italic opacity-60">The Benefit: Significant reduction in return rates, as customers get a realistic sense of fit and movement.</p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h3 className="text-xl font-bold text-teal">3. Hyper-Personalized "Brand Worlds"</h3>
+                                    <p className="text-lg">
+                                        Imagine a Nike "world" where, instead of a website, you enter a generated urban park to test out virtual sneakers. Brands could generate entire interactive campaign environments from a single prompt (e.g., "a luxury 1920s train car for a jewelry launch") where customers can explore and interact with products as part of a story.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h3 className="text-xl font-bold text-teal">4. Interactive "Digital Twins"</h3>
+                                    <p className="text-lg">
+                                        Genie 3 can turn a few photos into an interactive object. For high-end purchases like cars or tech, a salesperson could generate a "digital twin" of the specific model you're interested in. You could "sit" inside, open the glove box, or change the dashboard lighting in real time before it even leaves the factory.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Comparison Table */}
+                        <section className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 border border-ink/5 overflow-x-auto">
+                            <h3 className="text-xl font-bold mb-6 text-center">Traditional vs. Genie-Powered Shopping</h3>
+                            <table className="w-full text-left min-w-[600px]">
+                                <thead>
+                                    <tr className="border-b border-ink/10">
+                                        <th className="pb-4 font-bold text-ink/60">Feature</th>
+                                        <th className="pb-4 font-bold text-ink/60">Current Online Shopping</th>
+                                        <th className="pb-4 font-bold text-teal">Genie 3 Future</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-lg">
+                                    <tr className="border-b border-ink/5">
+                                        <td className="py-4 font-medium">Perspective</td>
+                                        <td className="py-4">2D Images / Video</td>
+                                        <td className="py-4 font-medium text-teal/90">First-person 3D exploration</td>
+                                    </tr>
+                                    <tr className="border-b border-ink/5">
+                                        <td className="py-4 font-medium">Interactivity</td>
+                                        <td className="py-4">Click to zoom</td>
+                                        <td className="py-4 font-medium text-teal/90">Physical interaction (open, move, wear)</td>
+                                    </tr>
+                                    <tr className="border-b border-ink/5">
+                                        <td className="py-4 font-medium">Environment</td>
+                                        <td className="py-4">Pre-rendered / Generic</td>
+                                        <td className="py-4 font-medium text-teal/90">Custom-generated (e.g., your actual home)</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-4 font-medium">Physics</td>
+                                        <td className="py-4">Static</td>
+                                        <td className="py-4 font-medium text-teal/90">Real-time gravity, light, and fabric drape</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </section>
+
+                        <section className="space-y-6">
+                            <h2 className="text-2xl font-bold text-ink">The "Friction" Challenge</h2>
+                            <p>
+                                For this to become mainstream, the current 60-second limit on Genie 3 sessions would need to be removed, and the 720p resolution would need to reach photorealistic levels. However, as these models scale, the "website" as we know it might eventually be replaced by a "shoppable world."
+                            </p>
+                        </section>
+
                         <section className="space-y-6 border-l-4 border-teal pl-8 py-4 bg-teal/5">
                             <h2 className="text-2xl font-bold text-ink">Why This Matters for Etsy Sellers & Content Creators</h2>
                             <p>
