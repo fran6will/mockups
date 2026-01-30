@@ -119,13 +119,10 @@ export default function GenieBlog() {
                         <section className="space-y-6 border-l-4 border-teal pl-8 py-4 bg-teal/5">
                             <h2 className="text-2xl font-bold text-ink">Why This Matters for Etsy Sellers & Content Creators</h2>
                             <p>
-                                For the millions of <strong>Etsy sellers</strong> and digital creators, the bar for <strong>high-fidelity product visualization</strong> is about to skyrocket. When customers become accustomed to exploring 3D virtual shops, a flat, boring mockup will no longer convert.
+                                This is where <strong>Copié-Collé</strong> fits into the puzzle. While we don't generate the 3D world itself, our <strong>2D mockup generator</strong> uses similar advanced AI to understand lighting, depth, and texture wrapping. We create <strong>photorealistic 2D composites</strong> that look as if they were taken inside these high-end environments.
                             </p>
                             <p>
-                                This is where <strong>Copié-Collé</strong> fits into this future ecosystem. While Genie 3 will likely build the environment, tools like our <strong>AI mockup generator</strong> (powered by Gemini Image Pro) are setting the standard for how we visualize items today. We speculate that in the near future, the gap between a static mockup and a dynamic 3D asset will close.
-                            </p>
-                            <p>
-                                By mastering <strong>high-fidelity product visualization</strong> now, creators are future-proofing their brand assets. When the day comes that we can "drag and drop" a design into a Genie 3 generated shop, the principles of lighting, texture, and placement—core to Copié-Collé's engine—will remain the same.
+                                By mastering <strong>high-fidelity imagery</strong> now, you train your brand to look professional in any setting. When the 3D web truly arrives, the brands that win will be the ones that already understand how to present their products with cinematic realism—something Copié-Collé solves today for your Etsy shop.
                             </p>
                         </section>
 
@@ -147,14 +144,14 @@ export default function GenieBlog() {
                                     <Rocket className="rotate-45" /> Ready for the 3D Revolution?
                                 </h3>
                                 <p className="text-white/80 text-lg">
-                                    Don't let your brand get left behind in the 2D past. Start using the most advanced <strong>AI mockup tool</strong> designed for the next generation of retail.
+                                    Don't let your brand get left behind with flat, lifeless images. Start using the most advanced <strong>AI mockup tool</strong> to create specific, high-converting 2D assets that rival 3D renders.
                                 </p>
                                 <div className="pt-4">
                                     <Link
                                         href="/gallery"
                                         className="inline-flex items-center gap-3 px-8 py-4 bg-white text-teal font-black rounded-xl hover:scale-105 transition-all shadow-lg"
                                     >
-                                        GENERATE YOUR FIRST 3D MOCKUP
+                                        CREATE YOUR FIRST MOCKUP
                                         <ArrowRight />
                                     </Link>
                                 </div>
