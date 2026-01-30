@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Sparkles, ShoppingBag, Globe, Zap, Target, BarChart3, Rocket } from 'lucide-react'
 import Header from '@/components/ui/Header'
-import Footer from '@/components/ui/Footer'
 
 export const metadata: Metadata = {
     title: 'Google Genie 3: Revolutionizing 3D AI E-commerce and Virtual Shopping Worlds',
@@ -123,7 +122,10 @@ export default function GenieBlog() {
                                 For the millions of <strong>Etsy sellers</strong> and digital creators, the bar for <strong>high-fidelity product visualization</strong> is about to skyrocket. When customers become accustomed to exploring 3D virtual shops, a flat, boring mockup will no longer convert.
                             </p>
                             <p>
-                                This is where <strong>Copié-Collé</strong> bridges the gap. While Genie 3 builds the environment, our <strong>AI mockup generator</strong> (powered by Gemini Image Pro) ensures your specific designs—your logos, your apparel graphics, your art—are rendered with photorealistic accuracy onto the products within that space.
+                                This is where <strong>Copié-Collé</strong> fits into this future ecosystem. While Genie 3 will likely build the environment, tools like our <strong>AI mockup generator</strong> (powered by Gemini Image Pro) are setting the standard for how we visualize items today. We speculate that in the near future, the gap between a static mockup and a dynamic 3D asset will close.
+                            </p>
+                            <p>
+                                By mastering <strong>high-fidelity product visualization</strong> now, creators are future-proofing their brand assets. When the day comes that we can "drag and drop" a design into a Genie 3 generated shop, the principles of lighting, texture, and placement—core to Copié-Collé's engine—will remain the same.
                             </p>
                         </section>
 
@@ -168,7 +170,6 @@ export default function GenieBlog() {
                     </article>
                 </div>
             </main>
-            <Footer />
         </div>
     )
 }

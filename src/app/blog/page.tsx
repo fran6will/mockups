@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/ui/Header';
-import Footer from '@/components/ui/Footer';
 import { ArrowRight, Calendar, Clock } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -108,7 +107,6 @@ export default function BlogPage() {
                     )}
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }
