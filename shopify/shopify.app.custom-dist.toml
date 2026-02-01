@@ -1,0 +1,27 @@
+# Copie-Colle - Custom Distribution
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "17a9e7fa1866561c18966b3ebc09ae1a"
+name = "Copie-Colle - Custom"
+application_url = "https://app.copiecolle.ai"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2024-04"
+
+[[webhooks.subscriptions]]
+topics = [ "app/uninstalled" ]
+uri = "/webhooks/app/uninstalled"
+
+[[webhooks.subscriptions]]
+compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+uri = "/webhooks/gdpr"
+
+[access_scopes]
+scopes = "write_products"
+
+[auth]
+redirect_urls = [ "https://app.copiecolle.ai/api/auth" ]

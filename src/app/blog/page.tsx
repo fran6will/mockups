@@ -11,6 +11,15 @@ export const metadata: Metadata = {
 // Blog posts data - can be moved to a CMS or database later
 const posts = [
     {
+        slug: 'ecommerce-financial-wisdom-predictions-2026',
+        title: 'E-Commerce Financial Wisdom & Industry Predictions for 2026',
+        excerpt: 'Master the 8 Financial Commandments for entrepreneurs. Discover key predictions for tech and online retail in 2026, plus wealth-building strategies beyond your business.',
+        date: 'February 1, 2026',
+        readTime: '8 min read',
+        category: 'E-Commerce Strategy',
+        image: '/hero-wallpaper.png',
+    },
+    {
         slug: 'google-genie-3-ai-3d-ecommerce-revolution',
         title: 'Google Genie 3: The Rise of Generative 3D Worlds in E-commerce',
         excerpt: 'Dive into how Google Genie 3 and world-model AI are transforming online retail into immersive 3D virtual shopping experiences. Discover the future of AI e-commerce.',
