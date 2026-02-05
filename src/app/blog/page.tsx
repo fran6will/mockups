@@ -11,6 +11,15 @@ export const metadata: Metadata = {
 // Blog posts data - can be moved to a CMS or database later
 const posts = [
     {
+        slug: 'claude-opus-4-6-etsy-game-changer',
+        title: 'Claude Opus 4.6: The New AI Standard & What It Means for Etsy Sellers',
+        excerpt: 'Anthropic\'s latest model brings agentic reasoning and 1M context. Learn how this "new brain" pairs with Copié-Collé to revolutionize your shop.',
+        date: 'February 5, 2026',
+        readTime: '6 min read',
+        category: 'AI News',
+        image: '/hero-wallpaper.png',
+    },
+    {
         slug: 'ecommerce-financial-wisdom-predictions-2026',
         title: 'E-Commerce Financial Wisdom & Industry Predictions for 2026',
         excerpt: 'Master the 8 Financial Commandments for entrepreneurs. Discover key predictions for tech and online retail in 2026, plus wealth-building strategies beyond your business.',
