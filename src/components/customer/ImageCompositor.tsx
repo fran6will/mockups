@@ -119,7 +119,7 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
     const { getRootProps: getRefRootProps, getInputProps: getRefInputProps, isDragActive: isRefDragActive } = useDropzone({
         onDrop: onDropReferences,
-        accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp'] },
+        accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.svg'] },
         maxFiles: 3 - referenceImages.length,
         disabled: referenceImages.length >= 3
     });
@@ -165,13 +165,19 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
     };
     const currentCost = getCost(imageSize);
 
-    const loadDemoImage = async () => {
-        try {
-            const response = await fetch('/logo-v2.png');
-            const blob = await response.blob();
-            const file = new File([blob], "sample-pattern.png", { type: "image/png" });
+    // Sample designs for users who don't have their own design ready
+    const SAMPLE_DESIGNS = [
+        { url: '/samples/sample-logo.svg', name: 'sample-logo.svg', label: 'Logo', description: 'Star + text logo' },
+        { url: '/samples/sample-text.svg', name: 'sample-text.svg', label: 'Quote', description: 'Motivational text' },
+        { url: '/samples/sample-graphic.svg', name: 'sample-graphic.svg', label: 'Graphic', description: 'Abstract pattern' },
+    ];
 
-            // Reuse onDrop logic manually
+    const loadSampleImage = async (sampleUrl: string, sampleName: string) => {
+        try {
+            const response = await fetch(sampleUrl);
+            const blob = await response.blob();
+            const file = new File([blob], sampleName, { type: blob.type || "image/svg+xml" });
+
             const previewUrl = URL.createObjectURL(file);
             const img = await new Promise<HTMLImageElement>((resolve, reject) => {
                 const image = new window.Image();
@@ -189,8 +195,9 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             }
             scale = Number(scale.toFixed(2));
 
+            const layerId = 'sample-' + Math.random().toString(36).substr(2, 6);
             const newLayer = {
-                id: 'demo-layer',
+                id: layerId,
                 file,
                 previewUrl,
                 rotation: 0,
@@ -203,11 +210,16 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
             };
 
             setLayers([newLayer]);
-            setActiveLayerId('demo-layer');
+            setActiveLayerId(layerId);
+            setGeneratedImage(null);
+            setError(null);
         } catch (e) {
-            console.error("Failed to load demo image", e);
+            console.error("Failed to load sample image", e);
         }
     };
+
+    // Backward-compatible demo loader for ?demo=true URL param
+    const loadDemoImage = () => loadSampleImage('/logo-v2.png', 'sample-pattern.png');
 
     useEffect(() => {
         // Check if there's an access code in URL - this takes priority
@@ -650,28 +662,43 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
                 >
                     <input {...inputProps} aria-label="Upload image" />
                     {!generatedImage && layers.length === 0 && (
-                        <div className="text-center text-ink/30">
+                        <div className="text-center text-ink/30 relative z-10">
                             <div className="w-24 h-24 bg-ink/5 rounded-full flex items-center justify-center mx-auto mb-4 pointer-events-none">
                                 <ImageIcon size={40} />
                             </div>
                             <p className="font-medium pointer-events-none">
                                 {category === 'Scenes' ? "Drag & Drop your product photo" : "Drag & Drop your logo here"}
                             </p>
-                            <p className="text-sm opacity-60 mt-2 pointer-events-none">or use the controls below</p>
+                            <p className="text-sm opacity-60 mt-2 pointer-events-none">or try a sample design</p>
 
-                            <div className="mt-6 relative z-50 flex justify-center">
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        loadDemoImage();
-                                    }}
-                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/90 backdrop-blur-md text-teal text-sm font-bold hover:bg-white hover:scale-105 transition-all border border-white/50 shadow-lg shadow-teal/10 cursor-pointer"
-                                >
-                                    <Sparkles size={16} />
-                                    Need inspiration? Try with a sample
-                                </button>
+                            {/* Sample Design Cards */}
+                            <div className="mt-6 relative z-50 flex justify-center gap-3 flex-wrap">
+                                {SAMPLE_DESIGNS.map((sample) => (
+                                    <button
+                                        key={sample.url}
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            loadSampleImage(sample.url, sample.name);
+                                        }}
+                                        className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/80 backdrop-blur-md border border-white/50 shadow-lg shadow-teal/5 hover:bg-white hover:scale-105 hover:shadow-xl hover:shadow-teal/10 transition-all cursor-pointer w-28"
+                                    >
+                                        <div className="w-16 h-16 rounded-xl bg-ink/80 flex items-center justify-center overflow-hidden border border-ink/10">
+                                            <img
+                                                src={sample.url}
+                                                alt={sample.label}
+                                                className="w-12 h-12 object-contain"
+                                            />
+                                        </div>
+                                        <span className="text-xs font-bold text-ink/70 group-hover:text-teal transition-colors">
+                                            {sample.label}
+                                        </span>
+                                        <span className="text-[10px] text-ink/40 leading-tight">
+                                            {sample.description}
+                                        </span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     )}

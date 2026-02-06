@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+  <!-- Outer ring -->
+  <circle cx="250" cy="250" r="180" fill="none" stroke="white" stroke-width="3" opacity="0.3"/>
+
+  <!-- Inner ring -->
+  <circle cx="250" cy="250" r="120" fill="none" stroke="white" stroke-width="2" opacity="0.5"/>
+
+  <!-- Geometric triangle pointing up -->
+  <polygon
+    points="250,130 340,290 160,290"
+    fill="none"
+    stroke="white"
+    stroke-width="3"
+    opacity="0.9"
+  />
+
+  <!-- Geometric triangle pointing down (inverted, overlapping) -->
+  <polygon
+    points="250,350 160,190 340,190"
+    fill="none"
+    stroke="white"
+    stroke-width="3"
+    opacity="0.9"
+  />
+
+  <!-- Center diamond -->
+  <polygon
+    points="250,200 290,250 250,300 210,250"
+    fill="white"
+    opacity="0.15"
+  />
+
+  <!-- Center dot -->
+  <circle cx="250" cy="250" r="6" fill="white" opacity="0.9"/>
+
+  <!-- Corner accent dots -->
+  <circle cx="250" cy="70" r="4" fill="white" opacity="0.4"/>
+  <circle cx="250" cy="430" r="4" fill="white" opacity="0.4"/>
+  <circle cx="70" cy="250" r="4" fill="white" opacity="0.4"/>
+  <circle cx="430" cy="250" r="4" fill="white" opacity="0.4"/>
+
+  <!-- Diagonal accent lines -->
+  <line x1="130" y1="130" x2="155" y2="155" stroke="white" stroke-width="2" opacity="0.3"/>
+  <line x1="370" y1="130" x2="345" y2="155" stroke="white" stroke-width="2" opacity="0.3"/>
+  <line x1="130" y1="370" x2="155" y2="345" stroke="white" stroke-width="2" opacity="0.3"/>
+  <line x1="370" y1="370" x2="345" y2="345" stroke="white" stroke-width="2" opacity="0.3"/>
+</svg>

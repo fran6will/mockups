@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+  <!-- Decorative top flourish -->
+  <path
+    d="M150,140 Q200,120 250,140 Q300,120 350,140"
+    fill="none"
+    stroke="white"
+    stroke-width="2"
+    opacity="0.5"
+  />
+
+  <!-- Opening quote mark -->
+  <text
+    x="140" y="200"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="80"
+    fill="white"
+    opacity="0.3"
+  >"</text>
+
+  <!-- Main quote line 1 -->
+  <text
+    x="250" y="230"
+    text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-weight="700"
+    font-size="42"
+    fill="white"
+    opacity="0.95"
+  >Create</text>
+
+  <!-- Main quote line 2 -->
+  <text
+    x="250" y="285"
+    text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-weight="700"
+    font-size="42"
+    fill="white"
+    opacity="0.95"
+  >Something</text>
+
+  <!-- Main quote line 3 -->
+  <text
+    x="250" y="340"
+    text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-style="italic"
+    font-weight="700"
+    font-size="46"
+    fill="white"
+  >Beautiful</text>
+
+  <!-- Decorative bottom flourish -->
+  <path
+    d="M150,380 Q200,400 250,380 Q300,400 350,380"
+    fill="none"
+    stroke="white"
+    stroke-width="2"
+    opacity="0.5"
+  />
+</svg>
