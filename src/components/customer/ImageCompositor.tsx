@@ -167,16 +167,16 @@ export default function ImageCompositor({ productId, productSlug, baseImageUrl, 
 
     // Sample designs for users who don't have their own design ready
     const SAMPLE_DESIGNS = [
-        { url: '/samples/sample-logo.svg', name: 'sample-logo.svg', label: 'Logo', description: 'Star + text logo' },
-        { url: '/samples/sample-text.svg', name: 'sample-text.svg', label: 'Quote', description: 'Motivational text' },
-        { url: '/samples/sample-graphic.svg', name: 'sample-graphic.svg', label: 'Graphic', description: 'Abstract pattern' },
+        { url: '/samples/sample-logo.png', name: 'sample-logo.png', label: 'Logo', description: 'Star + text logo' },
+        { url: '/samples/sample-text.png', name: 'sample-text.png', label: 'Quote', description: 'Motivational text' },
+        { url: '/samples/sample-graphic.png', name: 'sample-graphic.png', label: 'Graphic', description: 'Abstract pattern' },
     ];
 
     const loadSampleImage = async (sampleUrl: string, sampleName: string) => {
         try {
             const response = await fetch(sampleUrl);
             const blob = await response.blob();
-            const file = new File([blob], sampleName, { type: blob.type || "image/svg+xml" });
+            const file = new File([blob], sampleName, { type: blob.type || "image/png" });
 
             const previewUrl = URL.createObjectURL(file);
             const img = await new Promise<HTMLImageElement>((resolve, reject) => {
