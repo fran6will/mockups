@@ -11,6 +11,15 @@ export const metadata: Metadata = {
 // Blog posts data - can be moved to a CMS or database later
 const posts = [
     {
+        slug: 'best-free-mockup-generators-etsy-sellers-2026',
+        title: 'Best Free Mockup Generators for Etsy Sellers in 2026 | CopieColle',
+        excerpt: 'Compare the best free mockup generators for Etsy sellers in 2026. Discover AI-powered tools and template-based solutions to create professional product mockups without paid subscriptions.',
+        date: 'February 6, 2026',
+        readTime: '6 min read',
+        category: 'Guides',
+        image: '/hero-wallpaper.png',
+    },
+    {
         slug: 'how-to-make-product-mockups-etsy-guide-2026',
         title: 'How to Make Product Mockups for Etsy: Complete 2026 Guide for Sellers',
         excerpt: 'Learn the 3 best methods to create professional Etsy product mockups in minutes. DIY photography, Photoshop templates, or AI generators—find what works for your shop. Step-by-step guide for beginners.',
