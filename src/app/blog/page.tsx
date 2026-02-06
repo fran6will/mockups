@@ -11,6 +11,15 @@ export const metadata: Metadata = {
 // Blog posts data - can be moved to a CMS or database later
 const posts = [
     {
+        slug: 'ai-mockup-generators-vs-traditional-product-photography-etsy',
+        title: 'AI Mockup Generators vs Traditional Product Photography for Etsy Sellers | CopieColle',
+        excerpt: 'Compare AI mockup generators with traditional product photography for Etsy. See how AI mockups save time (3 seconds vs hours), cut costs (9.99/month vs hundreds), and scale unlimited variations. Plus practical tips for sellers switching from photography to AI.',
+        date: 'February 5, 2026',
+        readTime: '6 min read',
+        category: 'E-Commerce Tips',
+        image: '/hero-wallpaper.png',
+    },
+    {
         slug: 'claude-opus-4-6-etsy-game-changer',
         title: 'Claude Opus 4.6: The New AI Standard & What It Means for Etsy Sellers',
         excerpt: 'Anthropic\'s latest model brings agentic reasoning and 1M context. Learn how this "new brain" pairs with Copié-Collé to revolutionize your shop.',
