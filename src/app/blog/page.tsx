@@ -11,6 +11,15 @@ export const metadata: Metadata = {
 // Blog posts data - can be moved to a CMS or database later
 const posts = [
     {
+        slug: 'best-placeit-alternatives-2026-mockup-generators',
+        title: 'Best Placeit Alternatives in 2026: Free and Paid Mockup Generators Compared',
+        excerpt: 'Compare top Placeit alternatives including Canva, Smartmockups, Mockey.ai, and CopieColle. Find the best free or paid mockup generator for Etsy sellers and POD entrepreneurs.',
+        date: 'February 5, 2026',
+        readTime: '6 min read',
+        category: 'Product Reviews',
+        image: '/hero-wallpaper.png',
+    },
+    {
         slug: 'ai-mockup-generators-vs-traditional-product-photography-etsy',
         title: 'AI Mockup Generators vs Traditional Product Photography for Etsy Sellers | CopieColle',
         excerpt: 'Compare AI mockup generators with traditional product photography for Etsy. See how AI mockups save time (3 seconds vs hours), cut costs (9.99/month vs hundreds), and scale unlimited variations. Plus practical tips for sellers switching from photography to AI.',
