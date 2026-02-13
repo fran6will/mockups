@@ -35,6 +35,18 @@ export async function POST(req: Request) {
     const eventName = event.meta.event_name;
     const data = event.data;
 
+    // Skip Philia products — they are handled by the Philia webhook
+    const PHILIA_VARIANTS = new Set(['1303530', '1303612']);
+    const eventVariantId = String(
+      data.attributes?.variant_id ||
+      data.attributes?.first_order_item?.variant_id ||
+      ''
+    );
+    if (eventVariantId && PHILIA_VARIANTS.has(eventVariantId)) {
+      console.log('Skipping Philia product event, variant:', eventVariantId);
+      return new Response('Skipped (Philia product)', { status: 200 });
+    }
+
     if (eventName === 'subscription_created' || eventName === 'subscription_updated' || eventName === 'subscription_cancelled' || eventName === 'subscription_expired') {
       const attributes = data.attributes;
       const userId = attributes.user_email; // Assuming email is passed or we need to lookup user by email
